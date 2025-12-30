@@ -1,0 +1,16 @@
+# Pre-commit hooks provided by airlock
+# Add to your .pre-commit-config.yaml:
+#
+#   repos:
+#     - repo: https://github.com/yourorg/airlock
+#       rev: v0.1.0
+#       hooks:
+#         - id: airlock-lint
+
+- id: airlock-lint
+  name: airlock-lint
+  description: Detect direct .delay() and .apply_async() calls that bypass airlock
+  entry: python -m airlock.lint
+  language: python
+  types: [python]
+  additional_dependencies: []
