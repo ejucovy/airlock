@@ -951,7 +951,7 @@ class OutboxScope(Scope):
             TaskOutbox.objects.filter(...).update(status='ready')
 ```
 
-This is a **scope** concern (persistence + lifecycle), not an executor concern (how tasks run). The worker process that polls the outbox would use an executor (`celery_executor`, `django_q_executor`, etc.) to actually dispatch tasks.
+From airlock's perspective this is a **scope** concern (persistence + lifecycle) -- a separate external process would then be responsible for polling the outbox and actually dispatching tasks.
 
 ---
 
