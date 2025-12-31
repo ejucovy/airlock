@@ -332,43 +332,76 @@ with airlock.scope() as s:
 
 ## Dispatch options
 
-Pass queue-specific options (countdown, queue, priority, etc.) via `_dispatch_options`:
+Pass queue-specific options via `_dispatch_options`. Options are passed directly to the underlying dispatch method:
 
 ```python
+# With celery_executor
 airlock.enqueue(
     send_email,
     user_id=123,
     _dispatch_options={"countdown": 60, "queue": "emails"},
 )
+# Calls: task.apply_async(args=(user_id,), kwargs={}, countdown=60, queue="emails")
+
+# With django_q_executor
+airlock.enqueue(
+    send_email,
+    user_id=123,
+    _dispatch_options={"group": "emails", "timeout": 60},
+)
+# Calls: async_task(send_email, user_id=123, group="emails", timeout=60)
 ```
 
-At flush time, these are passed through to `apply_async()`:
-
-```python
-# Becomes:
-task.apply_async(args=(user_id,), kwargs={}, countdown=60, queue="emails")
-```
-
-For plain callables, `_dispatch_options` is silently ignored.
+Options are specific to your executor - use Celery options with `celery_executor`, django-q options with `django_q_executor`, etc. For plain callables, `_dispatch_options` is silently ignored.
 
 ## How dispatch works
 
-Airlock infers how to call your task:
+Dispatch is handled by **executors** — pluggable functions that execute intents. The default executor runs tasks synchronously.
+
+**Built-in executors:**
 
 ```python
-# Has dispatch_options? Has .apply_async()? Use apply_async
-task.apply_async(args=args, kwargs=kwargs, **dispatch_options)
-
-# Has .delay()? (Celery, Dramatiq, Huey)
-task.delay(*args, **kwargs)
-
-# Plain callable?
-task(*args, **kwargs)
+from airlock.integrations.executors.sync import sync_executor          # Default: task(*args, **kwargs)
+from airlock.integrations.executors.celery import celery_executor      # Celery: task.delay() or task.apply_async()
+from airlock.integrations.executors.django_q import django_q_executor  # django-q: async_task(task, *args, **kwargs)
+from airlock.integrations.executors.huey import huey_executor          # Huey: task.schedule()
+from airlock.integrations.executors.dramatiq import dramatiq_executor  # Dramatiq: task.send() or task.send_with_options()
 ```
 
-No configuration needed. Pass the task, airlock figures it out.
+**Celery executor** checks for `.delay()` / `.apply_async()` and falls back to sync:
 
-Note that this means **you can mix Celery tasks and plain callables in a single airlock.** The tasks will spawn, and the callables will run synchronously, in queue order.
+```python
+with airlock.scope(executor=celery_executor):
+    airlock.enqueue(celery_task, ...)    # Dispatches via .delay()
+    airlock.enqueue(plain_function, ...) # Falls back to sync
+```
+
+**django-q executor** always uses `async_task()`:
+
+```python
+with airlock.scope(executor=django_q_executor):
+    airlock.enqueue(any_function, ...)  # All go via async_task()
+```
+
+**Huey executor** checks for `.schedule()`:
+
+```python
+with airlock.scope(executor=huey_executor):
+    airlock.enqueue(huey_task, ...)      # Dispatches via .schedule()
+    airlock.enqueue(plain_function, ...) # Falls back to sync
+```
+
+**Dramatiq executor** checks for `.send()`:
+
+```python
+with airlock.scope(executor=dramatiq_executor):
+    airlock.enqueue(dramatiq_actor, ...)  # Dispatches via .send()
+    airlock.enqueue(plain_function, ...)  # Falls back to sync
+```
+
+**Dependencies**: Each executor requires its corresponding task queue library to be installed. Import the executor only if you have the library available (e.g., `celery_executor` requires `celery`, `django_q_executor` requires `django-q`).
+
+Executors are **composable** — use different executors with different scopes, or write your own for custom dispatch mechanisms.
 
 ## Django integration
 
@@ -399,7 +432,31 @@ AIRLOCK = {
 
     # Database alias for on_commit
     "DATABASE_ALIAS": "default",
+
+    # Task executor: dotted path to executor callable, or None for sync
+    "TASK_BACKEND": None,
 }
+```
+
+**TASK_BACKEND** is a dotted import path to an executor callable:
+
+| Setting | Behavior |
+|---------|----------|
+| `None` (default) | Tasks run synchronously at flush |
+| `"airlock.integrations.executors.celery.celery_executor"` | Dispatch via Celery `.delay()` / `.apply_async()` |
+| `"airlock.integrations.executors.django_q.django_q_executor"` | Dispatch via django-q `async_task()` |
+| `"airlock.integrations.executors.huey.huey_executor"` | Dispatch via Huey `.schedule()` |
+| `"airlock.integrations.executors.dramatiq.dramatiq_executor"` | Dispatch via Dramatiq `.send()` |
+| `"myapp.executors.custom_executor"` | Your custom executor |
+
+You can always pass an executor explicitly to override the setting:
+
+```python
+from airlock.integrations.executors.django_q import django_q_executor
+
+# Explicit executor (ignores TASK_BACKEND setting)
+with airlock.scope(_cls=DjangoScope, executor=django_q_executor):
+    ...
 ```
 
 ### Custom flush behavior
@@ -442,6 +499,67 @@ from airlock.integrations.django import DjangoScope
 with airlock.scope(_cls=DjangoScope):
     # dispatch deferred to transaction.on_commit()
     ...
+```
+
+### Using django-q
+
+django-q tasks work with airlock via the `django_q_executor`:
+
+```python
+# settings.py
+AIRLOCK = {
+    "TASK_BACKEND": "airlock.integrations.executors.django_q.django_q_executor",
+}
+```
+
+Now all tasks enqueued in `DjangoScope` will dispatch via `async_task()`:
+
+```python
+from airlock.integrations.django import DjangoScope
+
+def process_order(order_id):
+    # Plain function - no @task decorator needed
+    ...
+
+with transaction.atomic():
+    with airlock.scope(_cls=DjangoScope):
+        order.save()
+        airlock.enqueue(process_order, order.id)
+# Dispatches via django_q.tasks.async_task() after commit ✓
+```
+
+**How it works:**
+
+1. **Lifecycle** — `DjangoScope` defers flush to `transaction.on_commit()`
+2. **Execution** — `django_q_executor` dispatches via `async_task()`
+3. **Separation** — Scope and executor are independent concerns
+
+You can use `django_q_executor` with **any** scope type, not just `DjangoScope`:
+
+```python
+from airlock.integrations.executors.django_q import django_q_executor
+
+# Use django-q without Django transaction semantics
+with airlock.scope(executor=django_q_executor):
+    airlock.enqueue(my_task, ...)
+# Dispatches immediately at flush (no on_commit defer)
+```
+
+**Dispatch options:**
+
+`_dispatch_options` are passed directly to `async_task()`:
+
+```python
+airlock.enqueue(
+    send_email,
+    user_id=123,
+    _dispatch_options={
+        "group": "high-priority",
+        "hook": "my_hook",
+        "timeout": 60,
+    }
+)
+# Calls: async_task(send_email, user_id=123, group="high-priority", hook="my_hook", timeout=60)
 ```
 
 ## Celery integration
@@ -692,6 +810,148 @@ Policies should not rely on cross-intent coordination. While policies may mainta
 3. **Put context in the intent** — use `_origin` or `_dispatch_options` at enqueue time
 
 This is intentionally simple. Most policies don't need cross-phase memory.
+
+---
+
+# Architecture
+
+Airlock has three orthogonal extension points. Understanding their separation makes advanced usage intuitive.
+
+## The Three Extension Points
+
+| Extension Point | Purpose | When to Customize |
+|----------------|---------|-------------------|
+| **Policy** | Observe/filter intents | Logging, blocking specific tasks, test assertions |
+| **Executor** | How intents execute | Different task queues (Celery, django-q), threading, remote execution |
+| **Scope** | When/whether to flush | Transaction boundaries, durable buffering (outbox pattern) |
+
+These concerns are **independent** and can be mixed freely.
+
+### Policy = Observe and Filter
+
+Policies implement two hooks:
+- `on_enqueue(intent)` — Called when intent is buffered. Observe or raise.
+- `allows(intent)` — Called at flush. Return `True` to dispatch, `False` to drop.
+
+Policies are **stateless boolean gates**. They judge intents but don't affect ordering or execution mechanism.
+
+**Example: Block specific tasks**
+```python
+policy = airlock.BlockTasks({"send_sms", "expensive_rebuild"})
+with airlock.scope(policy=policy):
+    airlock.enqueue(send_email)  # Dispatches
+    airlock.enqueue(send_sms)    # Dropped
+```
+
+### Executor = How to Execute
+
+Executors are callables that take an `Intent` and execute it via some dispatch mechanism.
+
+**Built-in executors** (in `airlock.integrations.executors`):
+- `sync_executor` — Synchronous execution (default)
+- `celery_executor` — Dispatch via `.delay()` / `.apply_async()`
+- `django_q_executor` — Dispatch via `async_task()`
+- `huey_executor` — Dispatch via `.schedule()`
+- `dramatiq_executor` — Dispatch via `.send()`
+
+**Example: Use django-q for all tasks**
+```python
+from airlock.integrations.executors.django_q import django_q_executor
+
+with airlock.scope(executor=django_q_executor):
+    airlock.enqueue(process_order, order_id=123)
+# Dispatched via django_q.tasks.async_task()
+```
+
+Executors are **pluggable** — you can write your own for threadpools, AWS Lambda, remote sandboxes, etc.
+
+### Scope = When and Whether to Flush
+
+Scopes control:
+- **Buffer storage** (in-memory list, database table, etc.)
+- **Flush timing** (end of scope, after transaction commit, etc.)
+- **Flush decision** (always, on success, conditional, etc.)
+
+**Built-in scope types**:
+- `Scope` — Flushes on normal exit, discards on exception
+- `DjangoScope` — Defers flush to `transaction.on_commit()`
+- Custom scopes for outbox pattern, batching, etc.
+
+**Example: Transaction-aware scope**
+```python
+from airlock.integrations.django import DjangoScope
+
+with transaction.atomic():
+    with airlock.scope(_cls=DjangoScope):
+        order.save()
+        airlock.enqueue(send_receipt, order.id)
+# Flush deferred until transaction commits ✓
+```
+
+## Composing Extension Points
+
+**Scope type**, **executor**, and **policy** are orthogonal:
+
+```python
+# Django transaction boundary + django-q executor + logging policy
+from airlock.integrations.django import DjangoScope
+from airlock.integrations.executors.django_q import django_q_executor
+
+with airlock.scope(
+    _cls=DjangoScope,              # When: defer to on_commit
+    executor=django_q_executor,    # How: via async_task()
+    policy=airlock.LogOnFlush()    # What: log everything
+):
+    do_stuff()
+```
+
+You can mix:
+- `DjangoScope` + `celery_executor` ✓
+- Base `Scope` + `django_q_executor` ✓
+- Custom scope + custom executor ✓
+
+## When to Use Each Extension Point
+
+**Use Policy when:**
+- Filtering which tasks dispatch (block, allow, assert)
+- Observing intents for logging/metrics
+- Testing that code doesn't enqueue
+
+**Use Executor when:**
+- Changing how tasks run (queue, threading, remote)
+- All executors are pluggable integrations
+
+**Use Scope subclass when:**
+- Changing when effects escape (transaction boundaries)
+- Changing buffer persistence (outbox pattern)
+- Custom flush logic (batching, conditional dispatch)
+
+**Example: Outbox Pattern (Scope + Executor)**
+
+The transactional outbox pattern needs both a custom scope (for durable buffering) and an executor (for marking as ready):
+
+```python
+class OutboxScope(Scope):
+    """Durable scope that persists intents to database."""
+
+    def _add(self, intent):
+        super()._add(intent)
+        # Persist immediately (in transaction)
+        TaskOutbox.objects.create(
+            task_name=intent.name,
+            args=intent.args,
+            kwargs=intent.kwargs,
+            status='pending'
+        )
+
+    def _dispatch_all(self, intents):
+        # Mark as ready instead of executing
+        # Separate worker will dispatch later
+        for intent in intents:
+            TaskOutbox.objects.filter(...).update(status='ready')
+```
+
+From airlock's perspective this is a **scope** concern (persistence + lifecycle) -- a separate external process would then be responsible for polling the outbox and actually dispatching tasks.
 
 ---
 
