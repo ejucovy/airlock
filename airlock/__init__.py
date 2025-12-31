@@ -122,6 +122,34 @@ class Intent:
 
 
 # ============================================================================
+# Executor Protocol
+# ============================================================================
+
+
+@runtime_checkable
+class Executor(Protocol):
+    """
+    Protocol for intent executors.
+
+    An executor is a callable that takes an Intent and executes it
+    via some dispatch mechanism (synchronous, Celery, django-q, etc.).
+
+    Built-in executors are available in airlock.integrations.executors:
+    - sync_executor: Synchronous execution (default)
+    - celery_executor: Dispatch via Celery .delay() / .apply_async()
+    - django_q_executor: Dispatch via django-q's async_task()
+    - huey_executor: Dispatch via Huey's .schedule()
+    - dramatiq_executor: Dispatch via Dramatiq's .send()
+
+    Custom executors can be written by implementing this protocol.
+    """
+
+    def __call__(self, intent: Intent) -> None:
+        """Execute the given intent."""
+        ...
+
+
+# ============================================================================
 # Errors
 # ============================================================================
 
@@ -297,31 +325,29 @@ class CompositePolicy:
 
 
 def _execute(intent: Intent) -> None:
-    """Execute an intent by calling the task appropriately."""
-    task = intent.task
-    opts = intent.dispatch_options or {}
-
-    # If dispatch_options provided, prefer apply_async (supports options)
-    if opts and hasattr(task, "apply_async"):
-        task.apply_async(args=intent.args, kwargs=intent.kwargs, **opts)
-    # Celery/Dramatiq/Huey - anything with .delay()
-    elif hasattr(task, "delay"):
-        task.delay(*intent.args, **intent.kwargs)
-    # Celery apply_async for more control
-    elif hasattr(task, "apply_async"):
-        task.apply_async(args=intent.args, kwargs=intent.kwargs)
-    # Plain callable (dispatch_options ignored)
-    else:
-        task(*intent.args, **intent.kwargs)
+    """
+    Default executor: synchronous execution, ignoring dispatch_options.
+    """
+    intent.task(*intent.args, **intent.kwargs)
 
 
 class Scope:
     """
     A lifecycle scope that buffers and controls side effect intents.
+
+    Args:
+        policy: Policy controlling what intents are allowed
+        executor: Callable that executes intents. Defaults to synchronous execution.
+            See airlock.integrations.executors for available executors.
     """
 
-    def __init__(self, policy: Policy) -> None:
+    def __init__(
+        self,
+        policy: Policy,
+        executor: Executor | None = None
+    ) -> None:
         self._policy = policy
+        self._executor = executor or _execute
         self._intents: list[Intent] = []
         self._flushed = False
         self._discarded = False
@@ -449,9 +475,14 @@ class Scope:
         return intents_to_dispatch
 
     def _dispatch_all(self, intents: list[Intent]) -> None:
-        """Dispatch intents. Subclasses may override (e.g., for on_commit)."""
+        """
+        Dispatch intents using the configured executor.
+
+        Subclasses may override to customize dispatch timing (e.g., defer to on_commit).
+        The executor itself determines HOW intents are executed (sync, Celery, django-q, etc.).
+        """
         for intent in intents:
-            _execute(intent)
+            self._executor(intent)
 
     def discard(self) -> list[Intent]:
         """Discard all buffered intents without dispatching."""
@@ -485,6 +516,11 @@ def scope(
         policy: Policy controlling what intents are allowed. Defaults to AllowAll.
         _cls: Scope class to use. Subclass Scope and override should_flush()
             to customize flush/discard behavior.
+        **kwargs: Additional arguments passed to Scope constructor (e.g., executor).
+
+    Common kwargs:
+        executor: Callable that executes intents. Defaults to synchronous execution.
+            See airlock.integrations.executors for available executors.
 
     Behavior:
         - On normal exit: calls flush() if should_flush(None) returns True
@@ -492,6 +528,17 @@ def scope(
 
     The default Scope.should_flush() returns True on success, False on error.
     Subclass Scope to customize this behavior.
+
+    Examples:
+        # Use celery executor
+        from airlock.integrations.executors.celery import celery_executor
+        with airlock.scope(executor=celery_executor):
+            airlock.enqueue(my_task, ...)
+
+        # Use django-q executor
+        from airlock.integrations.executors.django_q import django_q_executor
+        with airlock.scope(executor=django_q_executor):
+            airlock.enqueue(my_task, ...)
     """
     if policy is None:
         policy = AllowAll()
@@ -629,6 +676,7 @@ def enqueue(
 __all__ = [
     # Core
     "Intent",
+    "Executor",
     "enqueue",
     "scope",
     "policy",

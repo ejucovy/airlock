@@ -5,13 +5,23 @@ Provides:
 - DjangoScope: Defers dispatch to transaction.on_commit()
 - AirlockMiddleware: Wraps requests in a scope
 - airlock_command: Decorator for management commands
+- get_executor(): Helper to select executor based on TASK_BACKEND setting
 
 Settings (in settings.py):
     AIRLOCK = {
         "DEFAULT_POLICY": "airlock.AllowAll",  # Dotted path or callable
         "USE_ON_COMMIT": True,              # Defer dispatch to transaction.on_commit
         "DATABASE_ALIAS": "default",        # Database for on_commit
+        "TASK_BACKEND": None,               # Dotted path to executor callable
     }
+
+TASK_BACKEND is a dotted import path to an executor callable:
+    - None (default): sync_executor (synchronous execution)
+    - "airlock.integrations.executors.celery.celery_executor"
+    - "airlock.integrations.executors.django_q.django_q_executor"
+    - "airlock.integrations.executors.huey.huey_executor"
+    - "airlock.integrations.executors.dramatiq.dramatiq_executor"
+    - "myapp.executors.custom_executor" (or any custom executor)
 """
 
 from functools import wraps
@@ -22,7 +32,7 @@ from django.conf import settings
 from django.db import transaction, DEFAULT_DB_ALIAS
 
 import airlock
-from airlock import Scope, Intent, AllowAll, DropAll, _execute
+from airlock import Scope, Intent, Executor, AllowAll, DropAll, _execute
 
 
 # =============================================================================
@@ -33,6 +43,7 @@ DEFAULTS = {
     "DEFAULT_POLICY": "airlock.AllowAll",
     "USE_ON_COMMIT": True,
     "DATABASE_ALIAS": DEFAULT_DB_ALIAS,
+    "TASK_BACKEND": None,  # Dotted path to executor callable, or None for sync
 }
 
 
@@ -61,6 +72,48 @@ def get_default_policy():
 
 
 # =============================================================================
+# Executor selection
+# =============================================================================
+
+
+def get_executor() -> Executor:
+    """
+    Get the appropriate executor based on TASK_BACKEND setting.
+
+    TASK_BACKEND should be a dotted import path to an executor callable,
+    or None for synchronous execution.
+
+    Examples:
+        AIRLOCK = {
+            'TASK_BACKEND': 'airlock.integrations.executors.django_q.django_q_executor',
+        }
+
+        # Or use a custom executor
+        AIRLOCK = {
+            'TASK_BACKEND': 'myapp.executors.custom_executor',
+        }
+
+    Returns:
+        Executor function based on TASK_BACKEND
+
+    Raises:
+        ImportError: If the executor module/callable cannot be imported
+    """
+    from importlib import import_module
+
+    backend = get_setting("TASK_BACKEND")
+
+    if backend is None:
+        from airlock.integrations.executors.sync import sync_executor
+        return sync_executor
+
+    # Import the callable from dotted path
+    module_path, callable_name = backend.rsplit(".", 1)
+    module = import_module(module_path)
+    return getattr(module, callable_name)
+
+
+# =============================================================================
 # DjangoScope
 # =============================================================================
 
@@ -71,22 +124,40 @@ class DjangoScope(Scope):
 
     Defers dispatch to transaction.on_commit() so side effects only
     fire after the transaction commits successfully.
+
+    If no executor is provided, uses get_executor() to select one based
+    on TASK_BACKEND setting.
     """
 
-    def __init__(self, *, using: str | None = None, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
+    def __init__(
+        self,
+        *,
+        using: str | None = None,
+        executor: Executor | None = None,
+        **kwargs: Any
+    ) -> None:
+        # Default to executor based on TASK_BACKEND setting if not provided
+        if executor is None:
+            executor = get_executor()
+
+        super().__init__(executor=executor, **kwargs)
         self.using = using or get_setting("DATABASE_ALIAS")
 
     def _dispatch_all(self, intents: list[Intent]) -> None:
-        """Dispatch intents, optionally deferring to on_commit."""
+        """
+        Dispatch intents, optionally deferring to on_commit.
+
+        Uses self._executor (configured via constructor or TASK_BACKEND setting)
+        to actually execute intents.
+        """
         if get_setting("USE_ON_COMMIT"):
             def do_dispatch():
                 for intent in intents:
-                    _execute(intent)
+                    self._executor(intent)
             transaction.on_commit(do_dispatch, using=self.using)
         else:
             for intent in intents:
-                _execute(intent)
+                self._executor(intent)
 
 
 # =============================================================================
