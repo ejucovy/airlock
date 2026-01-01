@@ -469,3 +469,372 @@ class TestScopeContextManager:
             s._add(make_intent(tracked))
 
         assert len(calls) == 1
+
+
+class TestNestedScopeCapture:
+    """Tests for nested scope capture behavior via on_nested_exit."""
+
+    def test_default_captures_nested_flush(self):
+        """Test that by default, nested scopes are captured (safe default)."""
+        outer_calls = []
+        inner_calls = []
+
+        def outer_task():
+            outer_calls.append(1)
+
+        def inner_task():
+            inner_calls.append(1)
+
+        with scope(policy=AllowAll()) as outer:
+            airlock.enqueue(outer_task)
+
+            with scope(policy=AllowAll()) as inner:
+                airlock.enqueue(inner_task)
+
+            # Default: inner's intents captured by outer
+            assert len(inner_calls) == 0
+            assert len(outer_calls) == 0
+
+        # Both flush together when outer exits
+        assert len(inner_calls) == 1
+        assert len(outer_calls) == 1
+
+    def test_independent_scope_allows_nested_flush(self):
+        """Test that IndependentScope allows nested scopes to flush independently."""
+        outer_calls = []
+        inner_calls = []
+
+        def outer_task():
+            outer_calls.append(1)
+
+        def inner_task():
+            inner_calls.append(1)
+
+        class IndependentScope(Scope):
+            def on_nested_exit(self, exiting_scope, intents):
+                return intents  # Allow independent flush
+
+        with scope(policy=AllowAll(), _cls=IndependentScope) as outer:
+            airlock.enqueue(outer_task)
+
+            with scope(policy=AllowAll()) as inner:
+                airlock.enqueue(inner_task)
+
+            # Inner flushed independently
+            assert len(inner_calls) == 1
+            assert len(outer_calls) == 0
+
+        # Outer flushes its own
+        assert len(outer_calls) == 1
+
+    def test_selective_capture(self):
+        """Test that scope can selectively capture specific intents."""
+        calls = []
+
+        def safe_task():
+            calls.append('safe')
+
+        def dangerous_task():
+            calls.append('dangerous')
+
+        class SmartScope(Scope):
+            def on_nested_exit(self, exiting_scope, intents):
+                # Allow safe tasks, capture dangerous ones
+                return [i for i in intents if 'dangerous' not in i.name]
+
+        with scope(policy=AllowAll(), _cls=SmartScope) as outer:
+            with scope(policy=AllowAll()) as inner:
+                airlock.enqueue(safe_task)
+                airlock.enqueue(dangerous_task)
+
+            # Safe task flushed immediately, dangerous was captured
+            assert 'safe' in calls
+            assert 'dangerous' not in calls
+
+        # Dangerous task flushes when outer exits
+        assert 'dangerous' in calls
+
+    def test_multi_level_nesting_walks_full_chain(self):
+        """Test that intents walk up through multiple levels."""
+        calls = []
+
+        def task():
+            calls.append(1)
+
+        class CapturingScope(Scope):
+            def on_nested_exit(self, exiting_scope, intents):
+                return []  # Capture everything
+
+        with scope(policy=AllowAll(), _cls=CapturingScope) as outer:
+            with scope(policy=AllowAll()) as middle:
+                with scope(policy=AllowAll()) as inner:
+                    airlock.enqueue(task)
+
+                # Innermost tried to flush, middle allowed, but outer captured
+                assert len(calls) == 0
+
+            # Middle tried to flush its own buffer (empty), nothing happens
+            assert len(calls) == 0
+
+        # Outer flushes captured intent
+        assert len(calls) == 1
+
+    def test_provenance_tracking_own_vs_captured(self):
+        """Test that scopes track which intents are their own vs captured."""
+
+        def own_task():
+            pass
+
+        def captured_task():
+            pass
+
+        class CapturingScope(Scope):
+            def on_nested_exit(self, exiting_scope, intents):
+                return []
+
+        with scope(policy=AllowAll(), _cls=CapturingScope) as outer:
+            airlock.enqueue(own_task)
+
+            with scope(policy=AllowAll()) as inner:
+                airlock.enqueue(captured_task)
+
+            # Check provenance
+            assert len(outer.intents) == 2  # Total
+            assert len(outer.own_intents) == 1  # Own
+            assert len(outer.captured_intents) == 1  # Captured
+
+            assert outer.own_intents[0].task == own_task
+            assert outer.captured_intents[0].task == captured_task
+
+    def test_captured_intents_respect_outer_policy(self):
+        """Test that captured intents are subject to outer scope's policy."""
+        calls = []
+
+        def allowed_task():
+            calls.append('allowed')
+
+        def blocked_task():
+            calls.append('blocked')
+
+        class CapturingScope(Scope):
+            def on_nested_exit(self, exiting_scope, intents):
+                return []
+
+        # Custom policy that blocks specific task by identity
+        class BlockSpecificTask:
+            def __init__(self, blocked_task_obj):
+                self.blocked_task = blocked_task_obj
+
+            def on_enqueue(self, intent):
+                pass
+
+            def allows(self, intent):
+                return intent.task is not self.blocked_task
+
+        # Outer scope blocks 'blocked_task'
+        with scope(
+            policy=BlockSpecificTask(blocked_task),
+            _cls=CapturingScope
+        ) as outer:
+            with scope(policy=AllowAll()) as inner:
+                airlock.enqueue(allowed_task)
+                airlock.enqueue(blocked_task)
+
+            # Both captured
+            assert len(calls) == 0
+
+        # Only allowed_task flushes (blocked_task filtered by outer policy)
+        assert calls == ['allowed']
+
+    def test_nested_scope_discard_doesnt_affect_parent(self):
+        """Test that nested scope discard doesn't affect parent buffer."""
+        calls = []
+
+        def outer_task():
+            calls.append('outer')
+
+        def inner_task():
+            calls.append('inner')
+
+        with scope(policy=AllowAll()) as outer:
+            airlock.enqueue(outer_task)
+
+            try:
+                with scope(policy=AllowAll()) as inner:
+                    airlock.enqueue(inner_task)
+                    raise ValueError("test error")
+            except ValueError:
+                pass
+
+            # Inner discarded its intent
+            assert 'inner' not in calls
+
+        # Outer still flushes its own intent
+        assert 'outer' in calls
+        assert 'inner' not in calls
+
+    def test_chain_walk_with_mixed_capture(self):
+        """Test walking a chain where some parents capture and some allow."""
+        calls = []
+
+        def task():
+            calls.append(1)
+
+        class CapturingScope(Scope):
+            def on_nested_exit(self, exiting_scope, intents):
+                return []
+
+        class AllowingScope(Scope):
+            def on_nested_exit(self, exiting_scope, intents):
+                return intents  # Allow all
+
+        # Outer captures, middle allows
+        with scope(policy=AllowAll(), _cls=CapturingScope) as outer:
+            with scope(policy=AllowAll(), _cls=AllowingScope) as middle:
+                with scope(policy=AllowAll()) as inner:
+                    airlock.enqueue(task)
+
+                # Inner tries to flush
+                # Middle allows it
+                # Outer captures it
+                assert len(calls) == 0
+
+            # Middle has nothing of its own
+            assert len(calls) == 0
+
+        # Outer flushes captured intent
+        assert len(calls) == 1
+
+    def test_partial_capture_splits_buffer(self):
+        """Test that partial capture correctly splits intents."""
+        calls = []
+
+        def task_1():
+            calls.append(1)
+
+        def task_2():
+            calls.append(2)
+
+        def task_3():
+            calls.append(3)
+
+        class SelectiveScope(Scope):
+            def on_nested_exit(self, exiting_scope, intents):
+                # Allow only task_1, capture the rest
+                return [i for i in intents if '1' in i.name]
+
+        with scope(policy=AllowAll(), _cls=SelectiveScope) as outer:
+            with scope(policy=AllowAll()) as inner:
+                airlock.enqueue(task_1)
+                airlock.enqueue(task_2)
+                airlock.enqueue(task_3)
+
+            # Only task_1 flushed
+            assert calls == [1]
+
+        # task_2 and task_3 flush when outer exits
+        assert calls == [1, 2, 3]
+
+    def test_on_nested_exit_can_inspect_exiting_scope(self):
+        """Test that on_nested_exit receives exiting scope for inspection."""
+        inspected_scopes = []
+
+        class InspectingScope(Scope):
+            def on_nested_exit(self, exiting_scope, intents):
+                inspected_scopes.append(exiting_scope)
+                # Check if inner scope has certain characteristics
+                if len(intents) > 2:
+                    return []  # Capture if too many intents
+                return intents  # Allow otherwise
+
+        def task():
+            pass
+
+        with scope(policy=AllowAll(), _cls=InspectingScope) as outer:
+            # First nested scope - few intents (allowed)
+            with scope(policy=AllowAll()) as inner1:
+                airlock.enqueue(task)
+
+            assert len(inspected_scopes) == 1
+            assert inspected_scopes[0] is inner1
+
+            # Second nested scope - many intents (captured)
+            with scope(policy=AllowAll()) as inner2:
+                airlock.enqueue(task)
+                airlock.enqueue(task)
+                airlock.enqueue(task)
+
+            assert len(inspected_scopes) == 2
+            assert inspected_scopes[1] is inner2
+
+            # inner2's intents were captured
+            assert len(outer.captured_intents) == 3
+
+    def test_on_nested_exit_return_none_raises_typeerror(self):
+        """Test that on_nested_exit returning None raises TypeError."""
+
+        class BrokenScope(Scope):
+            def on_nested_exit(self, exiting_scope, intents):
+                return None  # Bug: should return list
+
+        def task():
+            pass
+
+        with pytest.raises(TypeError, match="on_nested_exit.*must return a list.*got NoneType"):
+            with scope(policy=AllowAll(), _cls=BrokenScope):
+                with scope(policy=AllowAll()):
+                    airlock.enqueue(task)
+
+    def test_on_nested_exit_return_dict_raises_typeerror(self):
+        """Test that on_nested_exit returning wrong type raises TypeError."""
+
+        class BrokenScope(Scope):
+            def on_nested_exit(self, exiting_scope, intents):
+                return {"intents": intents}  # Bug: should return list
+
+        def task():
+            pass
+
+        with pytest.raises(TypeError, match="on_nested_exit.*must return a list.*got dict"):
+            with scope(policy=AllowAll(), _cls=BrokenScope):
+                with scope(policy=AllowAll()):
+                    airlock.enqueue(task)
+
+    def test_multiple_sequential_nested_scopes_all_captured(self):
+        """Test that multiple sequential nested scopes don't lose intents due to ID collision."""
+        calls = []
+
+        def task1():
+            calls.append(1)
+
+        def task2():
+            calls.append(2)
+
+        def task3():
+            calls.append(3)
+
+        def task4():
+            calls.append(4)
+
+        with scope(policy=AllowAll()) as outer:
+            # Create many sequential nested scopes
+            # Without the fix, ID reuse could cause data loss
+            with scope(policy=AllowAll()):
+                airlock.enqueue(task1)
+
+            with scope(policy=AllowAll()):
+                airlock.enqueue(task2)
+
+            with scope(policy=AllowAll()):
+                airlock.enqueue(task3)
+
+            with scope(policy=AllowAll()):
+                airlock.enqueue(task4)
+
+            # All should be captured
+            assert len(calls) == 0
+            assert len(outer.captured_intents) == 4
+            assert len(outer.intents) == 4
+
+        # All tasks should execute
+        assert calls == [1, 2, 3, 4]

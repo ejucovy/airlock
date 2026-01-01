@@ -126,8 +126,8 @@ class TestEnqueueIntegration:
         # Plain callables are called directly on flush
         assert len(calls) == 2
 
-    def test_nested_scopes_isolate_intents(self):
-        """Test that nested scopes have isolated intent buffers."""
+    def test_nested_scopes_captured_by_default(self):
+        """Test that nested scopes are captured by default (safe default)."""
         outer_calls = []
         inner_calls = []
 
@@ -143,8 +143,11 @@ class TestEnqueueIntegration:
             with scope(policy=AllowAll()):
                 enqueue(inner_task)
 
+            # Inner task captured, hasn't executed yet
+            assert len(inner_calls) == 0
             enqueue(outer_task)
 
+        # All tasks flush together
         assert len(outer_calls) == 2
         assert len(inner_calls) == 1
 
@@ -204,6 +207,8 @@ class TestDispatchOptions:
 
     def test_dispatch_options_passed_to_apply_async(self):
         """Test that dispatch_options are passed to apply_async."""
+        from airlock.integrations.executors import celery_executor
+
         apply_async_calls = []
 
         class FakeCeleryTask:
@@ -214,7 +219,7 @@ class TestDispatchOptions:
 
         task = FakeCeleryTask()
 
-        with scope(policy=AllowAll()):
+        with scope(policy=AllowAll(), executor=celery_executor):
             enqueue(
                 task,
                 "arg1",
@@ -250,6 +255,8 @@ class TestDispatchOptions:
 
     def test_dispatch_options_prefers_apply_async_over_delay(self):
         """Test that apply_async is used when dispatch_options are present."""
+        from airlock.integrations.executors import celery_executor
+
         delay_calls = []
         apply_async_calls = []
 
@@ -264,7 +271,7 @@ class TestDispatchOptions:
 
         task = FakeTask()
 
-        with scope(policy=AllowAll()):
+        with scope(policy=AllowAll(), executor=celery_executor):
             enqueue(task, "arg", _dispatch_options={"countdown": 10})
 
         # apply_async should be used, not delay
@@ -273,6 +280,8 @@ class TestDispatchOptions:
 
     def test_delay_used_without_dispatch_options(self):
         """Test that delay is used when no dispatch_options are present."""
+        from airlock.integrations.executors import celery_executor
+
         delay_calls = []
         apply_async_calls = []
 
@@ -287,7 +296,7 @@ class TestDispatchOptions:
 
         task = FakeTask()
 
-        with scope(policy=AllowAll()):
+        with scope(policy=AllowAll(), executor=celery_executor):
             enqueue(task, "arg", key="val")
 
         # delay should be used when no options

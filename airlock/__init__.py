@@ -352,6 +352,9 @@ class Scope:
         self._flushed = False
         self._discarded = False
         self._token: Token | None = None
+        self._parent: "Scope | None" = None
+        self._captured_intents: list[Intent] = []
+        self._own_intents_cache: list[Intent] | None = None
 
     @property
     def intents(self) -> list[Intent]:
@@ -371,6 +374,19 @@ class Scope:
         """True if this scope is currently the active scope."""
         return self._token is not None and _current_scope.get() is self
 
+    @property
+    def captured_intents(self) -> list[Intent]:
+        """Intents captured from nested scopes."""
+        return list(self._captured_intents)
+
+    @property
+    def own_intents(self) -> list[Intent]:
+        """Intents enqueued directly in this scope (not captured from nested scopes)."""
+        if self._own_intents_cache is None:
+            captured_set = set(id(i) for i in self._captured_intents)
+            self._own_intents_cache = [i for i in self._intents if id(i) not in captured_set]
+        return list(self._own_intents_cache)
+
     def enter(self) -> "Scope":
         """
         Activate this scope.
@@ -386,6 +402,10 @@ class Scope:
         """
         if self._token is not None:
             raise ScopeStateError("Scope is already active.")
+
+        # Capture parent scope before activating
+        self._parent = _current_scope.get()
+
         self._token = _current_scope.set(self)
         return self
 
@@ -420,6 +440,55 @@ class Scope:
         """
         return error is None
 
+    def on_nested_exit(self, exiting_scope: "Scope", intents: list[Intent]) -> list[Intent]:
+        """
+        Called when a nested scope exits and attempts to flush.
+
+        This method is called during the parent chain walk, allowing each ancestor
+        to decide which intents the exiting scope may flush vs which to capture.
+
+        Args:
+            exiting_scope: The nested scope that is exiting (may be deeply nested)
+            intents: The list of intents the exiting scope wants to flush
+
+        Returns:
+            The list of intents to allow through (the exiting scope will flush these).
+            Any intents not in the returned list are captured into this scope's buffer.
+
+            IMPORTANT: Must return a list. Returning None or other types raises TypeError.
+
+        Raises:
+            TypeError: If return value is not a list.
+
+            Any other exception raised by this method will propagate and abort the flush,
+            potentially leaving the scope in a partially-modified state.
+
+        Default behavior: Capture all intents (return []).
+        This is the controlled default - outer scopes have authority over nested scopes.
+
+        Override this method to allow nested scopes to flush independently:
+            - Return [] to capture all intents (default, controlled)
+            - Return intents to allow all (independent nested scopes)
+            - Return filtered list to selectively capture
+
+        Notes:
+            - Do not mutate the `intents` list. Return a new list or slice.
+            - Returning intents not in the input list has undefined behavior.
+            - In multi-level nesting, `exiting_scope` is always the innermost scope,
+              not necessarily the immediate child. Intermediate scopes haven't exited yet.
+
+        Example:
+            class IndependentScope(Scope):
+                def on_nested_exit(self, exiting_scope, intents):
+                    return intents  # Allow nested scopes to flush independently
+
+            class SmartScope(Scope):
+                def on_nested_exit(self, exiting_scope, intents):
+                    # Capture dangerous tasks, allow safe ones
+                    return [i for i in intents if 'dangerous' not in i.name]
+        """
+        return []  # Controlled default: capture everything
+
     def _add(self, intent: Intent) -> None:
         """Add an intent to the buffer. Internal - use enqueue() instead."""
         if self._flushed or self._discarded:
@@ -436,6 +505,7 @@ class Scope:
             _in_policy.reset(token)
 
         self._intents.append(intent)
+        self._own_intents_cache = None  # Invalidate cache
 
     def flush(self) -> list[Intent]:
         """Flush all buffered intents - apply policy and dispatch."""
@@ -451,11 +521,14 @@ class Scope:
 
         self._flushed = True
 
+        # Walk up parent chain to get approval for flushing
+        intents_allowed_to_flush = self._walk_parent_chain_for_approval(self._intents)
+
         token = _in_policy.set(True)
         try:
             # Filter intents through policies (FIFO order preserved)
             intents_to_dispatch = []
-            for intent in self._intents:
+            for intent in intents_allowed_to_flush:
                 # First: check local policies (innermost first)
                 allowed = True
                 for local_policy in reversed(intent._local_policies):
@@ -473,6 +546,49 @@ class Scope:
         self._dispatch_all(intents_to_dispatch)
 
         return intents_to_dispatch
+
+    def _walk_parent_chain_for_approval(self, intents: list[Intent]) -> list[Intent]:
+        """
+        Walk up the parent chain, calling on_nested_exit on each parent.
+
+        Each parent decides which intents this scope is allowed to flush.
+        Intents not approved are captured into the parent's buffer.
+
+        Returns the list of intents that survived all parent approvals.
+        """
+        if self._parent is None:
+            # No parent - we're the root scope, can flush everything
+            return intents
+
+        current_intents = intents
+        parent = self._parent
+
+        # Walk up the chain
+        while parent is not None:
+            # Ask parent what it allows us to flush
+            allowed = parent.on_nested_exit(self, current_intents)
+
+            # Validate return value
+            if not isinstance(allowed, list):
+                raise TypeError(
+                    f"on_nested_exit() must return a list, got {type(allowed).__name__}"
+                )
+
+            # Parent captures what it didn't allow
+            # Use id-based set for O(n) instead of O(n²) list membership check
+            allowed_ids = {id(i) for i in allowed}
+            captured = [i for i in current_intents if id(i) not in allowed_ids]
+
+            if captured:
+                parent._captured_intents.extend(captured)
+                parent._intents.extend(captured)
+                parent._own_intents_cache = None  # Invalidate cache
+
+            # Continue up the chain with only allowed intents
+            current_intents = allowed
+            parent = parent._parent
+
+        return current_intents
 
     def _dispatch_all(self, intents: list[Intent]) -> None:
         """
