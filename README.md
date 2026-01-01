@@ -334,12 +334,12 @@ This is the **controlled default** — outer scopes have authority over what esc
 
 > **Note:** Nested scopes are **captured** by default, not flushed independently.
 > This ensures compositional safety and is essential for transactional boundaries.
-> To allow independent nested scopes, override `on_nested_exit()` to return the intents list.
+> To allow independent nested scopes, override `before_descendant_flushes()` to return the intents list.
 
-### The `on_nested_exit()` protocol
+### The `before_descendant_flushes()` protocol
 
 ```python
-def on_nested_exit(self, exiting_scope: Scope, intents: list[Intent]) -> list[Intent]:
+def before_descendant_flushes(self, exiting_scope: Scope, intents: list[Intent]) -> list[Intent]:
     """
     Called when a nested scope exits and attempts to flush.
 
@@ -398,7 +398,7 @@ Ensure all side effects wait for transaction commit:
 
 ```python
 class TransactionScope(Scope):
-    def on_nested_exit(self, exiting_scope, intents):
+    def before_descendant_flushes(self, exiting_scope, intents):
         return []  # Capture all nested effects
 
 with TransactionScope() as txn:
@@ -419,7 +419,7 @@ class EmailBatchingScope(Scope):
         super().__init__(*args, **kwargs)
         self.email_batch = []
 
-    def on_nested_exit(self, exiting_scope, intents):
+    def before_descendant_flushes(self, exiting_scope, intents):
         # Capture emails for batching, allow others through
         emails = [i for i in intents if 'email' in i.name]
         non_emails = [i for i in intents if 'email' not in i.name]
@@ -442,7 +442,7 @@ Control execution order across nested operations:
 ```python
 class CacheAfterDBScope(Scope):
     """Ensure DB commits before cache updates"""
-    def on_nested_exit(self, exiting_scope, intents):
+    def before_descendant_flushes(self, exiting_scope, intents):
         # Let DB writes through NOW, capture cache updates for LATER
         db_writes = [i for i in intents if 'db' in i.name]
         return db_writes
@@ -458,11 +458,11 @@ with CacheAfterDBScope():
 
 ### Creating independent nested scopes
 
-To allow nested scopes to flush independently, override `on_nested_exit()`:
+To allow nested scopes to flush independently, override `before_descendant_flushes()`:
 
 ```python
 class IndependentScope(Scope):
-    def on_nested_exit(self, exiting_scope, intents):
+    def before_descendant_flushes(self, exiting_scope, intents):
         return intents  # Allow all intents through
 
 with IndependentScope(policy=AllowAll()) as outer:
@@ -475,7 +475,7 @@ with IndependentScope(policy=AllowAll()) as outer:
 # Only task_a dispatches here
 ```
 
-### on_nested_exit vs Policy: Different concerns
+### before_descendant_flushes vs Policy: Different concerns
 
 **`Policy`** controls **WHAT** executes (filtering):
 
@@ -486,12 +486,12 @@ with airlock.scope(policy=BlockTasks({"send_email"})):
     airlock.enqueue(log_event)   # ✓ Allowed - executes
 ```
 
-**`on_nested_exit`** controls **WHEN** executes (timing):
+**`before_descendant_flushes`** controls **WHEN** executes (timing):
 
 ```python
-# on_nested_exit defers intents
+# before_descendant_flushes defers intents
 class DeferEmailsScope(Scope):
-    def on_nested_exit(self, exiting_scope, intents):
+    def before_descendant_flushes(self, exiting_scope, intents):
         # Capture emails for later, allow others now
         return [i for i in intents if 'email' not in i.name]
 
@@ -506,9 +506,9 @@ with DeferEmailsScope():
 
 **Key difference:**
 - Policy: Intent **never executes** (filtered out)
-- on_nested_exit: Intent **executes later** (timing control)
+- before_descendant_flushes: Intent **executes later** (timing control)
 
-### When to use on_nested_exit vs other extension points
+### When to use before_descendant_flushes vs other extension points
 
 Airlock has multiple extension points. Here's when to use each:
 
@@ -517,14 +517,14 @@ Airlock has multiple extension points. Here's when to use each:
 | **Filter intents (what)** | `Policy` | What intents are allowed to exist |
 | **Change dispatch (how)** | `executor` | How intents execute (Celery, sync, etc.) |
 | **Control lifecycle (when)** | `should_flush()` | When scope flushes (success/error) |
-| **Control timing (when)** | `on_nested_exit()` | When nested intents execute (now/later) |
+| **Control timing (when)** | `before_descendant_flushes()` | When nested intents execute (now/later) |
 
 **Quick decision tree:**
 
 - Block specific tasks entirely? → Use **Policy**
 - Change how tasks run (Celery vs sync)? → Use **executor** parameter
 - Change when scope flushes (success vs error)? → Override **should_flush()**
-- Defer/batch/order nested effects? → Override **on_nested_exit()**
+- Defer/batch/order nested effects? → Override **before_descendant_flushes()**
 
 **Example combinations:**
 
@@ -534,7 +534,7 @@ class TransactionScope(DjangoScope):
     def __init__(self):
         super().__init__(policy=BlockTasks({"dangerous_task"}))
 
-    def on_nested_exit(self, exiting_scope, intents):
+    def before_descendant_flushes(self, exiting_scope, intents):
         return []  # Capture all nested scopes
 
 # Independent scope with Celery: allows nested flush + uses Celery executor
@@ -1276,7 +1276,7 @@ with airlock.scope() as outer:
 # All three tasks (task_a, task_b, task_c) flush together here
 ```
 
-For independent nested scopes, override `on_nested_exit()` (see [Nested Scope Capture](#nested-scope-capture)).
+For independent nested scopes, override `before_descendant_flushes()` (see [Nested Scope Capture](#nested-scope-capture)).
 
 ### `airlock.enqueue(task, *args, _origin=None, _dispatch_options=None, **kwargs)`
 
@@ -1398,13 +1398,13 @@ class FlushOnlyCriticalScope(Scope):
         )
 ```
 
-### `Scope.on_nested_exit(exiting_scope, intents)`
+### `Scope.before_descendant_flushes(exiting_scope, intents)`
 
 Override this method to control what happens when a nested scope exits.
 
 ```python
 class Scope:
-    def on_nested_exit(self, exiting_scope: "Scope", intents: list[Intent]) -> list[Intent]:
+    def before_descendant_flushes(self, exiting_scope: "Scope", intents: list[Intent]) -> list[Intent]:
         """
         Called when a nested scope exits and attempts to flush.
 
@@ -1435,7 +1435,7 @@ class Scope:
 class IndependentScope(Scope):
     """Allow nested scopes to flush independently."""
 
-    def on_nested_exit(self, exiting_scope, intents):
+    def before_descendant_flushes(self, exiting_scope, intents):
         return intents  # Allow all through
 
 with IndependentScope():
@@ -1450,7 +1450,7 @@ with IndependentScope():
 class SafetyScope(Scope):
     """Allow safe tasks, capture dangerous ones."""
 
-    def on_nested_exit(self, exiting_scope, intents):
+    def before_descendant_flushes(self, exiting_scope, intents):
         return [i for i in intents if not i.dispatch_options.get("dangerous")]
 
 with SafetyScope():

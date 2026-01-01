@@ -472,7 +472,7 @@ class TestScopeContextManager:
 
 
 class TestNestedScopeCapture:
-    """Tests for nested scope capture behavior via on_nested_exit."""
+    """Tests for nested scope capture behavior via before_descendant_flushes."""
 
     def test_default_captures_nested_flush(self):
         """Test that by default, nested scopes are captured (safe default)."""
@@ -511,7 +511,7 @@ class TestNestedScopeCapture:
             inner_calls.append(1)
 
         class IndependentScope(Scope):
-            def on_nested_exit(self, exiting_scope, intents):
+            def before_descendant_flushes(self, exiting_scope, intents):
                 return intents  # Allow independent flush
 
         with scope(policy=AllowAll(), _cls=IndependentScope) as outer:
@@ -538,7 +538,7 @@ class TestNestedScopeCapture:
             calls.append('dangerous')
 
         class SmartScope(Scope):
-            def on_nested_exit(self, exiting_scope, intents):
+            def before_descendant_flushes(self, exiting_scope, intents):
                 # Allow safe tasks, capture dangerous ones
                 return [i for i in intents if 'dangerous' not in i.name]
 
@@ -562,7 +562,7 @@ class TestNestedScopeCapture:
             calls.append(1)
 
         class CapturingScope(Scope):
-            def on_nested_exit(self, exiting_scope, intents):
+            def before_descendant_flushes(self, exiting_scope, intents):
                 return []  # Capture everything
 
         with scope(policy=AllowAll(), _cls=CapturingScope) as outer:
@@ -589,7 +589,7 @@ class TestNestedScopeCapture:
             pass
 
         class CapturingScope(Scope):
-            def on_nested_exit(self, exiting_scope, intents):
+            def before_descendant_flushes(self, exiting_scope, intents):
                 return []
 
         with scope(policy=AllowAll(), _cls=CapturingScope) as outer:
@@ -617,7 +617,7 @@ class TestNestedScopeCapture:
             calls.append('blocked')
 
         class CapturingScope(Scope):
-            def on_nested_exit(self, exiting_scope, intents):
+            def before_descendant_flushes(self, exiting_scope, intents):
                 return []
 
         # Custom policy that blocks specific task by identity
@@ -681,11 +681,11 @@ class TestNestedScopeCapture:
             calls.append(1)
 
         class CapturingScope(Scope):
-            def on_nested_exit(self, exiting_scope, intents):
+            def before_descendant_flushes(self, exiting_scope, intents):
                 return []
 
         class AllowingScope(Scope):
-            def on_nested_exit(self, exiting_scope, intents):
+            def before_descendant_flushes(self, exiting_scope, intents):
                 return intents  # Allow all
 
         # Outer captures, middle allows
@@ -719,7 +719,7 @@ class TestNestedScopeCapture:
             calls.append(3)
 
         class SelectiveScope(Scope):
-            def on_nested_exit(self, exiting_scope, intents):
+            def before_descendant_flushes(self, exiting_scope, intents):
                 # Allow only task_1, capture the rest
                 return [i for i in intents if '1' in i.name]
 
@@ -735,12 +735,12 @@ class TestNestedScopeCapture:
         # task_2 and task_3 flush when outer exits
         assert calls == [1, 2, 3]
 
-    def test_on_nested_exit_can_inspect_exiting_scope(self):
-        """Test that on_nested_exit receives exiting scope for inspection."""
+    def test_before_descendant_flushes_can_inspect_exiting_scope(self):
+        """Test that before_descendant_flushes receives exiting scope for inspection."""
         inspected_scopes = []
 
         class InspectingScope(Scope):
-            def on_nested_exit(self, exiting_scope, intents):
+            def before_descendant_flushes(self, exiting_scope, intents):
                 inspected_scopes.append(exiting_scope)
                 # Check if inner scope has certain characteristics
                 if len(intents) > 2:
@@ -770,32 +770,32 @@ class TestNestedScopeCapture:
             # inner2's intents were captured
             assert len(outer.captured_intents) == 3
 
-    def test_on_nested_exit_return_none_raises_typeerror(self):
-        """Test that on_nested_exit returning None raises TypeError."""
+    def test_before_descendant_flushes_return_none_raises_typeerror(self):
+        """Test that before_descendant_flushes returning None raises TypeError."""
 
         class BrokenScope(Scope):
-            def on_nested_exit(self, exiting_scope, intents):
+            def before_descendant_flushes(self, exiting_scope, intents):
                 return None  # Bug: should return list
 
         def task():
             pass
 
-        with pytest.raises(TypeError, match="on_nested_exit.*must return a list.*got NoneType"):
+        with pytest.raises(TypeError, match="before_descendant_flushes.*must return a list.*got NoneType"):
             with scope(policy=AllowAll(), _cls=BrokenScope):
                 with scope(policy=AllowAll()):
                     airlock.enqueue(task)
 
-    def test_on_nested_exit_return_dict_raises_typeerror(self):
-        """Test that on_nested_exit returning wrong type raises TypeError."""
+    def test_before_descendant_flushes_return_dict_raises_typeerror(self):
+        """Test that before_descendant_flushes returning wrong type raises TypeError."""
 
         class BrokenScope(Scope):
-            def on_nested_exit(self, exiting_scope, intents):
+            def before_descendant_flushes(self, exiting_scope, intents):
                 return {"intents": intents}  # Bug: should return list
 
         def task():
             pass
 
-        with pytest.raises(TypeError, match="on_nested_exit.*must return a list.*got dict"):
+        with pytest.raises(TypeError, match="before_descendant_flushes.*must return a list.*got dict"):
             with scope(policy=AllowAll(), _cls=BrokenScope):
                 with scope(policy=AllowAll()):
                     airlock.enqueue(task)

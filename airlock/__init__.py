@@ -440,7 +440,7 @@ class Scope:
         """
         return error is None
 
-    def on_nested_exit(self, exiting_scope: "Scope", intents: list[Intent]) -> list[Intent]:
+    def before_descendant_flushes(self, exiting_scope: "Scope", intents: list[Intent]) -> list[Intent]:
         """
         Called when a nested scope exits and attempts to flush.
 
@@ -479,11 +479,11 @@ class Scope:
 
         Example:
             class IndependentScope(Scope):
-                def on_nested_exit(self, exiting_scope, intents):
+                def before_descendant_flushes(self, exiting_scope, intents):
                     return intents  # Allow nested scopes to flush independently
 
             class SmartScope(Scope):
-                def on_nested_exit(self, exiting_scope, intents):
+                def before_descendant_flushes(self, exiting_scope, intents):
                     # Capture dangerous tasks, allow safe ones
                     return [i for i in intents if 'dangerous' not in i.name]
         """
@@ -549,7 +549,7 @@ class Scope:
 
     def _walk_parent_chain_for_approval(self, intents: list[Intent]) -> list[Intent]:
         """
-        Walk up the parent chain, calling on_nested_exit on each parent.
+        Walk up the parent chain, calling before_descendant_flushes on each parent.
 
         Each parent decides which intents this scope is allowed to flush.
         Intents not approved are captured into the parent's buffer.
@@ -566,12 +566,12 @@ class Scope:
         # Walk up the chain
         while parent is not None:
             # Ask parent what it allows us to flush
-            allowed = parent.on_nested_exit(self, current_intents)
+            allowed = parent.before_descendant_flushes(self, current_intents)
 
             # Validate return value
             if not isinstance(allowed, list):
                 raise TypeError(
-                    f"on_nested_exit() must return a list, got {type(allowed).__name__}"
+                    f"before_descendant_flushes() must return a list, got {type(allowed).__name__}"
                 )
 
             # Parent captures what it didn't allow
