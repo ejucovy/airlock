@@ -245,7 +245,7 @@ with airlock.scope():
 
 All four intents go to the **same buffer**. The policy is captured on each intent at enqueue time and applied at flush.
 
-This differs from nested scopes, which create separate buffers with independent flush/discard lifecycles.
+This differs from nested scopes, which create separate buffers. By default, parent scopes capture nested scope intents (see [Nested Scope Capture](#nested-scope-capture) below).
 
 ### Use cases
 
@@ -278,6 +278,273 @@ def backfill_orders(orders):
 with airlock.policy(LogOnFlush()):
     with airlock.policy(BlockTasks({"notifications"})):
         airlock.enqueue(send_notification)  # blocked, then logged
+```
+
+## Nested Scope Capture
+
+### Why nested capture?
+
+**Airlock scopes need to compose safely.** Without nested capture, airlock adoption would create an **inverse flywheel** — the more code uses airlock, the less control you have.
+
+**The problem:**
+
+```python
+# Early days: Only your code uses airlock ✓
+with TransactionScope():
+    order.save()
+    charge_payment()  # Plain function, works fine
+
+# Later: A library adopts airlock internally ✗
+with TransactionScope():
+    order.save()
+    payment_lib.process(order)  # Creates nested scope, flushes immediately!
+    # Side effects escaped before transaction committed!
+```
+
+Without capture, you'd need to **audit every callee** to check if they use airlock. This defeats the abstraction and makes adoption risky.
+
+**The solution: Capture by default**
+
+```python
+# Always safe, regardless of what callees do ✓
+with TransactionScope():
+    order.save()
+    payment_lib.process(order)  # Uses airlock? Captured automatically!
+    # All effects held until transaction commits
+```
+
+Parent scopes have **authority** over nested scopes. Library code can't bypass your boundaries. Airlock adoption makes your code **more safe**, not less.
+
+### Default behavior: Capture all
+
+By default, nested scopes are captured by their parent:
+
+```python
+with airlock.scope(policy=AllowAll()) as outer:
+    airlock.enqueue(task_a)
+
+    with airlock.scope(policy=AllowAll()) as inner:
+        airlock.enqueue(task_b)
+    # task_b is captured by outer (doesn't dispatch yet)
+
+# Both task_a and task_b dispatch together when outer exits
+```
+
+This is the **controlled default** — outer scopes have authority over what escapes.
+
+> **Note:** Nested scopes are **captured** by default, not flushed independently.
+> This ensures compositional safety and is essential for transactional boundaries.
+> To allow independent nested scopes, override `before_descendant_flushes()` to return the intents list.
+
+### The `before_descendant_flushes()` protocol
+
+```python
+def before_descendant_flushes(self, exiting_scope: Scope, intents: list[Intent]) -> list[Intent]:
+    """
+    Called when a nested scope exits and attempts to flush.
+
+    Args:
+        exiting_scope: The nested scope that is exiting (may be deeply nested)
+        intents: The list of intents the exiting scope wants to flush
+
+    Returns:
+        The list of intents to allow through (the nested scope will flush these).
+        Any intents not in the returned list are captured into this scope's buffer.
+
+    Default: return [] (capture all intents)
+    """
+    return []
+```
+
+### Provenance tracking
+
+Parent scopes can distinguish between their own intents and captured intents:
+
+```python
+with airlock.scope() as outer:
+    airlock.enqueue(task_a)  # outer's own intent
+
+    with airlock.scope() as inner:
+        airlock.enqueue(task_b)  # captured from inner
+
+    # Provenance inspection
+    assert len(outer.own_intents) == 1      # [task_a]
+    assert len(outer.captured_intents) == 1  # [task_b]
+    assert len(outer.intents) == 2           # [task_a, task_b]
+```
+
+### Use cases
+
+**1. Compositional atomicity**
+
+Ensure multi-step operations stay atomic even when steps use nested scopes:
+
+```python
+# High-level operation that should be atomic
+def checkout_cart(cart_id):
+    with airlock.scope():  # Create boundary
+        validate_inventory(cart_id)     # May use nested scopes internally
+        charge_payment(cart_id)         # May use nested scopes internally
+        send_confirmation(cart_id)      # May use nested scopes internally
+    # All effects dispatch together — atomic operation ✓
+
+# Call it safely
+checkout_cart(123)  # Works correctly regardless of internal implementation
+```
+
+**2. Transactional boundaries**
+
+Ensure all side effects wait for transaction commit:
+
+```python
+class TransactionScope(Scope):
+    def before_descendant_flushes(self, exiting_scope, intents):
+        return []  # Capture all nested effects
+
+with TransactionScope() as txn:
+    order.save()
+    payment_lib.process(order)  # Uses airlock internally? Captured!
+    # Nothing dispatches yet
+
+# All captured tasks dispatch when transaction commits ✓
+```
+
+**3. Timing control: Batching**
+
+Collect effects from nested operations for batch processing:
+
+```python
+class EmailBatchingScope(Scope):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.email_batch = []
+
+    def before_descendant_flushes(self, exiting_scope, intents):
+        # Capture emails for batching, allow others through
+        emails = [i for i in intents if 'email' in i.name]
+        non_emails = [i for i in intents if 'email' not in i.name]
+
+        self.email_batch.extend(emails)
+        return non_emails  # Non-emails execute immediately
+
+with EmailBatchingScope() as batch:
+    process_orders()  # Nested code can enqueue emails
+    # Emails collected, other effects dispatched
+
+# Send all emails in one batch
+send_batch_emails(batch.email_batch)
+```
+
+**4. Timing control: Ordering guarantees**
+
+Control execution order across nested operations:
+
+```python
+class CacheAfterDBScope(Scope):
+    """Ensure DB commits before cache updates"""
+    def before_descendant_flushes(self, exiting_scope, intents):
+        # Let DB writes through NOW, capture cache updates for LATER
+        db_writes = [i for i in intents if 'db' in i.name]
+        return db_writes
+
+with CacheAfterDBScope():
+    with airlock.scope():
+        airlock.enqueue(update_cache, key='foo')  # Captured
+        airlock.enqueue(db_commit)                # Dispatches now
+    # db_commit has executed ✓
+
+# update_cache executes here, after DB is committed ✓
+```
+
+### Creating independent nested scopes
+
+To allow nested scopes to flush independently, override `before_descendant_flushes()`:
+
+```python
+class IndependentScope(Scope):
+    def before_descendant_flushes(self, exiting_scope, intents):
+        return intents  # Allow all intents through
+
+with IndependentScope(policy=AllowAll()) as outer:
+    airlock.enqueue(task_a)
+
+    with airlock.scope(policy=AllowAll()) as inner:
+        airlock.enqueue(task_b)
+    # task_b dispatches here (independent flush)
+
+# Only task_a dispatches here
+```
+
+### before_descendant_flushes vs Policy: Different concerns
+
+**`Policy`** controls **WHAT** executes (filtering):
+
+```python
+# Policy blocks intents entirely
+with airlock.scope(policy=BlockTasks({"send_email"})):
+    airlock.enqueue(send_email)  # ✗ Blocked - never executes
+    airlock.enqueue(log_event)   # ✓ Allowed - executes
+```
+
+**`before_descendant_flushes`** controls **WHEN** executes (timing):
+
+```python
+# before_descendant_flushes defers intents
+class DeferEmailsScope(Scope):
+    def before_descendant_flushes(self, exiting_scope, intents):
+        # Capture emails for later, allow others now
+        return [i for i in intents if 'email' not in i.name]
+
+with DeferEmailsScope():
+    with airlock.scope():
+        airlock.enqueue(send_email)  # ✓ Captured - executes later
+        airlock.enqueue(log_event)   # ✓ Allowed - executes now
+    # log_event executed ✓
+
+# send_email executes here ✓ (deferred, not blocked)
+```
+
+**Key difference:**
+- Policy: Intent **never executes** (filtered out)
+- before_descendant_flushes: Intent **executes later** (timing control)
+
+### When to use before_descendant_flushes vs other extension points
+
+Airlock has multiple extension points. Here's when to use each:
+
+| Need | Extension Point | What it controls |
+|------|----------------|------------------|
+| **Filter intents (what)** | `Policy` | What intents are allowed to exist |
+| **Change dispatch (how)** | `executor` | How intents execute (Celery, sync, etc.) |
+| **Control lifecycle (when)** | `should_flush()` | When scope flushes (success/error) |
+| **Control timing (when)** | `before_descendant_flushes()` | When nested intents execute (now/later) |
+
+**Quick decision tree:**
+
+- Block specific tasks entirely? → Use **Policy**
+- Change how tasks run (Celery vs sync)? → Use **executor** parameter
+- Change when scope flushes (success vs error)? → Override **should_flush()**
+- Defer/batch/order nested effects? → Override **before_descendant_flushes()**
+
+**Example combinations:**
+
+```python
+# Transaction scope: captures nested + flushes on commit + blocks dangerous tasks
+class TransactionScope(DjangoScope):
+    def __init__(self):
+        super().__init__(policy=BlockTasks({"dangerous_task"}))
+
+    def before_descendant_flushes(self, exiting_scope, intents):
+        return []  # Capture all nested scopes
+
+# Independent scope with Celery: allows nested flush + uses Celery executor
+with airlock.scope(
+    _cls=IndependentScope,
+    executor=celery_executor,
+    policy=AllowAll()
+):
+    # Nested scopes flush independently, tasks dispatched via Celery
+    ...
 ```
 
 ## Introspection
@@ -995,7 +1262,7 @@ with airlock.scope() as s:
 - On normal exit: calls `flush()` — intents are dispatched (subject to policy)
 - On exception: calls `discard()` — intents are dropped
 
-**Nested scopes** create independent buffers:
+**Nested scopes** create separate buffers, but by default the parent scope has authority over nested scopes:
 
 ```python
 with airlock.scope() as outer:
@@ -1003,11 +1270,13 @@ with airlock.scope() as outer:
 
     with airlock.scope() as inner:
         airlock.enqueue(task_b)  # Goes to inner
-    # inner flushes here
+    # By default, task_b is captured by outer here (doesn't flush yet)
 
     airlock.enqueue(task_c)  # Goes to outer
-# outer flushes here
+# All three tasks (task_a, task_b, task_c) flush together here
 ```
+
+For independent nested scopes, override `before_descendant_flushes()` (see [Nested Scope Capture](#nested-scope-capture)).
 
 ### `airlock.enqueue(task, *args, _origin=None, _dispatch_options=None, **kwargs)`
 
@@ -1129,6 +1398,70 @@ class FlushOnlyCriticalScope(Scope):
         )
 ```
 
+### `Scope.before_descendant_flushes(exiting_scope, intents)`
+
+Override this method to control what happens when a nested scope exits.
+
+```python
+class Scope:
+    def before_descendant_flushes(self, exiting_scope: "Scope", intents: list[Intent]) -> list[Intent]:
+        """
+        Called when a nested scope exits and attempts to flush.
+
+        Args:
+            exiting_scope: The nested scope that is exiting (may be deeply nested).
+            intents: The list of intents the nested scope wants to flush.
+
+        Returns:
+            The list of intents to allow through (the nested scope will flush these).
+            Any intents not in the returned list are captured into this scope's buffer.
+
+        Raises:
+            TypeError: If return value is not a list.
+            Any exception raised will abort the flush.
+
+        Default behavior: Capture all intents (return []).
+
+        Notes:
+            - Do not mutate the intents list. Return a new list or slice.
+            - In multi-level nesting, exiting_scope is the innermost scope.
+        """
+        return []
+```
+
+**Example: Allow independent nested scopes**
+
+```python
+class IndependentScope(Scope):
+    """Allow nested scopes to flush independently."""
+
+    def before_descendant_flushes(self, exiting_scope, intents):
+        return intents  # Allow all through
+
+with IndependentScope():
+    with airlock.scope():
+        airlock.enqueue(task)
+    # task dispatches here (not captured)
+```
+
+**Example: Selective capture based on intent properties**
+
+```python
+class SafetyScope(Scope):
+    """Allow safe tasks, capture dangerous ones."""
+
+    def before_descendant_flushes(self, exiting_scope, intents):
+        return [i for i in intents if not i.dispatch_options.get("dangerous")]
+
+with SafetyScope():
+    with airlock.scope():
+        airlock.enqueue(safe_task)
+        airlock.enqueue(dangerous_task, _dispatch_options={"dangerous": True})
+    # safe_task dispatches, dangerous_task captured
+```
+
+See [Nested Scope Capture](#nested-scope-capture) for detailed examples and use cases.
+
 ### `Scope._dispatch_all(intents)`
 
 Override to customize how intents are dispatched (e.g., defer to `on_commit`).
@@ -1153,7 +1486,9 @@ Subclasses have access to:
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `self.intents` | `list[Intent]` | Read-only list of buffered intents |
+| `self.intents` | `list[Intent]` | All buffered intents (own + captured) |
+| `self.own_intents` | `list[Intent]` | Intents enqueued directly in this scope |
+| `self.captured_intents` | `list[Intent]` | Intents captured from nested scopes |
 | `self._policy` | `Policy` | The scope's policy |
 | `self.is_flushed` | `bool` | True after `flush()` called |
 | `self.is_discarded` | `bool` | True after `discard()` called |
