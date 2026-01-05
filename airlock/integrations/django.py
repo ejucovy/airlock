@@ -149,6 +149,32 @@ class DjangoScope(Scope):
 
         Uses self._executor (configured via constructor or TASK_BACKEND setting)
         to actually execute intents.
+
+        Exception behavior:
+            The exception behavior depends on the USE_ON_COMMIT setting:
+
+            USE_ON_COMMIT=False (immediate dispatch):
+                Executor exceptions propagate immediately during flush(), just like
+                the base Scope class. This allows errors to be caught and handled
+                synchronously.
+
+            USE_ON_COMMIT=True (deferred dispatch, default):
+                Dispatch is deferred until transaction.on_commit(). If an executor
+                raises an exception during dispatch, Django's on_commit mechanism
+                will LOG the exception but will NOT re-raise it. This is Django's
+                design - on_commit callbacks run after the response is sent, so there
+                is no caller to propagate exceptions to.
+
+                This means executor failures (e.g., broker connection errors) will be
+                SILENT at the application level and only visible in logs. This is the
+                standard Django behavior when using transaction.on_commit().
+
+                This is a known tradeoff: you get transactional safety (tasks only
+                dispatch after commit succeeds) but lose synchronous error propagation.
+
+            Fail-fast behavior:
+                In both cases, if an executor raises an exception, the dispatch loop
+                stops immediately and remaining intents are not dispatched (fail-fast).
         """
         if get_setting("USE_ON_COMMIT"):
             def do_dispatch():

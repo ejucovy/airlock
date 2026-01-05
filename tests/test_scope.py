@@ -838,3 +838,77 @@ class TestNestedScopeCapture:
 
         # All tasks should execute
         assert calls == [1, 2, 3, 4]
+
+
+class TestExecutorExceptionHandling:
+    """Tests for exception handling during flush when executors raise."""
+
+    def test_executor_exception_propagates_during_flush(self):
+        """Test that executor exceptions propagate during flush (fail-fast)."""
+        calls = []
+
+        def task_a():
+            calls.append('a')
+
+        def failing_task():
+            raise ValueError("Task failed!")
+
+        def task_c():
+            calls.append('c')
+
+        # Custom executor that actually calls the task
+        def sync_executor(intent):
+            intent.task(*intent.args, **intent.kwargs)
+
+        s = Scope(policy=AllowAll(), executor=sync_executor)
+        s._add(make_intent(task_a))
+        s._add(make_intent(failing_task))
+        s._add(make_intent(task_c))
+
+        # flush() should raise the exception from failing_task
+        with pytest.raises(ValueError, match="Task failed!"):
+            s.flush()
+
+        # task_a should have executed, but task_c should not (fail-fast)
+        assert calls == ['a']
+
+        # Scope should still be marked as flushed
+        assert s.is_flushed
+
+    def test_executor_exception_during_context_manager_flush(self):
+        """Test that executor exceptions propagate when flush happens in __exit__."""
+        calls = []
+
+        def task_a():
+            calls.append('a')
+
+        def failing_task():
+            raise ValueError("Task failed!")
+
+        def task_c():
+            calls.append('c')
+
+        def sync_executor(intent):
+            intent.task(*intent.args, **intent.kwargs)
+
+        # Using context manager - flush happens automatically
+        with pytest.raises(ValueError, match="Task failed!"):
+            with scope(policy=AllowAll(), executor=sync_executor):
+                airlock.enqueue(task_a)
+                airlock.enqueue(failing_task)
+                airlock.enqueue(task_c)
+
+        # task_a executed, task_c did not (fail-fast)
+        assert calls == ['a']
+
+    def test_executor_exception_with_empty_queue(self):
+        """Test that executor with no intents doesn't raise."""
+        def sync_executor(intent):
+            raise ValueError("Should not be called")
+
+        s = Scope(policy=AllowAll(), executor=sync_executor)
+        # No intents added
+        result = s.flush()
+
+        assert result == []
+        assert s.is_flushed

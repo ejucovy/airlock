@@ -466,3 +466,125 @@ def test_django_scope_with_multiple_executors_in_sequence():
             args=(1,),
             kwargs={}
         )
+
+
+# =============================================================================
+# Executor exception handling tests
+# =============================================================================
+
+
+def test_django_scope_executor_exception_propagates_without_on_commit():
+    """Test executor exceptions propagate when USE_ON_COMMIT=False (fail-fast)."""
+    calls = []
+
+    def task_a():
+        calls.append('a')
+
+    def failing_task():
+        raise ValueError("Executor failed!")
+
+    def task_c():
+        calls.append('c')
+
+    def sync_executor(intent):
+        intent.task(*intent.args, **intent.kwargs)
+
+    with patch("airlock.integrations.django.get_setting") as mock_get_setting:
+        mock_get_setting.side_effect = lambda key: {
+            "TASK_BACKEND": None,
+            "DATABASE_ALIAS": "default",
+            "USE_ON_COMMIT": False,  # Execute immediately, not deferred
+        }.get(key)
+
+        scope = DjangoScope(policy=AllowAll(), executor=sync_executor)
+        scope._add(Intent(task=task_a, args=(), kwargs={}))
+        scope._add(Intent(task=failing_task, args=(), kwargs={}))
+        scope._add(Intent(task=task_c, args=(), kwargs={}))
+
+        # flush() should raise the exception from failing_task
+        with pytest.raises(ValueError, match="Executor failed!"):
+            scope.flush()
+
+        # task_a executed, task_c did not (fail-fast)
+        assert calls == ['a']
+
+        # Scope should still be marked as flushed
+        assert scope._flushed
+
+
+def test_django_scope_executor_exception_silent_with_on_commit():
+    """Test executor exceptions are silent when USE_ON_COMMIT=True (Django limitation)."""
+    calls = []
+
+    def task_a():
+        calls.append('a')
+
+    def failing_task():
+        raise ValueError("Executor failed!")
+
+    def task_c():
+        calls.append('c')
+
+    def sync_executor(intent):
+        intent.task(*intent.args, **intent.kwargs)
+
+    with patch("airlock.integrations.django.get_setting") as mock_get_setting:
+        mock_get_setting.side_effect = lambda key: {
+            "TASK_BACKEND": None,
+            "DATABASE_ALIAS": "default",
+            "USE_ON_COMMIT": True,  # Deferred execution
+        }.get(key)
+
+        with patch("airlock.integrations.django.transaction") as mock_transaction:
+            scope = DjangoScope(policy=AllowAll(), executor=sync_executor)
+            scope._add(Intent(task=task_a, args=(), kwargs={}))
+            scope._add(Intent(task=failing_task, args=(), kwargs={}))
+            scope._add(Intent(task=task_c, args=(), kwargs={}))
+
+            # flush() registers callback but doesn't execute yet
+            scope.flush()
+
+            # Scope marked as flushed
+            assert scope._flushed
+
+            # on_commit should have been called with a callback
+            mock_transaction.on_commit.assert_called_once()
+            callback = mock_transaction.on_commit.call_args[0][0]
+
+            # Now execute the callback - this is what Django does after commit
+            # The exception will be raised, but Django's on_commit will swallow it
+            with pytest.raises(ValueError, match="Executor failed!"):
+                callback()
+
+            # task_a executed, task_c did not (fail-fast within the callback)
+            assert calls == ['a']
+
+
+def test_django_scope_executor_exception_in_context_manager_without_on_commit():
+    """Test executor exception propagates in context manager when USE_ON_COMMIT=False."""
+    calls = []
+
+    def task_a():
+        calls.append('a')
+
+    def failing_task():
+        raise ValueError("Executor failed!")
+
+    def sync_executor(intent):
+        intent.task(*intent.args, **intent.kwargs)
+
+    with patch("airlock.integrations.django.get_setting") as mock_get_setting:
+        mock_get_setting.side_effect = lambda key: {
+            "TASK_BACKEND": None,
+            "DATABASE_ALIAS": "default",
+            "USE_ON_COMMIT": False,
+        }.get(key)
+
+        # Exception should propagate from context manager __exit__
+        with pytest.raises(ValueError, match="Executor failed!"):
+            with airlock.scope(policy=AllowAll(), _cls=DjangoScope, executor=sync_executor):
+                airlock.enqueue(task_a)
+                airlock.enqueue(failing_task)
+
+        # task_a executed (fail-fast)
+        assert calls == ['a']
