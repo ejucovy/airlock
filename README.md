@@ -1678,6 +1678,99 @@ if intent.passes_local_policies():
 
 ---
 
+## Exception Handling
+
+Airlock uses **fail-fast** exception handling: errors are loud and uncaught, stopping execution immediately.
+
+### During `enqueue()`
+
+Policy exceptions propagate immediately:
+
+```python
+with airlock.scope(policy=AssertNoEffects()):
+    airlock.enqueue(send_email)  # Raises PolicyViolation immediately
+    # Intent is NOT added to buffer
+```
+
+**When raised:**
+- `PolicyViolation` — Policy explicitly rejects the intent via `on_enqueue()`
+- `PolicyEnqueueError` — `enqueue()` called from within a policy callback
+- `NoScopeError` — No active scope exists
+
+### During `flush()` — Fail-Fast Behavior
+
+If an executor raises an exception while dispatching, **flush stops immediately**:
+
+```python
+with airlock.scope():
+    airlock.enqueue(task_a)  # Will execute
+    airlock.enqueue(task_b)  # Raises during dispatch (e.g., broker down)
+    airlock.enqueue(task_c)  # Will NOT execute (fail-fast)
+
+# task_a: ✅ dispatched successfully
+# task_b: ❌ raises exception (broker connection failure)
+# task_c: ⚠️  never attempted (remaining intents abandoned)
+```
+
+**Key points:**
+- Scope is marked as flushed even on exception (no retry possible)
+- Earlier intents may have already dispatched (not atomic)
+- This is intentional: infrastructure failures should fail loudly
+
+**For async executors** (Celery, django-q, etc.):
+- Dispatch exceptions are **rare** (only when broker/queue is unreachable)
+- Task execution happens asynchronously (failures handled by task queue)
+- Dispatch is just "submit to queue", not "run the task"
+
+### DjangoScope Exception Behavior
+
+Exception handling depends on the `USE_ON_COMMIT` setting:
+
+#### `USE_ON_COMMIT=False` (immediate dispatch)
+
+Executor exceptions propagate synchronously, same as base `Scope`:
+
+```python
+with airlock.scope(_cls=DjangoScope):
+    airlock.enqueue(task_a)
+    airlock.enqueue(failing_task)  # Raises immediately during flush
+```
+
+#### `USE_ON_COMMIT=True` (deferred dispatch, **default**)
+
+Executor exceptions are **silent** at the application level:
+
+```python
+with airlock.scope(_cls=DjangoScope):  # USE_ON_COMMIT=True (default)
+    airlock.enqueue(task_a)
+    airlock.enqueue(failing_task)
+# Flush returns successfully (dispatch deferred to on_commit)
+# Response sent to user
+# Transaction commits
+# NOW executor runs — if it raises, Django logs but doesn't re-raise
+```
+
+**Why silent?**
+- `transaction.on_commit()` callbacks run **after the response is sent**
+- Django logs exceptions but has no caller to propagate to
+- This is **standard Django behavior**, not an airlock limitation
+
+**Tradeoff:**
+- ✅ Transactional safety: tasks only dispatch after commit succeeds
+- ❌ Silent failures: executor errors only visible in logs
+
+This is the same behavior you get with:
+```python
+transaction.on_commit(lambda: my_celery_task.delay())  # Silent failures
+```
+
+**Recommendation:**
+- Monitor Django's error logs for on_commit exceptions
+- Use health checks to verify broker connectivity
+- Consider alerting on repeated dispatch failures
+
+---
+
 ## Errors
 
 All errors inherit from `AirlockError`.
