@@ -1,0 +1,98 @@
+site_name: Airlock
+site_description: Express side effects anywhere. Control whether & when they escape.
+site_url: https://ejucovy.github.io/airlock/
+repo_url: https://github.com/thethirdbearsolutions/airlock
+repo_name: thethirdbearsolutions/airlock
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotate
+    - content.code.copy
+
+plugins:
+  - search
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - pymdownx.details
+  - tables
+  - attr_list
+  - md_in_html
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+
+  - Quickstart:
+    - Raw Python (5 min): quickstart/raw-python.md
+    - Django (5 min): quickstart/django.md
+    - Celery (5 min): quickstart/celery.md
+
+  - Understanding Airlock:
+    - The Problem: understanding/the-problem.md
+    - Core Model (3 Concerns): understanding/core-model.md
+    - How It Composes: understanding/how-it-composes.md
+
+  - Practical Guide:
+    - Basic Usage: guide/basic-usage.md
+    - Policies: guide/policies.md
+    - Nested Scopes: guide/nested-scopes.md
+    - Dispatch: guide/dispatch.md
+
+  - Integrations:
+    - Celery:
+      - Task Wrapper: integrations/celery/task-wrapper.md
+
+  - Migration:
+    - From .delay() Calls: migration/from-direct-delay.md
+    - Selective vs Blanket: migration/selective-vs-blanket.md
+
+  - Extending:
+    - Custom Policies: extending/custom-policies.md
+    - Custom Executors: extending/custom-executors.md
+    - Custom Scopes: extending/custom-scopes.md
+
+  - API Reference:
+    - Core Functions: api/core.md
+    - Scope Class: api/scope-class.md
+    - Intent: api/intent.md
+    - Policies: api/policies.md
+
+  - Alternatives: alternatives.md
