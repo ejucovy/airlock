@@ -2,21 +2,22 @@
 
 **Express side effects anywhere. Control whether & when they escape.**
 
+## tl;dr
+
 ```python
 import airlock
 
 class Order:
     def process(self):
         self.status = "processed"
-        self.save()
         airlock.enqueue(notify_warehouse, self.id)
-        airlock.enqueue(send_confirmation_email, self.id)
+        airlock.enqueue(send_confirmation_email)
 ```
 
 The **execution context** decides when (and whether) your side effects actually get dispatched:
 
 ```python
-# Production: flush at end of request
+# Production API endpoint: flush at end of request
 with airlock.scope():
     order.process()
 # side effects dispatch here
@@ -28,9 +29,50 @@ with airlock.scope(policy=airlock.DropAll()):
 
 # Test: fail if anything tries to escape
 with airlock.scope(policy=airlock.AssertNoEffects()):
-    test_pure_logic()
-# raises if any enqueue() called
+    order.hopefully_pure_function() # raises if any enqueue() called
+
+# Test: surface the side effects
+with airlock.scope(policy=airlock.DropAll()) as scope:
+    order.process() # raises if any enqueue() called
+    assert len(self.intents) == 2
+    print((intent.name, intent.args, intent.kwargs) for intent in self.intents)
+
+# Admin API endpoint: selective control
+with airlock.scope(policy=airlock.BlockTasks({"send_confirmation_email"})):
+    order.process()
+    assert len(self.intents) == 2 # the blocked task remains enqueued while we're in the scope
+# side effects dispatch or discard here -- warehouse notified, but no confirmation email sent 
 ```
+
+## Using Django? Maybe with Celery?
+
+```
+# settings.py
+MIDDLEWARE = [
+    # ... other middleware ...
+    "airlock.integrations.django.AirlockMiddleware",
+]
+
+# models.py
+import airlock
+import .tasks
+
+class Order(models.Model):
+    def process(self):
+        self.status = "processed"
+        self.save()
+        airlock.enqueue(tasks.send_confirmation_email, order_id=self.id)
+        airlock.enqueue(tasks.notify_warehouse, order_id=self.id)
+
+# views.py
+def checkout(request):
+    order = Order.objects.get(id=request.POST['order_id'])
+    order.process()
+    return HttpResponse("OK")
+# Celery tasks dispatch in transaction.on_commit
+```
+
+Read more: [Django quickstart](docs/quickstart/django.md)
 
 ## Installation
 
@@ -38,98 +80,16 @@ with airlock.scope(policy=airlock.AssertNoEffects()):
 pip install airlock
 ```
 
-## Quick Start
-
-Choose your path:
-
-- **[Raw Python (5 min)](docs/quickstart/raw-python.md)** - Just Python, no framework needed
-- **[Django (5 min)](docs/quickstart/django.md)** - Auto-scoping with middleware
-- **[Celery (5 min)](docs/quickstart/celery.md)** - Wrap tasks, migrate `.delay()` calls
-
 ## Documentation
 
-**[Full documentation →](docs/)**
+[Full documentation](docs/)
 
 Key pages:
 
 - [The Problem](docs/understanding/the-problem.md) - Why airlock exists
 - [Core Model](docs/understanding/core-model.md) - The 3 concerns (Policy/Executor/Scope)
 - [How It Composes](docs/understanding/how-it-composes.md) - Nested scopes and safety
-
-## The Problem
-
-Side effects deep in the call stack are dangerous:
-
-```python
-class Order(models.Model):
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        notify_warehouse.delay(self.id)  # Fires EVERYWHERE
-```
-
-- ❌ Migrations trigger emails
-- ❌ Tests require mocking
-- ❌ Bulk operations explode
-- ❌ No control at call site
-
-## The Solution
-
-With airlock, effects are **buffered** and escape **where you decide**:
-
-```python
-import airlock
-
-class Order(models.Model):
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        airlock.enqueue(notify_warehouse, self.id)  # Buffered
-
-# Production
-with airlock.scope():
-    order.save()  # Effects dispatch here
-
-# Migration
-with airlock.scope(policy=airlock.DropAll()):
-    order.save()  # Nothing dispatches
-
-# Test
-with airlock.scope(policy=airlock.AssertNoEffects()):
-    order.save()  # Raises if any side effects
-```
-
-## Core Concepts
-
-Airlock separates three orthogonal concerns:
-
-| Concern | Controlled By | Question |
-|---------|---------------|----------|
-| **WHEN** | Scope | When do effects escape? |
-| **WHAT** | Policy | Which effects execute? |
-| **HOW** | Executor | How do they run? |
-
-Mix and match freely:
-
-```python
-# Django transaction + Celery dispatch + logging
-with airlock.scope(
-    _cls=DjangoScope,           # WHEN: after transaction.on_commit()
-    executor=celery_executor,   # HOW: via Celery
-    policy=LogOnFlush()         # WHAT: log everything
-):
-    do_stuff()
-```
-
-## When You Don't Need This
-
-You might not need airlock if:
-
-- ✅ All `.delay()` calls are in views (never models/services)
-- ✅ Tasks never chain
-- ✅ You're happy with these constraints
-
-That's a **valid architecture**. Airlock is for when you want effects closer to domain logic without losing control.
-
-[See alternatives →](docs/alternatives.md)
+- [Alternatives](docs/alternatives.md) - Do I really need this...?
 
 ## Contributing
 
