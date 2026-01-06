@@ -10,13 +10,9 @@
       
       
       
-        <link rel="canonical" href="https://ejucovy.github.io/airlock/understanding/the-problem/">
+        <link rel="canonical" href="https://ejucovy.github.io/airlock/understanding/alternatives/">
       
       
-        <link rel="prev" href="../../quickstart/celery/">
-      
-      
-        <link rel="next" href="../core-model/">
       
       
         
@@ -27,7 +23,7 @@
     
     
       
-        <title>The Problem - Airlock</title>
+        <title>Alternatives - Airlock</title>
       
     
     
@@ -78,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#the-problem" class="md-skip">
+        <a href="#alternatives" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +108,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              The Problem
+              Alternatives
             
           </span>
         </div>
@@ -264,13 +260,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../the-problem/" class="md-tabs__link">
           
   
   
@@ -652,10 +646,8 @@
       
   
   
-    
   
   
-  
     
     
       
@@ -669,22 +661,21 @@
     
     
       
-        
-        
-      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
             
   
   
@@ -702,7 +693,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -717,37 +708,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    The Problem
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../the-problem/" class="md-nav__link">
         
   
   
@@ -763,81 +727,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#why-does-airlock-exist-what-problem-does-it-solve" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Why does airlock exist? What problem does it solve?
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#stuff-it-all-in-an-airlock" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Stuff it all in an airlock
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#what-this-unlocks" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What this unlocks
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#do-i-really-need-this" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Do I really need this...?
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#next" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Next
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1761,10 +1650,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#why-does-airlock-exist-what-problem-does-it-solve" class="md-nav__link">
+  <a href="#transactionon_commit" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Why does airlock exist? What problem does it solve?
+        transaction.on_commit()
       
     </span>
   </a>
@@ -1772,10 +1661,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#stuff-it-all-in-an-airlock" class="md-nav__link">
+  <a href="#django-signals" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Stuff it all in an airlock
+        Django signals
       
     </span>
   </a>
@@ -1783,10 +1672,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-this-unlocks" class="md-nav__link">
+  <a href="#celery-chordschains" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What this unlocks
+        Celery chords/chains
       
     </span>
   </a>
@@ -1794,10 +1683,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#do-i-really-need-this" class="md-nav__link">
+  <a href="#when-you-dont-need-this" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Do I really need this...?
+        When you don't need this
       
     </span>
   </a>
@@ -1835,65 +1724,48 @@
   
 
 
-<h1 id="the-problem">The Problem<a class="headerlink" href="#the-problem" title="Permanent link">&para;</a></h1>
-<h2 id="why-does-airlock-exist-what-problem-does-it-solve">Why does airlock exist? What problem does it solve?<a class="headerlink" href="#why-does-airlock-exist-what-problem-does-it-solve" title="Permanent link">&para;</a></h2>
-<p>Putting side effects deep in the call stack is common but dangerous:</p>
+<h1 id="alternatives">Alternatives<a class="headerlink" href="#alternatives" title="Permanent link">&para;</a></h1>
+<h2 id="transactionon_commit"><code>transaction.on_commit()</code><a class="headerlink" href="#transactionon_commit" title="Permanent link">&para;</a></h2>
+<p>In many Django projects, the typical pattern evolution is to start with immediately-escaping tasks:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">Order</span><span class="p">:</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;processed&quot;</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        <span class="n">notify_warehouse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        <span class="n">send_confirmation_email</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        <span class="n">notify_warehouse</span><span class="o">.</span><span class="n">delay</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        <span class="n">send_confirmation_email</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
 </span></code></pre></div>
-<p>Conditional logic is tempting too. Also dangerous!</p>
+<p>And then migrate to a transaction boundary:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">Order</span><span class="p">:</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">update_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">):</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        <span class="n">notify_warehouse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;paid&quot;</span><span class="p">:</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>            <span class="n">send_confirmation_email</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        <span class="k">elif</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;shipped&quot;</span><span class="p">:</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>            <span class="n">update_tracking_system</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>            <span class="n">send_update_email</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;processed&quot;</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        <span class="n">transaction</span><span class="o">.</span><span class="n">on_commit</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">notify_warehouse</span><span class="o">.</span><span class="n">delay</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        <span class="n">transaction</span><span class="o">.</span><span class="n">on_commit</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">send_confirmation_email</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
 </span></code></pre></div>
-<p>But <em>why</em> are they dangerous?</p>
+<p>This solves one problem: don't fire if the transaction rolls back, and don't fire until database state has settled. But it doesn't solve the rest:</p>
 <ul>
-<li><strong>You can't opt out.</strong> Every scripted creation, fixture load, and migration that calls the method fires the tasks.</li>
-<li><strong>It's invisible at the call site.</strong> <code>order.mark_as_paid()</code> looks innocent. You have to know to trace its call stack for side effects.</li>
-<li><strong>Testing is miserable.</strong> Mock at the task level (fragile), run a real broker (slow), or <code>CELERY_ALWAYS_EAGER=True</code> (hides async bugs).</li>
-<li><strong>Bulk operations explode.</strong> A loop calling <code>save()</code> on 10,000 orders enqueues 10,000 tasks.</li>
-<li><strong>Re-entrancy bites.</strong> <code>User.save()</code> calls <code>enrich_from_api.delay(user.id)</code>. That task fetches data, sets <code>user.age</code> and <code>user.income</code>, then calls <code>user.save()</code>... which enqueues <code>enrich_from_api</code> again. Now you're adding flags like <code>_skip_enrich=True</code> and threading them through everywhere. (Or you're diffing against <code>Model.objects.get(pk=self.pk)</code> in every <code>save()</code> and using <code>save(changed_fields=[])</code> as a task dispatcher. Now you have three problems.)</li>
+<li><strong>Only works inside a transaction.</strong> If you call <code>on_commit()</code> while there isn't an open transaction, the callback will be executed immediately. So the temporal sequence of your code changes silently based on both global configuration (<code>ATOMIC_REQUESTS</code>) and any given call stack (<code>with transaction.atomic()</code>) -- yikes!</li>
+<li><strong>No opt-out.</strong> Migrations, fixtures, tests still trigger.</li>
+<li><strong>No introspection.</strong> Can't ask "what's about to fire?"</li>
+<li><strong>No policy control.</strong> Can't suppress specific tasks or block regions.</li>
+<li><strong>What about sequential transactions? What about savepoints (nested transactions)?</strong> Hard to reason about! (Your side effects will run after each outermost transaction commits, in the order they were registered within that transaction's scope.)</li>
 </ul>
-<p>The problem isn't <em>where</em> the intent is expressed. It's that <strong>the effects are silent, and escape immediately</strong>.</p>
-<h2 id="stuff-it-all-in-an-airlock">Stuff it all in an airlock<a class="headerlink" href="#stuff-it-all-in-an-airlock" title="Permanent link">&para;</a></h2>
-<p>With airlock, you express an <em>intent</em> to perform a side effect, but the side effects don't escape until someone lets them out:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">airlock</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">Order</span><span class="p">:</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;processed&quot;</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>        <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">notify_warehouse</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>          <span class="c1"># Buffered for later</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>        <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">send_confirmation_email</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>   <span class="c1"># Buffered for later</span>
-</span></code></pre></div>
-<p>Now these methods are a <em>legitimate</em> and <em>safe</em> place to express domain intent:</p>
+<p>Airlock gives you <code>on_commit</code> behavior (via <code>DjangoScope</code>) <em>plus</em> policies, introspection, and a single dispatch boundary.</p>
+<h2 id="django-signals">Django signals<a class="headerlink" href="#django-signals" title="Permanent link">&para;</a></h2>
+<p>Signals move <em>where</em> the side effect lives, not <em>whether</em> or <em>when</em> it fires. This is a powerful tool for code organization, but it doesn't address the core problems.</p>
+<h2 id="celery-chordschains">Celery chords/chains<a class="headerlink" href="#celery-chordschains" title="Permanent link">&para;</a></h2>
+<p>If your tasks trigger other tasks, consider whether the workflow should be defined upfront instead. <code>chain(task_a.s(), task_b.s())</code> makes the cascade explicit with no hidden enqueues.</p>
+<p>Airlock helps when that's not practical: triggers deep in the call stack that can't be hoisted trivially, dynamic cascades, tasks that conditionally trigger others, or legacy code where tasks already enqueue tasks.</p>
+<h2 id="when-you-dont-need-this">When you don't need this<a class="headerlink" href="#when-you-dont-need-this" title="Permanent link">&para;</a></h2>
+<p>You might not need airlock if:</p>
 <ul>
-<li><strong>Colocation.</strong> The model knows when it needs side effects. That knowledge sometimes belongs here.</li>
-<li><strong>DRY.</strong> Every code path that saves an Order gets the side effects. You can't forget.</li>
-<li><strong>Control.</strong> The <em>scope</em> decides what escapes, not the call site.</li>
-<li><strong>Visibility.</strong> You can inspect the buffer before it flushes... run a model method and compare before-and-after... great for tests!</li>
-<li><strong>Control again.</strong> Define your own nested scopes for surgically stacked policies, or even define multiple execution boundaries.</li>
+<li><strong>Views are the only place you enqueue.</strong> All <code>.delay()</code> calls (or <code>on_commit(lambda: task.delay(...))</code>) are in views, never in models or reusable services.</li>
+<li><strong>Tasks don't chain.</strong> No task triggers another task within its code.</li>
+<li><strong>You use <code>ATOMIC_REQUESTS</code>.</strong> Transaction boundaries are already request-scoped, so <code>on_commit</code> behaves predictably.</li>
+<li><strong>You're happy with these constraints.</strong> You accept that domain intent ("notify warehouse when order ships") lives in views, not models.</li>
 </ul>
-<p>Side effects can be defined close to the source, and still escape in one place.</p>
-<h2 id="what-this-unlocks">What this unlocks<a class="headerlink" href="#what-this-unlocks" title="Permanent link">&para;</a></h2>
-<p>Without airlock, "enqueue side effects at the edge" is an important constraint for maintaining predictable timing, auditability, and control. Side effects deep in the call stack are dangerous, so you're forced to hoist them.</p>
-<p>With airlock, both patterns are safe:</p>
-<ul>
-<li><strong>Edge-only</strong>: All enqueues in views/handlers. Explicit, visible at the boundary.</li>
-<li><strong>Colocated</strong>: Enqueues near domain logic (<code>save()</code>, signals, service methods). DRY, encapsulated.</li>
-</ul>
-<p>Choose based on your preferences, not out of necessity.</p>
-<h2 id="do-i-really-need-this">Do I really need this...?<a class="headerlink" href="#do-i-really-need-this" title="Permanent link">&para;</a></h2>
-<ul>
-<li>See <a href="../alternatives/">Alternatives</a></li>
-</ul>
+<p>In this scenario, the view plus the database transaction <em>is</em> your boundary.</p>
+<p>That's a valid architecture. (I prefer it actually!) Airlock is for when you <em>want</em> to express intent closer to the domain -- in <code>save()</code>, in signals, in service methods -- without losing control over escape.</p>
 <h2 id="next">Next<a class="headerlink" href="#next" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../core-model/">Core model</a> - The 3 concerns (Policy/Executor/Scope)</li>
