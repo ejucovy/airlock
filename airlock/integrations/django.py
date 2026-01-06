@@ -153,7 +153,6 @@ class DjangoScope(Scope):
             USE_ON_COMMIT: If True, defer dispatch to transaction.on_commit()
             ROBUST: Passed to Django's on_commit(robust=...) parameter
 
-        Fail-fast: Executor exceptions stop dispatch of remaining intents.
         """
         if get_setting("USE_ON_COMMIT"):
             def do_dispatch():
