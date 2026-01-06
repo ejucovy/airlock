@@ -1,16 +1,12 @@
 # Core Model: The 3 Concerns
 
-Airlock separates three orthogonal concerns. Understanding this makes everything else obvious.
-
-## The Three Concerns
+Airlock separates three orthogonal concerns that can be mixed and customized.
 
 | Concern | Controlled By | Question |
 |---------|---------------|----------|
 | **WHEN** | Scope | When do effects escape? |
 | **WHAT** | Policy | Which effects execute? |
 | **HOW** | Executor | How do they run? |
-
-These are **independent** and can be mixed freely.
 
 ## Concern 1: WHEN (Scope)
 
@@ -98,7 +94,7 @@ with airlock.scope(executor=django_q_executor):
 ```
 
 ### Executor decides:
-- How to run the task (sync, queue, thread pool, lambda)
+- How to run the task (sync, queue, thread pool...)
 - What protocol to use (Celery, django-q, Huey, custom)
 
 Default: synchronous execution.
@@ -141,55 +137,6 @@ with airlock.scope(
 ):
     backfill_data()
 ```
-
-## Mental Model
-
-Think of airlock as a **buffer with three independent controls**:
-
-```
-┌─────────────────────────────────────────┐
-│  airlock.enqueue(task, ...)             │ ← Express intent
-└──────────────────┬──────────────────────┘
-                   │
-                   ▼
-         ┌─────────────────┐
-         │     BUFFER      │ ← Intent stored
-         │  [intent list]  │
-         └─────────────────┘
-                   │
-        ┌──────────┼──────────┐
-        │          │          │
-        ▼          ▼          ▼
-    ┌──────┐  ┌──────┐  ┌──────┐
-    │POLICY│  │SCOPE │  │EXEC  │ ← 3 independent controls
-    │      │  │      │  │      │
-    │WHAT? │  │WHEN? │  │HOW?  │
-    └──────┘  └──────┘  └──────┘
-        │          │          │
-        └──────────┼──────────┘
-                   │
-                   ▼
-         task(*args, **kwargs) ← Execution
-```
-
-Each concern is **independent**:
-
-- Change WHEN without changing WHAT or HOW
-- Change WHAT without changing WHEN or HOW
-- Change HOW without changing WHEN or WHAT
-
-This separation enables powerful composition.
-
-## Common Combinations
-
-| Use Case | Scope | Policy | Executor |
-|----------|-------|--------|----------|
-| **Django production** | `DjangoScope` | `AllowAll` | `celery_executor` |
-| **Django test** | `Scope` | `AssertNoEffects` | `sync_executor` |
-| **Migration script** | `Scope` | `DropAll` | (doesn't matter) |
-| **Admin bulk operation** | `DjangoScope` | `BlockTasks({"send_email"})` | `celery_executor` |
-| **Celery task** | `Scope` | `AllowAll` | `celery_executor` |
-| **Debug mode** | `Scope` | `LogOnFlush` | `sync_executor` |
 
 ## Next
 
