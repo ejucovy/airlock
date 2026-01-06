@@ -1722,56 +1722,27 @@ with airlock.scope():
 - Task execution happens asynchronously (failures handled by task queue)
 - Dispatch is just "submit to queue", not "run the task"
 
-### DjangoScope Exception Behavior
+### DjangoScope Settings
 
-Exception handling depends on the `USE_ON_COMMIT` setting:
+**`USE_ON_COMMIT`** (default: `True`)
+- `True`: Defer dispatch to `transaction.on_commit()`
+- `False`: Dispatch immediately during `flush()`
 
-#### `USE_ON_COMMIT=False` (immediate dispatch)
+**`ROBUST`** (default: `True`)
+- Passed to Django's `on_commit(robust=...)` parameter
+- `True`: Log dispatch errors, continue other hooks
+- `False`: Dispatch errors propagate, stop other hooks
 
-Executor exceptions propagate synchronously, same as base `Scope`:
+**`DATABASE_ALIAS`** (default: `"default"`)
+- Database connection for on_commit
 
+Example configuration:
 ```python
-with airlock.scope(_cls=DjangoScope):
-    airlock.enqueue(task_a)
-    airlock.enqueue(failing_task)  # Raises immediately during flush
-```
-
-#### `USE_ON_COMMIT=True` (deferred dispatch, **default**)
-
-Executor exceptions **still propagate**, but during transaction commit:
-
-```python
-with transaction.atomic():
-    with airlock.scope(_cls=DjangoScope):  # USE_ON_COMMIT=True (default)
-        airlock.enqueue(task_a)
-        airlock.enqueue(failing_task)
-        # flush() succeeds - just registers callback
-
-    # Transaction commits here - on_commit runs, exception propagates!
-    # Exception raised during commit, before response is sent
-```
-
-**Key points:**
-- `flush()` succeeds (only registers callback, doesn't execute)
-- Execution happens during `transaction.commit()`
-- Exceptions **DO propagate** (Django's `robust=False` default)
-- In middleware: happens during request handling, **BEFORE response sent**
-- Errors are **LOUD** - will cause request failures
-
-**About `robust=False` (Django's default):**
-- If airlock's callback fails, **other on_commit hooks DON'T run**
-- Exception propagates up to the caller (middleware/view)
-- Airlock uses this default to ensure loud failures
-
-**Tradeoff:**
-- ✅ Transactional safety: tasks only dispatch after commit succeeds
-- ✅ Loud failures: exceptions propagate during commit
-- ⚠️  Exception happens during commit, not during flush()
-
-This matches standard Django behavior:
-```python
-transaction.on_commit(lambda: my_celery_task.delay())  # Exceptions propagate!
-```
+AIRLOCK = {
+    "USE_ON_COMMIT": True,
+    "ROBUST": True,  # Recommended: don't break other hooks
+    "DATABASE_ALIAS": "default",
+}
 
 ---
 

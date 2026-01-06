@@ -515,13 +515,8 @@ def test_django_scope_executor_exception_propagates_without_on_commit():
         assert scope._flushed
 
 
-def test_django_scope_executor_exception_propagates_with_on_commit_default():
-    """Test that executor exceptions PROPAGATE with USE_ON_COMMIT=True.
-
-    With robust=False (default), exceptions propagate during transaction commit.
-    This test verifies that behavior - exception happens when transaction commits,
-    BEFORE response is sent (in middleware context).
-    """
+def test_django_scope_with_robust_false():
+    """Test ROBUST=False setting - exceptions propagate."""
     from django.db import transaction
 
     calls = []
@@ -532,8 +527,40 @@ def test_django_scope_executor_exception_propagates_with_on_commit_default():
     def failing_task():
         raise ValueError("Executor failed!")
 
-    def task_c():
-        calls.append('c')
+    def sync_executor(intent):
+        intent.task(*intent.args, **intent.kwargs)
+
+    with patch("airlock.integrations.django.get_setting") as mock_get_setting:
+        mock_get_setting.side_effect = lambda key: {
+            "TASK_BACKEND": None,
+            "DATABASE_ALIAS": "default",
+            "USE_ON_COMMIT": True,
+            "ROBUST": False,  # Exceptions propagate
+        }.get(key)
+
+        with pytest.raises(ValueError, match="Executor failed!"):
+            with transaction.atomic():
+                scope = DjangoScope(policy=AllowAll(), executor=sync_executor)
+                scope._add(Intent(task=task_a, args=(), kwargs={}))
+                scope._add(Intent(task=failing_task, args=(), kwargs={}))
+
+                scope.flush()
+
+        # Fail-fast: task_a ran
+        assert calls == ['a']
+
+
+def test_django_scope_with_robust_true():
+    """Test ROBUST=True setting (default) - exceptions logged, don't propagate."""
+    from django.db import transaction
+
+    calls = []
+
+    def task_a():
+        calls.append('a')
+
+    def failing_task():
+        raise ValueError("Executor failed!")
 
     def sync_executor(intent):
         intent.task(*intent.args, **intent.kwargs)
@@ -542,24 +569,19 @@ def test_django_scope_executor_exception_propagates_with_on_commit_default():
         mock_get_setting.side_effect = lambda key: {
             "TASK_BACKEND": None,
             "DATABASE_ALIAS": "default",
-            "USE_ON_COMMIT": True,  # Deferred execution
+            "USE_ON_COMMIT": True,
+            "ROBUST": True,  # Default - log errors, don't propagate
         }.get(key)
 
-        # Exception propagates when transaction commits
-        with pytest.raises(ValueError, match="Executor failed!"):
-            with transaction.atomic():
-                scope = DjangoScope(policy=AllowAll(), executor=sync_executor)
-                scope._add(Intent(task=task_a, args=(), kwargs={}))
-                scope._add(Intent(task=failing_task, args=(), kwargs={}))
-                scope._add(Intent(task=task_c, args=(), kwargs={}))
+        # No exception propagates with robust=True
+        with transaction.atomic():
+            scope = DjangoScope(policy=AllowAll(), executor=sync_executor)
+            scope._add(Intent(task=task_a, args=(), kwargs={}))
+            scope._add(Intent(task=failing_task, args=(), kwargs={}))
 
-                # flush() succeeds - just registers callback
-                scope.flush()
-                assert scope._flushed
+            scope.flush()
 
-            # Transaction commits here, on_commit runs, exception propagates!
-
-        # Verify fail-fast: task_a ran, task_c did not
+        # Fail-fast: task_a ran
         assert calls == ['a']
 
 

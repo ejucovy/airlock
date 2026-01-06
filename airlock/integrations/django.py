@@ -11,6 +11,7 @@ Settings (in settings.py):
     AIRLOCK = {
         "DEFAULT_POLICY": "airlock.AllowAll",  # Dotted path or callable
         "USE_ON_COMMIT": True,              # Defer dispatch to transaction.on_commit
+        "ROBUST": True,                     # on_commit robust parameter
         "DATABASE_ALIAS": "default",        # Database for on_commit
         "TASK_BACKEND": None,               # Dotted path to executor callable
     }
@@ -42,6 +43,7 @@ from airlock import Scope, Intent, Executor, AllowAll, DropAll, _execute
 DEFAULTS = {
     "DEFAULT_POLICY": "airlock.AllowAll",
     "USE_ON_COMMIT": True,
+    "ROBUST": True,  # Django's on_commit robust parameter
     "DATABASE_ALIAS": DEFAULT_DB_ALIAS,
     "TASK_BACKEND": None,  # Dotted path to executor callable, or None for sync
 }
@@ -147,40 +149,21 @@ class DjangoScope(Scope):
         """
         Dispatch intents, optionally deferring to on_commit.
 
-        Uses self._executor (configured via constructor or TASK_BACKEND setting)
-        to actually execute intents.
+        Settings:
+            USE_ON_COMMIT: If True, defer dispatch to transaction.on_commit()
+            ROBUST: Passed to Django's on_commit(robust=...) parameter
 
-        Exception behavior:
-            The exception behavior depends on the USE_ON_COMMIT setting:
-
-            USE_ON_COMMIT=False (immediate dispatch):
-                Executor exceptions propagate immediately during flush(), just like
-                the base Scope class. This allows errors to be caught and handled
-                synchronously.
-
-            USE_ON_COMMIT=True (deferred dispatch, default):
-                Dispatch is deferred until transaction.on_commit(). Executor exceptions
-                propagate during transaction commit (robust=False is Django's default).
-
-                This means:
-                - flush() succeeds (it only registers the callback)
-                - The exception propagates when the transaction commits
-                - In middleware: this happens during request handling, BEFORE response sent
-                - Errors are LOUD - they will cause request failures
-
-                Note: robust=False means if this callback fails, other on_commit hooks
-                are NOT executed. robust=True would continue other hooks but airlock uses
-                the default to ensure loud failures.
-
-            Fail-fast behavior:
-                In both cases, if an executor raises an exception, the dispatch loop
-                stops immediately and remaining intents are not dispatched (fail-fast).
+        Fail-fast: Executor exceptions stop dispatch of remaining intents.
         """
         if get_setting("USE_ON_COMMIT"):
             def do_dispatch():
                 for intent in intents:
                     self._executor(intent)
-            transaction.on_commit(do_dispatch, using=self.using, robust=False)
+            transaction.on_commit(
+                do_dispatch,
+                using=self.using,
+                robust=get_setting("ROBUST")
+            )
         else:
             for intent in intents:
                 self._executor(intent)
