@@ -9,7 +9,10 @@ from airlock import Intent, AllowAll, ScopeStateError
 from django.conf import settings
 if not settings.configured:
     settings.configure(
-        DATABASES={"default": {"ENGINE": "django.db.backends.sqlite3"}},
+        DATABASES={"default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": ":memory:",  # In-memory database for tests
+        }},
         INSTALLED_APPS=["django.contrib.contenttypes"],
     )
 
@@ -512,15 +515,14 @@ def test_django_scope_executor_exception_propagates_without_on_commit():
         assert scope._flushed
 
 
-def test_django_scope_executor_exception_deferred_with_on_commit():
-    """Test that flush() succeeds when USE_ON_COMMIT=True (dispatch is deferred).
+def test_django_scope_executor_exception_propagates_with_on_commit_default():
+    """Test that executor exceptions PROPAGATE with USE_ON_COMMIT=True (Django default).
 
-    This test verifies that flush() doesn't raise even when executors would fail,
-    because dispatch is deferred to transaction.on_commit(). The actual exception
-    handling happens later when Django runs the callback (which would be silent).
-
-    We also verify fail-fast behavior within the deferred callback itself.
+    Django's transaction.on_commit(robust=False) is the default, which means
+    exceptions DO propagate. This test verifies the actual Django behavior.
     """
+    from django.db import transaction
+
     calls = []
 
     def task_a():
@@ -542,29 +544,22 @@ def test_django_scope_executor_exception_deferred_with_on_commit():
             "USE_ON_COMMIT": True,  # Deferred execution
         }.get(key)
 
-        with patch("airlock.integrations.django.transaction") as mock_transaction:
-            scope = DjangoScope(policy=AllowAll(), executor=sync_executor)
-            scope._add(Intent(task=task_a, args=(), kwargs={}))
-            scope._add(Intent(task=failing_task, args=(), kwargs={}))
-            scope._add(Intent(task=task_c, args=(), kwargs={}))
+        # Use real atomic transaction
+        with pytest.raises(ValueError, match="Executor failed!"):
+            with transaction.atomic():
+                scope = DjangoScope(policy=AllowAll(), executor=sync_executor)
+                scope._add(Intent(task=task_a, args=(), kwargs={}))
+                scope._add(Intent(task=failing_task, args=(), kwargs={}))
+                scope._add(Intent(task=task_c, args=(), kwargs={}))
 
-            # flush() should succeed - it only registers a callback, doesn't execute
-            scope.flush()  # No exception raised here!
+                # flush() succeeds - just registers callback
+                scope.flush()
+                assert scope._flushed
 
-            # Scope marked as flushed
-            assert scope._flushed
+            # Transaction commits here - on_commit runs, exception propagates!
 
-            # on_commit should have been called with a callback
-            mock_transaction.on_commit.assert_called_once()
-            callback = mock_transaction.on_commit.call_args[0][0]
-
-            # Verify the callback itself has fail-fast behavior
-            # (When Django runs this later, it would log but not re-raise)
-            with pytest.raises(ValueError, match="Executor failed!"):
-                callback()
-
-            # task_a executed, task_c did not (fail-fast within callback)
-            assert calls == ['a']
+        # Verify fail-fast: task_a ran, task_c did not
+        assert calls == ['a']
 
 
 def test_django_scope_executor_exception_in_context_manager_without_on_commit():

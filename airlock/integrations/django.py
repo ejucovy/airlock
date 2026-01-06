@@ -159,18 +159,18 @@ class DjangoScope(Scope):
                 synchronously.
 
             USE_ON_COMMIT=True (deferred dispatch, default):
-                Dispatch is deferred until transaction.on_commit(). If an executor
-                raises an exception during dispatch, Django's on_commit mechanism
-                will LOG the exception but will NOT re-raise it. This is Django's
-                design - on_commit callbacks run after the response is sent, so there
-                is no caller to propagate exceptions to.
+                Dispatch is deferred until transaction.on_commit(). Executor exceptions
+                STILL PROPAGATE (Django's default robust=False behavior), but they occur
+                during transaction commit, not during flush().
 
-                This means executor failures (e.g., broker connection errors) will be
-                SILENT at the application level and only visible in logs. This is the
-                standard Django behavior when using transaction.on_commit().
+                This means:
+                - flush() succeeds (it only registers the callback)
+                - The exception propagates when the transaction commits
+                - In middleware: this happens during request handling, before response
+                - Errors are LOUD (not silent) - they will cause request failures
 
-                This is a known tradeoff: you get transactional safety (tasks only
-                dispatch after commit succeeds) but lose synchronous error propagation.
+                This is the standard Django behavior when using transaction.on_commit()
+                with robust=False (the default).
 
             Fail-fast behavior:
                 In both cases, if an executor raises an exception, the dispatch loop
@@ -180,7 +180,7 @@ class DjangoScope(Scope):
             def do_dispatch():
                 for intent in intents:
                     self._executor(intent)
-            transaction.on_commit(do_dispatch, using=self.using)
+            transaction.on_commit(do_dispatch, using=self.using, robust=False)
         else:
             for intent in intents:
                 self._executor(intent)

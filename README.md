@@ -1738,36 +1738,37 @@ with airlock.scope(_cls=DjangoScope):
 
 #### `USE_ON_COMMIT=True` (deferred dispatch, **default**)
 
-Executor exceptions are **silent** at the application level:
+Executor exceptions **still propagate**, but during transaction commit:
 
 ```python
-with airlock.scope(_cls=DjangoScope):  # USE_ON_COMMIT=True (default)
-    airlock.enqueue(task_a)
-    airlock.enqueue(failing_task)
-# Flush returns successfully (dispatch deferred to on_commit)
-# Response sent to user
-# Transaction commits
-# NOW executor runs — if it raises, Django logs but doesn't re-raise
+with transaction.atomic():
+    with airlock.scope(_cls=DjangoScope):  # USE_ON_COMMIT=True (default)
+        airlock.enqueue(task_a)
+        airlock.enqueue(failing_task)
+        # flush() succeeds - just registers callback
+
+    # Transaction commits here - on_commit runs, exception propagates!
+    # Exception raised during commit, before response is sent
 ```
 
-**Why silent?**
-- `transaction.on_commit()` callbacks run **after the response is sent**
-- Django logs exceptions but has no caller to propagate to
-- This is **standard Django behavior**, not an airlock limitation
+**Key points:**
+- `flush()` succeeds (only registers callback, doesn't execute)
+- Execution happens during `transaction.commit()`
+- Exceptions **DO propagate** (Django's `robust=False` default)
+- In middleware: happens during request handling, **before** response sent
+- Errors are **LOUD** (not silent) - will cause request failures
 
 **Tradeoff:**
 - ✅ Transactional safety: tasks only dispatch after commit succeeds
-- ❌ Silent failures: executor errors only visible in logs
+- ✅ Loud failures: exceptions propagate during commit
+- ⚠️  Exception happens during commit, not during flush()
 
-This is the same behavior you get with:
+This matches standard Django behavior:
 ```python
-transaction.on_commit(lambda: my_celery_task.delay())  # Silent failures
+transaction.on_commit(lambda: my_celery_task.delay())  # Exceptions propagate!
 ```
 
-**Recommendation:**
-- Monitor Django's error logs for on_commit exceptions
-- Use health checks to verify broker connectivity
-- Consider alerting on repeated dispatch failures
+**Note:** Django's `on_commit(robust=True)` would make failures silent (logged only), but airlock uses the default `robust=False` to ensure errors are visible.
 
 ---
 
