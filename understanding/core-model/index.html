@@ -808,17 +808,6 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-three-concerns" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The Three Concerns
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#concern-1-when-scope" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -907,28 +896,6 @@
     <span class="md-ellipsis">
       
         Mixing Concerns
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#mental-model" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Mental Model
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#common-combinations" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Common Combinations
       
     </span>
   </a>
@@ -1845,17 +1812,6 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-three-concerns" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The Three Concerns
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#concern-1-when-scope" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1951,28 +1907,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#mental-model" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Mental Model
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#common-combinations" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Common Combinations
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#next" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2004,8 +1938,7 @@
 
 
 <h1 id="core-model-the-3-concerns">Core Model: The 3 Concerns<a class="headerlink" href="#core-model-the-3-concerns" title="Permanent link">&para;</a></h1>
-<p>Airlock separates three orthogonal concerns. Understanding this makes everything else obvious.</p>
-<h2 id="the-three-concerns">The Three Concerns<a class="headerlink" href="#the-three-concerns" title="Permanent link">&para;</a></h2>
+<p>Airlock separates three orthogonal concerns that can be mixed and customized.</p>
 <table>
 <thead>
 <tr>
@@ -2032,7 +1965,6 @@
 </tr>
 </tbody>
 </table>
-<p>These are <strong>independent</strong> and can be mixed freely.</p>
 <h2 id="concern-1-when-scope">Concern 1: WHEN (Scope)<a class="headerlink" href="#concern-1-when-scope" title="Permanent link">&para;</a></h2>
 <p><strong>Scopes</strong> control timing and lifecycle.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Basic scope: flush on success, discard on error</span>
@@ -2106,7 +2038,7 @@
 </span></code></pre></div>
 <h3 id="executor-decides">Executor decides:<a class="headerlink" href="#executor-decides" title="Permanent link">&para;</a></h3>
 <ul>
-<li>How to run the task (sync, queue, thread pool, lambda)</li>
+<li>How to run the task (sync, queue, thread pool...)</li>
 <li>What protocol to use (Celery, django-q, Huey, custom)</li>
 </ul>
 <p>Default: synchronous execution.</p>
@@ -2141,88 +2073,6 @@
 </span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="p">):</span>
 </span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    <span class="n">backfill_data</span><span class="p">()</span>
 </span></code></pre></div>
-<h2 id="mental-model">Mental Model<a class="headerlink" href="#mental-model" title="Permanent link">&para;</a></h2>
-<p>Think of airlock as a <strong>buffer with three independent controls</strong>:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>┌─────────────────────────────────────────┐
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>│  airlock.enqueue(task, ...)             │ ← Express intent
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>└──────────────────┬──────────────────────┘
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>                   │
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>                   ▼
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>         ┌─────────────────┐
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>         │     BUFFER      │ ← Intent stored
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>         │  [intent list]  │
-</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>         └─────────────────┘
-</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>                   │
-</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>        ┌──────────┼──────────┐
-</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>        │          │          │
-</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>        ▼          ▼          ▼
-</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>    ┌──────┐  ┌──────┐  ┌──────┐
-</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>    │POLICY│  │SCOPE │  │EXEC  │ ← 3 independent controls
-</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>    │      │  │      │  │      │
-</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>    │WHAT? │  │WHEN? │  │HOW?  │
-</span><span id="__span-7-18"><a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a>    └──────┘  └──────┘  └──────┘
-</span><span id="__span-7-19"><a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a>        │          │          │
-</span><span id="__span-7-20"><a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a>        └──────────┼──────────┘
-</span><span id="__span-7-21"><a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a>                   │
-</span><span id="__span-7-22"><a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a>                   ▼
-</span><span id="__span-7-23"><a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a>         task(*args, **kwargs) ← Execution
-</span></code></pre></div>
-<p>Each concern is <strong>independent</strong>:</p>
-<ul>
-<li>Change WHEN without changing WHAT or HOW</li>
-<li>Change WHAT without changing WHEN or HOW</li>
-<li>Change HOW without changing WHEN or WHAT</li>
-</ul>
-<p>This separation enables powerful composition.</p>
-<h2 id="common-combinations">Common Combinations<a class="headerlink" href="#common-combinations" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Use Case</th>
-<th>Scope</th>
-<th>Policy</th>
-<th>Executor</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Django production</strong></td>
-<td><code>DjangoScope</code></td>
-<td><code>AllowAll</code></td>
-<td><code>celery_executor</code></td>
-</tr>
-<tr>
-<td><strong>Django test</strong></td>
-<td><code>Scope</code></td>
-<td><code>AssertNoEffects</code></td>
-<td><code>sync_executor</code></td>
-</tr>
-<tr>
-<td><strong>Migration script</strong></td>
-<td><code>Scope</code></td>
-<td><code>DropAll</code></td>
-<td>(doesn't matter)</td>
-</tr>
-<tr>
-<td><strong>Admin bulk operation</strong></td>
-<td><code>DjangoScope</code></td>
-<td><code>BlockTasks({"send_email"})</code></td>
-<td><code>celery_executor</code></td>
-</tr>
-<tr>
-<td><strong>Celery task</strong></td>
-<td><code>Scope</code></td>
-<td><code>AllowAll</code></td>
-<td><code>celery_executor</code></td>
-</tr>
-<tr>
-<td><strong>Debug mode</strong></td>
-<td><code>Scope</code></td>
-<td><code>LogOnFlush</code></td>
-<td><code>sync_executor</code></td>
-</tr>
-</tbody>
-</table>
 <h2 id="next">Next<a class="headerlink" href="#next" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../how-it-composes/">How it composes</a> - Nested scopes and provenance</li>
