@@ -512,8 +512,15 @@ def test_django_scope_executor_exception_propagates_without_on_commit():
         assert scope._flushed
 
 
-def test_django_scope_executor_exception_silent_with_on_commit():
-    """Test executor exceptions are silent when USE_ON_COMMIT=True (Django limitation)."""
+def test_django_scope_executor_exception_deferred_with_on_commit():
+    """Test that flush() succeeds when USE_ON_COMMIT=True (dispatch is deferred).
+
+    This test verifies that flush() doesn't raise even when executors would fail,
+    because dispatch is deferred to transaction.on_commit(). The actual exception
+    handling happens later when Django runs the callback (which would be silent).
+
+    We also verify fail-fast behavior within the deferred callback itself.
+    """
     calls = []
 
     def task_a():
@@ -541,8 +548,8 @@ def test_django_scope_executor_exception_silent_with_on_commit():
             scope._add(Intent(task=failing_task, args=(), kwargs={}))
             scope._add(Intent(task=task_c, args=(), kwargs={}))
 
-            # flush() registers callback but doesn't execute yet
-            scope.flush()
+            # flush() should succeed - it only registers a callback, doesn't execute
+            scope.flush()  # No exception raised here!
 
             # Scope marked as flushed
             assert scope._flushed
@@ -551,12 +558,12 @@ def test_django_scope_executor_exception_silent_with_on_commit():
             mock_transaction.on_commit.assert_called_once()
             callback = mock_transaction.on_commit.call_args[0][0]
 
-            # Now execute the callback - this is what Django does after commit
-            # The exception will be raised, but Django's on_commit will swallow it
+            # Verify the callback itself has fail-fast behavior
+            # (When Django runs this later, it would log but not re-raise)
             with pytest.raises(ValueError, match="Executor failed!"):
                 callback()
 
-            # task_a executed, task_c did not (fail-fast within the callback)
+            # task_a executed, task_c did not (fail-fast within callback)
             assert calls == ['a']
 
 
