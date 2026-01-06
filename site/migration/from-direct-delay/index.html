@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://github.com/thethirdbearsolutions/airlock/guide/basic-usage/">
+        <link rel="canonical" href="https://github.com/thethirdbearsolutions/airlock/migration/from-direct-delay/">
       
       
-        <link rel="prev" href="../../understanding/how-it-composes/">
+        <link rel="prev" href="../../integrations/celery/task-wrapper/">
       
       
-        <link rel="next" href="../policies/">
+        <link rel="next" href="../selective-vs-blanket/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Basic Usage - Airlock</title>
+        <title>From .delay() Calls - Airlock</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#basic-usage" class="md-skip">
+        <a href="#migrating-from-direct-delay-calls" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Basic Usage
+              From .delay() Calls
             
           </span>
         </div>
@@ -286,13 +286,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../guide/basic-usage/" class="md-tabs__link">
           
   
   
@@ -342,11 +340,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../migration/from-direct-delay/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
           
   
   
@@ -805,10 +805,8 @@
       
   
   
-    
   
   
-  
     
     
       
@@ -822,22 +820,21 @@
     
     
       
-        
-        
-      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
             
   
   
@@ -855,7 +852,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -870,37 +867,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Basic Usage
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../guide/basic-usage/" class="md-nav__link">
         
   
   
@@ -916,114 +886,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#the-basic-pattern" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The Basic Pattern
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#scope-lifecycle" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Scope Lifecycle
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#local-policy-context" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Local Policy Context
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#inspecting-the-buffer" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Inspecting the Buffer
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pass-dispatch-options" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Pass Dispatch Options
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#get-current-scope" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Get Current Scope
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#error-handling" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Error Handling
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Next Steps
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1036,7 +898,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../policies/" class="md-nav__link">
+      <a href="../../guide/policies/" class="md-nav__link">
         
   
   
@@ -1064,7 +926,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../nested-scopes/" class="md-nav__link">
+      <a href="../../guide/nested-scopes/" class="md-nav__link">
         
   
   
@@ -1255,8 +1117,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -1268,21 +1132,22 @@
     
     
       
+        
+        
+      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
         
           
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
-        
-          
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
             
   
   
@@ -1300,7 +1165,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1315,10 +1180,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../migration/from-direct-delay/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    From .delay() Calls
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1334,6 +1226,142 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-challenge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Challenge
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strategy-1-selective-migration-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strategy 1: Selective Migration (Recommended)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strategy-2-blanket-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strategy 2: Blanket Migration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strategy-3-greenfield-new-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strategy 3: Greenfield (New Code)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comparison
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-noscopeerror-with-legacytaskshim" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: NoScopeError with LegacyTaskShim
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-return-value-is-none" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Return value is None
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-warnings-everywhere" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Warnings everywhere
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1346,7 +1374,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../migration/selective-vs-blanket/" class="md-nav__link">
+      <a href="../selective-vs-blanket/" class="md-nav__link">
         
   
   
@@ -1704,10 +1732,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-basic-pattern" class="md-nav__link">
+  <a href="#the-challenge" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The Basic Pattern
+        The Challenge
       
     </span>
   </a>
@@ -1715,10 +1743,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#scope-lifecycle" class="md-nav__link">
+  <a href="#strategy-1-selective-migration-recommended" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Scope Lifecycle
+        Strategy 1: Selective Migration (Recommended)
       
     </span>
   </a>
@@ -1726,10 +1754,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#local-policy-context" class="md-nav__link">
+  <a href="#strategy-2-blanket-migration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Local Policy Context
+        Strategy 2: Blanket Migration
       
     </span>
   </a>
@@ -1737,10 +1765,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#inspecting-the-buffer" class="md-nav__link">
+  <a href="#strategy-3-greenfield-new-code" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Inspecting the Buffer
+        Strategy 3: Greenfield (New Code)
       
     </span>
   </a>
@@ -1748,10 +1776,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#pass-dispatch-options" class="md-nav__link">
+  <a href="#comparison" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Pass Dispatch Options
+        Comparison
       
     </span>
   </a>
@@ -1759,24 +1787,52 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#get-current-scope" class="md-nav__link">
+  <a href="#common-issues" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Get Current Scope
+        Common Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-noscopeerror-with-legacytaskshim" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: NoScopeError with LegacyTaskShim
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#error-handling" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#issue-return-value-is-none" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Error Handling
+        Issue: Return value is None
       
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-warnings-everywhere" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Warnings everywhere
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1811,78 +1867,141 @@
   
 
 
-<h1 id="basic-usage">Basic Usage<a class="headerlink" href="#basic-usage" title="Permanent link">&para;</a></h1>
-<p>Core patterns for everyday use.</p>
-<h2 id="the-basic-pattern">The Basic Pattern<a class="headerlink" href="#the-basic-pattern" title="Permanent link">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">airlock</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># 1. Express intent with airlock.enqueue()</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">process_order</span><span class="p">(</span><span class="n">order_id</span><span class="p">):</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">order</span> <span class="o">=</span> <span class="n">get_order</span><span class="p">(</span><span class="n">order_id</span><span class="p">)</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">order</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;processed&quot;</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">save</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">notify_warehouse</span><span class="p">,</span> <span class="n">order_id</span><span class="o">=</span><span class="n">order_id</span><span class="p">)</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">send_confirmation</span><span class="p">,</span> <span class="n">order_id</span><span class="o">=</span><span class="n">order_id</span><span class="p">)</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="c1"># 2. Wrap in a scope</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">():</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="n">process_order</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="c1"># Effects dispatch here</span>
+<h1 id="migrating-from-direct-delay-calls">Migrating from Direct .delay() Calls<a class="headerlink" href="#migrating-from-direct-delay-calls" title="Permanent link">&para;</a></h1>
+<p>How to migrate an existing codebase from direct Celery <code>.delay()</code> calls to airlock.</p>
+<h2 id="the-challenge">The Challenge<a class="headerlink" href="#the-challenge" title="Permanent link">&para;</a></h2>
+<p>You have code like this scattered everywhere:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">Order</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        <span class="n">notify_warehouse</span><span class="o">.</span><span class="n">delay</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        <span class="n">send_email</span><span class="o">.</span><span class="n">delay</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># And in views</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="k">def</span><span class="w"> </span><span class="nf">process_order</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">order_id</span><span class="p">):</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">order</span><span class="o">.</span><span class="n">process</span><span class="p">()</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">analytics</span><span class="o">.</span><span class="n">delay</span><span class="p">(</span><span class="n">order</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span><span class="s2">&quot;OK&quot;</span><span class="p">)</span>
 </span></code></pre></div>
-<h2 id="scope-lifecycle">Scope Lifecycle<a class="headerlink" href="#scope-lifecycle" title="Permanent link">&para;</a></h2>
-<p><strong>On normal exit:</strong> calls <code>flush()</code> - intents dispatch</p>
-<p><strong>On exception:</strong> calls <code>discard()</code> - intents dropped</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">():</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">task_a</span><span class="p">)</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">()</span>  <span class="c1"># Scope discards, task_a doesn&#39;t run</span>
+<p>Changing every <code>.delay()</code> to <code>airlock.enqueue()</code> is tedious and error-prone.</p>
+<h2 id="strategy-1-selective-migration-recommended">Strategy 1: Selective Migration (Recommended)<a class="headerlink" href="#strategy-1-selective-migration-recommended" title="Permanent link">&para;</a></h2>
+<p>Migrate tasks one at a time using <code>LegacyTaskShim</code>:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airlock.integrations.celery</span><span class="w"> </span><span class="kn">import</span> <span class="n">LegacyTaskShim</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1"># Apply to tasks you&#39;re migrating</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="nd">@app</span><span class="o">.</span><span class="n">task</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="n">LegacyTaskShim</span><span class="p">)</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">notify_warehouse</span><span class="p">(</span><span class="n">order_id</span><span class="p">):</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="o">...</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="c1"># Old code still works (inside scopes)</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">():</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    <span class="n">notify_warehouse</span><span class="o">.</span><span class="n">delay</span><span class="p">(</span><span class="n">order_id</span><span class="p">)</span>  <span class="c1"># Routes through airlock, warns</span>
 </span></code></pre></div>
-<h2 id="local-policy-context">Local Policy Context<a class="headerlink" href="#local-policy-context" title="Permanent link">&para;</a></h2>
-<p>Apply policy to a region without creating a new scope:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">():</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">task_a</span><span class="p">)</span>  <span class="c1"># Will dispatch</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">policy</span><span class="p">(</span><span class="n">airlock</span><span class="o">.</span><span class="n">DropAll</span><span class="p">()):</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">task_b</span><span class="p">)</span>  <span class="c1"># Won&#39;t dispatch</span>
+<p><strong>Behavior:</strong>
+- ✅ Inside scope: routes through airlock, returns <code>None</code>
+- ❌ Outside scope: raises <code>NoScopeError</code>
+- ⚠️ Always emits <code>DeprecationWarning</code></p>
+<p><strong>Migration path:</strong>
+1. Add <code>LegacyTaskShim</code> to one task
+2. Ensure all call sites have scopes
+3. Replace <code>.delay()</code> with <code>airlock.enqueue()</code> at your leisure
+4. Remove <code>LegacyTaskShim</code> when done</p>
+<h2 id="strategy-2-blanket-migration">Strategy 2: Blanket Migration<a class="headerlink" href="#strategy-2-blanket-migration" title="Permanent link">&para;</a></h2>
+<p>Intercept ALL tasks globally:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># celery.py</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">celery</span><span class="w"> </span><span class="kn">import</span> <span class="n">Celery</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airlock.integrations.celery</span><span class="w"> </span><span class="kn">import</span> <span class="n">install_global_intercept</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">app</span> <span class="o">=</span> <span class="n">Celery</span><span class="p">(</span><span class="s1">&#39;myapp&#39;</span><span class="p">)</span>
 </span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">task_c</span><span class="p">)</span>  <span class="c1"># Will dispatch</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1"># Patch all tasks at startup</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="n">install_global_intercept</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
 </span></code></pre></div>
-<p>All three intents go to the same buffer. Policy is captured per-intent.</p>
-<h2 id="inspecting-the-buffer">Inspecting the Buffer<a class="headerlink" href="#inspecting-the-buffer" title="Permanent link">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">()</span> <span class="k">as</span> <span class="n">s</span><span class="p">:</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">do_stuff</span><span class="p">()</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="c1"># Check what&#39;s buffered</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="k">for</span> <span class="n">intent</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">intents</span><span class="p">:</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">intent</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">intent</span><span class="o">.</span><span class="n">args</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">intent</span><span class="o">.</span><span class="n">kwargs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<p><strong>Behavior:</strong>
+- ✅ Inside scope: routes through airlock, returns <code>None</code>
+- ✅ Outside scope: passes through to Celery, warns
+- ⚠️ Always emits <code>DeprecationWarning</code>
+- 🔄 Wraps all task execution in scopes automatically</p>
+<p><strong>Use for:</strong>
+- Large codebases with 100s of <code>.delay()</code> calls
+- Quick proof-of-concept
+- Gradual migration without breaking existing code</p>
+<p><strong>⚠️ Warning:</strong> This is a <strong>migration tool</strong>, not steady-state architecture. It monkey-patches Celery globally. Plan to replace <code>.delay()</code> with <code>airlock.enqueue()</code> over time.</p>
+<h2 id="strategy-3-greenfield-new-code">Strategy 3: Greenfield (New Code)<a class="headerlink" href="#strategy-3-greenfield-new-code" title="Permanent link">&para;</a></h2>
+<p>Just use <code>airlock.enqueue()</code> from the start:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">airlock</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">Order</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>        <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">notify_warehouse</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="c1"># In views (with Django middleware)</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="k">def</span><span class="w"> </span><span class="nf">process_order</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">order_id</span><span class="p">):</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="n">order</span><span class="o">.</span><span class="n">process</span><span class="p">()</span>  <span class="c1"># Effects auto-scoped by middleware</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span><span class="s2">&quot;OK&quot;</span><span class="p">)</span>
 </span></code></pre></div>
-<h2 id="pass-dispatch-options">Pass Dispatch Options<a class="headerlink" href="#pass-dispatch-options" title="Permanent link">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">send_email</span><span class="p">,</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">user_id</span><span class="o">=</span><span class="mi">123</span><span class="p">,</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">_dispatch_options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;countdown&quot;</span><span class="p">:</span> <span class="mi">60</span><span class="p">,</span> <span class="s2">&quot;queue&quot;</span><span class="p">:</span> <span class="s2">&quot;emails&quot;</span><span class="p">}</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="p">)</span>
+<p>No shims, no warnings, no migration needed.</p>
+<h2 id="comparison">Comparison<a class="headerlink" href="#comparison" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Approach</th>
+<th>Effort</th>
+<th>Risk</th>
+<th>Use When</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Selective</strong></td>
+<td>Medium</td>
+<td>Low</td>
+<td>Methodical migration, want control</td>
+</tr>
+<tr>
+<td><strong>Blanket</strong></td>
+<td>Low</td>
+<td>Medium</td>
+<td>Large codebase, need quick win</td>
+</tr>
+<tr>
+<td><strong>Greenfield</strong></td>
+<td>Low</td>
+<td>None</td>
+<td>New project or isolated feature</td>
+</tr>
+</tbody>
+</table>
+<h2 id="common-issues">Common Issues<a class="headerlink" href="#common-issues" title="Permanent link">&para;</a></h2>
+<h3 id="issue-noscopeerror-with-legacytaskshim">Issue: <code>NoScopeError</code> with <code>LegacyTaskShim</code><a class="headerlink" href="#issue-noscopeerror-with-legacytaskshim" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">notify_warehouse</span><span class="o">.</span><span class="n">delay</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>  <span class="c1"># NoScopeError!</span>
 </span></code></pre></div>
-<p>Options are executor-specific (Celery, django-q, etc.)</p>
-<h2 id="get-current-scope">Get Current Scope<a class="headerlink" href="#get-current-scope" title="Permanent link">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">scope</span> <span class="o">=</span> <span class="n">airlock</span><span class="o">.</span><span class="n">get_current_scope</span><span class="p">()</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="k">if</span> <span class="n">scope</span><span class="p">:</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;In scope with </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">scope</span><span class="o">.</span><span class="n">intents</span><span class="p">)</span><span class="si">}</span><span class="s2"> intents buffered&quot;</span><span class="p">)</span>
+<p><strong>Fix:</strong> <code>LegacyTaskShim</code> requires a scope. Add one:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">():</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="n">notify_warehouse</span><span class="o">.</span><span class="n">delay</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>  <span class="c1"># Works</span>
 </span></code></pre></div>
-<h2 id="error-handling">Error Handling<a class="headerlink" href="#error-handling" title="Permanent link">&para;</a></h2>
-<p><strong>No scope:</strong></p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>  <span class="c1"># Raises NoScopeError</span>
+<p>Or use <code>install_global_intercept()</code> instead (allows outside scopes).</p>
+<h3 id="issue-return-value-is-none">Issue: Return value is <code>None</code><a class="headerlink" href="#issue-return-value-is-none" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">delay</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>  <span class="c1"># AttributeError: &#39;NoneType&#39; has no attribute &#39;get&#39;</span>
 </span></code></pre></div>
-<p>This is intentional - side effects require explicit boundaries.</p>
-<p><strong>Policy violation:</strong></p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">policy</span><span class="o">=</span><span class="n">airlock</span><span class="o">.</span><span class="n">AssertNoEffects</span><span class="p">()):</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>  <span class="c1"># Raises PolicyViolation immediately</span>
+<p><strong>Why:</strong> Inside scopes, <code>.delay()</code> returns <code>None</code> because dispatch is deferred.</p>
+<p><strong>Fix:</strong> Stop relying on <code>AsyncResult</code>. Decouple intent from result tracking. If you need results, use a different pattern (callbacks, database polling, etc.).</p>
+<h3 id="issue-warnings-everywhere">Issue: Warnings everywhere<a class="headerlink" href="#issue-warnings-everywhere" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="ne">DeprecationWarning</span><span class="p">:</span> <span class="n">task</span><span class="o">.</span><span class="n">delay</span><span class="p">()</span> <span class="ow">is</span> <span class="n">deprecated</span><span class="p">,</span> <span class="n">use</span> <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">()</span>
+</span></code></pre></div>
+<p><strong>Fix:</strong> This is intentional! Replace <code>.delay()</code> with <code>airlock.enqueue()</code>:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Old</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">task</span><span class="o">.</span><span class="n">delay</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="c1"># New</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">arg</span><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../policies/">Policies</a> - Built-in and custom policies</li>
-<li><a href="../nested-scopes/">Nested scopes</a> - Composition patterns</li>
-<li><a href="dispatch.md">Dispatch</a> - Executors and options</li>
+<li><a href="../selective-vs-blanket/">Selective vs Blanket</a> - Choosing migration strategy</li>
+<li><a href="../../integrations/celery/task-wrapper/">Celery Task Wrapper</a> - <code>AirlockTask</code> deep dive</li>
 </ul>
 
 

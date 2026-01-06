@@ -9,7 +9,47 @@
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
+         <loc>https://github.com/thethirdbearsolutions/airlock/api/core/</loc>
+         <lastmod>2026-01-06</lastmod>
+    </url>
+    <url>
+         <loc>https://github.com/thethirdbearsolutions/airlock/api/policies/</loc>
+         <lastmod>2026-01-06</lastmod>
+    </url>
+    <url>
+         <loc>https://github.com/thethirdbearsolutions/airlock/extending/custom-executors/</loc>
+         <lastmod>2026-01-06</lastmod>
+    </url>
+    <url>
+         <loc>https://github.com/thethirdbearsolutions/airlock/extending/custom-policies/</loc>
+         <lastmod>2026-01-06</lastmod>
+    </url>
+    <url>
+         <loc>https://github.com/thethirdbearsolutions/airlock/extending/custom-scopes/</loc>
+         <lastmod>2026-01-06</lastmod>
+    </url>
+    <url>
          <loc>https://github.com/thethirdbearsolutions/airlock/guide/basic-usage/</loc>
+         <lastmod>2026-01-06</lastmod>
+    </url>
+    <url>
+         <loc>https://github.com/thethirdbearsolutions/airlock/guide/nested-scopes/</loc>
+         <lastmod>2026-01-06</lastmod>
+    </url>
+    <url>
+         <loc>https://github.com/thethirdbearsolutions/airlock/guide/policies/</loc>
+         <lastmod>2026-01-06</lastmod>
+    </url>
+    <url>
+         <loc>https://github.com/thethirdbearsolutions/airlock/integrations/celery/task-wrapper/</loc>
+         <lastmod>2026-01-06</lastmod>
+    </url>
+    <url>
+         <loc>https://github.com/thethirdbearsolutions/airlock/migration/from-direct-delay/</loc>
+         <lastmod>2026-01-06</lastmod>
+    </url>
+    <url>
+         <loc>https://github.com/thethirdbearsolutions/airlock/migration/selective-vs-blanket/</loc>
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>

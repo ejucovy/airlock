@@ -72,5 +72,24 @@ nav:
 
   - Practical Guide:
     - Basic Usage: guide/basic-usage.md
+    - Policies: guide/policies.md
+    - Nested Scopes: guide/nested-scopes.md
+
+  - Integrations:
+    - Celery:
+      - Task Wrapper: integrations/celery/task-wrapper.md
+
+  - Migration:
+    - From .delay() Calls: migration/from-direct-delay.md
+    - Selective vs Blanket: migration/selective-vs-blanket.md
+
+  - Extending:
+    - Custom Policies: extending/custom-policies.md
+    - Custom Executors: extending/custom-executors.md
+    - Custom Scopes: extending/custom-scopes.md
+
+  - API Reference:
+    - Core Functions: api/core.md
+    - Policies: api/policies.md
 
   - Alternatives: alternatives.md
