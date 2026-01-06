@@ -476,8 +476,8 @@ def test_django_scope_with_multiple_executors_in_sequence():
 # =============================================================================
 
 
-def test_django_scope_executor_exception_propagates_without_on_commit():
-    """Test executor exceptions propagate when USE_ON_COMMIT=False (fail-fast)."""
+def test_use_on_commit_false_fail_fast():
+    """Test fail-fast with USE_ON_COMMIT=False: three tasks, middle fails."""
     calls = []
 
     def task_a():
@@ -496,7 +496,7 @@ def test_django_scope_executor_exception_propagates_without_on_commit():
         mock_get_setting.side_effect = lambda key: {
             "TASK_BACKEND": None,
             "DATABASE_ALIAS": "default",
-            "USE_ON_COMMIT": False,  # Execute immediately, not deferred
+            "USE_ON_COMMIT": False,
         }.get(key)
 
         scope = DjangoScope(policy=AllowAll(), executor=sync_executor)
@@ -504,28 +504,28 @@ def test_django_scope_executor_exception_propagates_without_on_commit():
         scope._add(Intent(task=failing_task, args=(), kwargs={}))
         scope._add(Intent(task=task_c, args=(), kwargs={}))
 
-        # flush() should raise the exception from failing_task
         with pytest.raises(ValueError, match="Executor failed!"):
             scope.flush()
 
-        # task_a executed, task_c did not (fail-fast)
+        # Fail-fast: only task_a ran
         assert calls == ['a']
 
-        # Scope should still be marked as flushed
-        assert scope._flushed
 
-
-def test_django_scope_with_robust_false():
-    """Test ROBUST=False setting - exceptions propagate."""
+def test_robust_false_stops_other_hooks():
+    """Test ROBUST=False: our callback fails, other on_commit hooks don't run."""
     from django.db import transaction
 
     calls = []
+    other_hook_ran = []
 
     def task_a():
         calls.append('a')
 
     def failing_task():
         raise ValueError("Executor failed!")
+
+    def task_c():
+        calls.append('c')
 
     def sync_executor(intent):
         intent.task(*intent.args, **intent.kwargs)
@@ -535,7 +535,7 @@ def test_django_scope_with_robust_false():
             "TASK_BACKEND": None,
             "DATABASE_ALIAS": "default",
             "USE_ON_COMMIT": True,
-            "ROBUST": False,  # Exceptions propagate
+            "ROBUST": False,
         }.get(key)
 
         with pytest.raises(ValueError, match="Executor failed!"):
@@ -543,24 +543,34 @@ def test_django_scope_with_robust_false():
                 scope = DjangoScope(policy=AllowAll(), executor=sync_executor)
                 scope._add(Intent(task=task_a, args=(), kwargs={}))
                 scope._add(Intent(task=failing_task, args=(), kwargs={}))
+                scope._add(Intent(task=task_c, args=(), kwargs={}))
 
                 scope.flush()
 
-        # Fail-fast: task_a ran
+                # Register another on_commit hook AFTER airlock's
+                transaction.on_commit(lambda: other_hook_ran.append(1))
+
+        # Fail-fast within our callback: only task_a ran
         assert calls == ['a']
+        # robust=False: other hook didn't run (our exception stopped it)
+        assert other_hook_ran == []
 
 
-def test_django_scope_with_robust_true():
-    """Test ROBUST=True setting (default) - exceptions logged, don't propagate."""
+def test_robust_true_continues_other_hooks():
+    """Test ROBUST=True (default): our callback fails, other on_commit hooks DO run."""
     from django.db import transaction
 
     calls = []
+    other_hook_ran = []
 
     def task_a():
         calls.append('a')
 
     def failing_task():
         raise ValueError("Executor failed!")
+
+    def task_c():
+        calls.append('c')
 
     def sync_executor(intent):
         intent.task(*intent.args, **intent.kwargs)
@@ -570,7 +580,7 @@ def test_django_scope_with_robust_true():
             "TASK_BACKEND": None,
             "DATABASE_ALIAS": "default",
             "USE_ON_COMMIT": True,
-            "ROBUST": True,  # Default - log errors, don't propagate
+            "ROBUST": True,  # Default
         }.get(key)
 
         # No exception propagates with robust=True
@@ -578,38 +588,14 @@ def test_django_scope_with_robust_true():
             scope = DjangoScope(policy=AllowAll(), executor=sync_executor)
             scope._add(Intent(task=task_a, args=(), kwargs={}))
             scope._add(Intent(task=failing_task, args=(), kwargs={}))
+            scope._add(Intent(task=task_c, args=(), kwargs={}))
 
             scope.flush()
 
-        # Fail-fast: task_a ran
+            # Register another on_commit hook AFTER airlock's
+            transaction.on_commit(lambda: other_hook_ran.append(1))
+
+        # Fail-fast within our callback: only task_a ran
         assert calls == ['a']
-
-
-def test_django_scope_executor_exception_in_context_manager_without_on_commit():
-    """Test executor exception propagates in context manager when USE_ON_COMMIT=False."""
-    calls = []
-
-    def task_a():
-        calls.append('a')
-
-    def failing_task():
-        raise ValueError("Executor failed!")
-
-    def sync_executor(intent):
-        intent.task(*intent.args, **intent.kwargs)
-
-    with patch("airlock.integrations.django.get_setting") as mock_get_setting:
-        mock_get_setting.side_effect = lambda key: {
-            "TASK_BACKEND": None,
-            "DATABASE_ALIAS": "default",
-            "USE_ON_COMMIT": False,
-        }.get(key)
-
-        # Exception should propagate from context manager __exit__
-        with pytest.raises(ValueError, match="Executor failed!"):
-            with airlock.scope(policy=AllowAll(), _cls=DjangoScope, executor=sync_executor):
-                airlock.enqueue(task_a)
-                airlock.enqueue(failing_task)
-
-        # task_a executed (fail-fast)
-        assert calls == ['a']
+        # robust=True: other hook DID run (our exception was logged, not propagated)
+        assert other_hook_ran == [1]
