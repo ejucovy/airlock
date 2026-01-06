@@ -1,116 +1,63 @@
-# Alternatives to Airlock
-
-Airlock isn't always the right choice. Here are alternatives and when to use them.
+# Alternatives
 
 ## `transaction.on_commit()`
 
-Django's built-in way to defer execution until transaction commits:
+In many Django projects, the typical pattern evolution is to start with immediately-escaping tasks:
 
 ```python
-from django.db import transaction
-
-class Order(models.Model):
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        transaction.on_commit(lambda: notify_warehouse.delay(self.id))
-```
-
-### When This Works
-
-- You only care about transaction boundaries
-- You're okay with limited introspection
-- You use `ATOMIC_REQUESTS` consistently
-
-### Limitations
-
-- **Only works in transactions** - If no transaction, runs immediately
-- **No opt-out** - Migrations, fixtures trigger callbacks
-- **No introspection** - Can't inspect what's queued
-- **No policy control** - Can't block specific tasks
-- **Confusing with nested transactions** - Savepoints complicate behavior
-
-Airlock gives you `on_commit` behavior (via `DjangoScope`) **plus** policies, introspection, and unified dispatch.
-
-## Django Signals
-
-Signals move **where** code lives, not **when** it executes:
-
-```python
-from django.db.models.signals import post_save
-
-@receiver(post_save, sender=Order)
-def notify_on_order_save(sender, instance, **kwargs):
-    if instance.status == "shipped":
-        notify_warehouse.delay(instance.id)
-```
-
-### When This Works
-
-- You want to decouple handlers from models
-- Multiple independent handlers for same event
-- Event-driven architecture
-
-### Limitations
-
-- **Doesn't solve timing** - Tasks still fire immediately
-- **Doesn't solve opt-out** - Migrations still trigger signals
-- **Implicit coupling** - Hard to find all handlers
-
-Signals are orthogonal to airlock. You can use signals to **trigger** `airlock.enqueue()`.
-
-## Celery Chords/Chains
-
-Define workflow upfront:
-
-```python
-from celery import chain, chord
-
-# Sequential
-workflow = chain(task_a.s(), task_b.s(), task_c.s())
-workflow.apply_async()
-
-# Parallel then collect
-callback = collect_results.s()
-workflow = chord([task_a.s(), task_b.s(), task_c.s()])(callback)
-```
-
-### When This Works
-
-- Workflow is known upfront
-- Tasks don't dynamically trigger others
-- You want explicit DAG
-
-### Limitations
-
-- **Can't handle dynamic workflows** - Tasks that conditionally trigger others
-- **Doesn't help with models** - Still need to decide where to start the chain
-
-Airlock helps when triggers are deep in the call stack, workflow is dynamic/conditional, or you can't hoist to the edge easily.
-
-## Edge-Only Pattern (No Airlock)
-
-Keep all `.delay()` calls in views:
-
-```python
-# Model stays pure
-class Order(models.Model):
-    def mark_shipped(self):
-        self.status = "shipped"
+class Order:
+    def process(self):
+        self.status = "processed"
         self.save()
-
-# View handles side effects
-def ship_order(request, order_id):
-    order = Order.objects.get(id=order_id)
-    order.mark_shipped()
-
-    notify_warehouse.delay(order.id)
-    send_confirmation.delay(order.id)
-
-    return HttpResponse("OK")
+        notify_warehouse.delay(self.id)
+        send_confirmation_email(self.id)
 ```
 
-This is a **valid architecture**. Airlock is for when you want to express intent closer to domain logic.
+And then migrate to a transaction boundary:
 
-## When NOT to Use Airlock
+```python
+class Order:
+    def process(self):
+        self.status = "processed"
+        self.save()
+        transaction.on_commit(lambda: notify_warehouse.delay(self.id))
+        transaction.on_commit(lambda: send_confirmation_email(self.id))
+```
 
-Skip airlock if you're happy with edge-only pattern and your team prefers explicit over encapsulated.
+This solves one problem: don't fire if the transaction rolls back, and don't fire until database state has settled. But it doesn't solve the rest:
+
+- **Only works inside a transaction.** If you call `on_commit()` while there isn't an open transaction, the callback will be executed immediately. So the temporal sequence of your code changes silently based on both global configuration (`ATOMIC_REQUESTS`) and any given call stack (`with transaction.atomic()`) -- yikes!
+- **No opt-out.** Migrations, fixtures, tests still trigger.
+- **No introspection.** Can't ask "what's about to fire?"
+- **No policy control.** Can't suppress specific tasks or block regions.
+- **What about sequential transactions? What about savepoints (nested transactions)?** Hard to reason about! (Your side effects will run after each outermost transaction commits, in the order they were registered within that transaction's scope.)
+
+Airlock gives you `on_commit` behavior (via `DjangoScope`) *plus* policies, introspection, and a single dispatch boundary.
+
+## Django signals
+
+Signals move *where* the side effect lives, not *whether* or *when* it fires. This is a powerful tool for code organization, but it doesn't address the core problems.
+
+## Celery chords/chains
+
+If your tasks trigger other tasks, consider whether the workflow should be defined upfront instead. `chain(task_a.s(), task_b.s())` makes the cascade explicit with no hidden enqueues.
+
+Airlock helps when that's not practical: triggers deep in the call stack that can't be hoisted trivially, dynamic cascades, tasks that conditionally trigger others, or legacy code where tasks already enqueue tasks.
+
+## When you don't need this
+
+You might not need airlock if:
+
+- **Views are the only place you enqueue.** All `.delay()` calls (or `on_commit(lambda: task.delay(...))`) are in views, never in models or reusable services.
+- **Tasks don't chain.** No task triggers another task within its code.
+- **You use `ATOMIC_REQUESTS`.** Transaction boundaries are already request-scoped, so `on_commit` behaves predictably.
+- **You're happy with these constraints.** You accept that domain intent ("notify warehouse when order ships") lives in views, not models.
+
+In this scenario, the view plus the database transaction *is* your boundary.
+
+That's a valid architecture. (I prefer it actually!) Airlock is for when you *want* to express intent closer to the domain -- in `save()`, in signals, in service methods -- without losing control over escape.
+
+## Next
+
+- [Core model](core-model.md) - The 3 concerns (Policy/Executor/Scope)
+- [How it composes](how-it-composes.md) - Nested scopes and provenance
