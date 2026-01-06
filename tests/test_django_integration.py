@@ -476,9 +476,11 @@ def test_django_scope_with_multiple_executors_in_sequence():
 # =============================================================================
 
 
-def test_use_on_commit_false_fail_fast():
-    """Test fail-fast with USE_ON_COMMIT=False: three tasks, middle fails."""
+def test_use_on_commit_false():
+    """Test USE_ON_COMMIT=False: exception propagates immediately from flush."""
     calls = []
+    code_after_enqueue = []
+    code_after_flush = []
 
     def task_a():
         calls.append('a')
@@ -499,23 +501,29 @@ def test_use_on_commit_false_fail_fast():
             "USE_ON_COMMIT": False,
         }.get(key)
 
-        scope = DjangoScope(policy=AllowAll(), executor=sync_executor)
-        scope._add(Intent(task=task_a, args=(), kwargs={}))
-        scope._add(Intent(task=failing_task, args=(), kwargs={}))
-        scope._add(Intent(task=task_c, args=(), kwargs={}))
-
         with pytest.raises(ValueError, match="Executor failed!"):
-            scope.flush()
+            with airlock.scope(policy=AllowAll(), _cls=DjangoScope, executor=sync_executor):
+                airlock.enqueue(task_a)
+                airlock.enqueue(failing_task)
+                airlock.enqueue(task_c)
+                code_after_enqueue.append(1)
+            # flush happens in __exit__, raises immediately
+            code_after_flush.append(1)
 
-        # Fail-fast: only task_a ran
-        assert calls == ['a']
+        # Verify checkpoints
+        assert calls == ['a']  # fail-fast: only task_a ran
+        assert code_after_enqueue == [1]  # always runs
+        assert code_after_flush == []  # doesn't run (exception from flush)
 
 
-def test_robust_false_stops_other_hooks():
-    """Test ROBUST=False: our callback fails, other on_commit hooks don't run."""
+def test_robust_false():
+    """Test ROBUST=False: exception propagates from commit, stops other hooks."""
     from django.db import transaction
 
     calls = []
+    code_after_enqueue = []
+    code_after_flush = []
+    code_after_atomic = []
     other_hook_ran = []
 
     def task_a():
@@ -540,27 +548,35 @@ def test_robust_false_stops_other_hooks():
 
         with pytest.raises(ValueError, match="Executor failed!"):
             with transaction.atomic():
-                scope = DjangoScope(policy=AllowAll(), executor=sync_executor)
-                scope._add(Intent(task=task_a, args=(), kwargs={}))
-                scope._add(Intent(task=failing_task, args=(), kwargs={}))
-                scope._add(Intent(task=task_c, args=(), kwargs={}))
+                with airlock.scope(policy=AllowAll(), _cls=DjangoScope, executor=sync_executor):
+                    airlock.enqueue(task_a)
+                    airlock.enqueue(failing_task)
+                    airlock.enqueue(task_c)
+                    code_after_enqueue.append(1)
+                # flush happens in scope.__exit__, succeeds (registers callback)
+                code_after_flush.append(1)
 
-                scope.flush()
-
-                # Register another on_commit hook AFTER airlock's
+                # Register another on_commit hook
                 transaction.on_commit(lambda: other_hook_ran.append(1))
+            # atomic.__exit__ commits, callbacks run, exception propagates
+            code_after_atomic.append(1)
 
-        # Fail-fast within our callback: only task_a ran
-        assert calls == ['a']
-        # robust=False: other hook didn't run (our exception stopped it)
-        assert other_hook_ran == []
+        # Verify checkpoints
+        assert calls == ['a']  # fail-fast: only task_a ran
+        assert code_after_enqueue == [1]  # always runs
+        assert code_after_flush == [1]  # runs (flush succeeded)
+        assert other_hook_ran == []  # doesn't run (robust=False stops it)
+        assert code_after_atomic == []  # doesn't run (exception from commit)
 
 
-def test_robust_true_continues_other_hooks():
-    """Test ROBUST=True (default): our callback fails, other on_commit hooks DO run."""
+def test_robust_true():
+    """Test ROBUST=True (default): exception logged, other hooks continue."""
     from django.db import transaction
 
     calls = []
+    code_after_enqueue = []
+    code_after_flush = []
+    code_after_atomic = []
     other_hook_ran = []
 
     def task_a():
@@ -585,17 +601,22 @@ def test_robust_true_continues_other_hooks():
 
         # No exception propagates with robust=True
         with transaction.atomic():
-            scope = DjangoScope(policy=AllowAll(), executor=sync_executor)
-            scope._add(Intent(task=task_a, args=(), kwargs={}))
-            scope._add(Intent(task=failing_task, args=(), kwargs={}))
-            scope._add(Intent(task=task_c, args=(), kwargs={}))
+            with airlock.scope(policy=AllowAll(), _cls=DjangoScope, executor=sync_executor):
+                airlock.enqueue(task_a)
+                airlock.enqueue(failing_task)
+                airlock.enqueue(task_c)
+                code_after_enqueue.append(1)
+            # flush happens in scope.__exit__, succeeds (registers callback)
+            code_after_flush.append(1)
 
-            scope.flush()
-
-            # Register another on_commit hook AFTER airlock's
+            # Register another on_commit hook
             transaction.on_commit(lambda: other_hook_ran.append(1))
+        # atomic.__exit__ commits, callbacks run, exception logged (not propagated)
+        code_after_atomic.append(1)
 
-        # Fail-fast within our callback: only task_a ran
-        assert calls == ['a']
-        # robust=True: other hook DID run (our exception was logged, not propagated)
-        assert other_hook_ran == [1]
+        # Verify checkpoints
+        assert calls == ['a']  # fail-fast: only task_a ran
+        assert code_after_enqueue == [1]  # always runs
+        assert code_after_flush == [1]  # runs (flush succeeded)
+        assert other_hook_ran == [1]  # runs (robust=True continues)
+        assert code_after_atomic == [1]  # runs (no exception propagated)
