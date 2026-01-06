@@ -619,7 +619,6 @@ class Scope:
             If an executor raises an exception while dispatching an intent, the exception
             propagates immediately and remaining intents in the queue are NOT dispatched.
             This is intentional - executor failures are out of scope.
-            (e.g., cannot connect to broker) should fail loudly rather than silently.
 
             Example:
                 with scope():
