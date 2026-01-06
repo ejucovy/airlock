@@ -508,7 +508,25 @@ class Scope:
         self._own_intents_cache = None  # Invalidate cache
 
     def flush(self) -> list[Intent]:
-        """Flush all buffered intents - apply policy and dispatch."""
+        """
+        Flush all buffered intents - apply policy and dispatch.
+
+        Filters intents through policies (both local and scope-level), then dispatches
+        them in FIFO order using the configured executor.
+
+        Returns:
+            List of intents that were dispatched (after policy filtering).
+
+        Raises:
+            ScopeStateError: If scope is already flushed, discarded, or still active.
+            Any exception raised by the executor during dispatch (fail-fast behavior).
+                See _dispatch_all() docstring for details on exception handling.
+
+        Note:
+            The scope is marked as flushed even if an executor raises an exception.
+            This prevents retry attempts, as the scope is in an inconsistent state
+            (some intents may have been dispatched before the failure).
+        """
         if self._flushed:
             raise ScopeStateError("Scope has already been flushed.")
         if self._discarded:
@@ -596,6 +614,25 @@ class Scope:
 
         Subclasses may override to customize dispatch timing (e.g., defer to on_commit).
         The executor itself determines HOW intents are executed (sync, Celery, django-q, etc.).
+
+        Exception behavior (fail-fast):
+            If an executor raises an exception while dispatching an intent, the exception
+            propagates immediately and remaining intents in the queue are NOT dispatched.
+            This is intentional - executor failures are out of scope.
+
+            Example:
+                with scope():
+                    enqueue(task_a)  # succeeds
+                    enqueue(task_b)  # executor raises during flush
+                    enqueue(task_c)  # will NOT execute
+
+                # task_a executes successfully
+                # task_b raises exception (e.g., broker connection failure)
+                # task_c is never attempted (fail-fast)
+
+            For async executors (Celery, django-q, etc.), dispatch exceptions are rare -
+            they typically only occur when the broker/queue is unreachable. The actual
+            task execution happens asynchronously, so task failures are not visible here.
         """
         for intent in intents:
             self._executor(intent)
@@ -751,6 +788,9 @@ def enqueue(
     Raises:
         PolicyEnqueueError: If called from within a policy callback.
         NoScopeError: If no scope is active.
+        PolicyViolation: If a policy explicitly rejects the intent via on_enqueue().
+            For example, AssertNoEffects policy raises PolicyViolation on any enqueue.
+            When this happens, the intent is NOT added to the buffer.
     """
     # INVARIANT: Policies do not enqueue
     if _in_policy.get():

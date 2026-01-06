@@ -11,6 +11,7 @@ Settings (in settings.py):
     AIRLOCK = {
         "DEFAULT_POLICY": "airlock.AllowAll",  # Dotted path or callable
         "USE_ON_COMMIT": True,              # Defer dispatch to transaction.on_commit
+        "ROBUST": True,                     # on_commit robust parameter
         "DATABASE_ALIAS": "default",        # Database for on_commit
         "TASK_BACKEND": None,               # Dotted path to executor callable
     }
@@ -42,6 +43,7 @@ from airlock import Scope, Intent, Executor, AllowAll, DropAll, _execute
 DEFAULTS = {
     "DEFAULT_POLICY": "airlock.AllowAll",
     "USE_ON_COMMIT": True,
+    "ROBUST": True,  # Django's on_commit robust parameter
     "DATABASE_ALIAS": DEFAULT_DB_ALIAS,
     "TASK_BACKEND": None,  # Dotted path to executor callable, or None for sync
 }
@@ -147,14 +149,20 @@ class DjangoScope(Scope):
         """
         Dispatch intents, optionally deferring to on_commit.
 
-        Uses self._executor (configured via constructor or TASK_BACKEND setting)
-        to actually execute intents.
+        Settings:
+            USE_ON_COMMIT: If True, defer dispatch to transaction.on_commit()
+            ROBUST: Passed to Django's on_commit(robust=...) parameter
+
         """
         if get_setting("USE_ON_COMMIT"):
             def do_dispatch():
                 for intent in intents:
                     self._executor(intent)
-            transaction.on_commit(do_dispatch, using=self.using)
+            transaction.on_commit(
+                do_dispatch,
+                using=self.using,
+                robust=get_setting("ROBUST")
+            )
         else:
             for intent in intents:
                 self._executor(intent)

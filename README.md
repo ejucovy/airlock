@@ -1678,6 +1678,74 @@ if intent.passes_local_policies():
 
 ---
 
+## Exception Handling
+
+Airlock uses **fail-fast** exception handling: errors are loud and uncaught, stopping execution immediately.
+
+### During `enqueue()`
+
+Policy exceptions propagate immediately:
+
+```python
+with airlock.scope(policy=AssertNoEffects()):
+    airlock.enqueue(send_email)  # Raises PolicyViolation immediately
+    # Intent is NOT added to buffer
+```
+
+**When raised:**
+- `PolicyViolation` — Policy explicitly rejects the intent via `on_enqueue()`
+- `PolicyEnqueueError` — `enqueue()` called from within a policy callback
+- `NoScopeError` — No active scope exists
+
+### During `flush()` — Fail-Fast Behavior
+
+If an executor raises an exception while dispatching, **flush stops immediately**:
+
+```python
+with airlock.scope():
+    airlock.enqueue(task_a)  # Will execute
+    airlock.enqueue(task_b)  # Raises during dispatch (e.g., broker down)
+    airlock.enqueue(task_c)  # Will NOT execute (fail-fast)
+
+# task_a: ✅ dispatched successfully
+# task_b: ❌ raises exception (broker connection failure)
+# task_c: ⚠️  never attempted (remaining intents abandoned)
+```
+
+**Key points:**
+- Scope is marked as flushed even on exception (no retry possible)
+- Earlier intents may have already dispatched (not atomic)
+- This is intentional: infrastructure failures should fail loudly
+
+**For async executors** (Celery, django-q, etc.):
+- Dispatch exceptions are **rare** (only when broker/queue is unreachable)
+- Task execution happens asynchronously (failures handled by task queue)
+- Dispatch is just "submit to queue", not "run the task"
+
+### DjangoScope Settings
+
+**`USE_ON_COMMIT`** (default: `True`)
+- `True`: Defer dispatch to `transaction.on_commit()`
+- `False`: Dispatch immediately during `flush()`
+
+**`ROBUST`** (default: `True`)
+- Passed to Django's `on_commit(robust=...)` parameter
+- `True`: Log dispatch errors, continue other hooks
+- `False`: Dispatch errors propagate, stop other hooks
+
+**`DATABASE_ALIAS`** (default: `"default"`)
+- Database connection for on_commit
+
+Example configuration:
+```python
+AIRLOCK = {
+    "USE_ON_COMMIT": True,
+    "ROBUST": True,  # Recommended: don't break other hooks
+    "DATABASE_ALIAS": "default",
+}
+
+---
+
 ## Errors
 
 All errors inherit from `AirlockError`.
