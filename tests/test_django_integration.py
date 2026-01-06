@@ -479,11 +479,15 @@ def test_django_scope_with_multiple_executors_in_sequence():
 
 @override_settings(AIRLOCK={"USE_ON_COMMIT": False})
 def test_use_on_commit_false():
-    """Test USE_ON_COMMIT=False: exception propagates immediately from flush."""
+    """Test USE_ON_COMMIT=False: dispatch happens during flush, before commit."""
+    from django.db import transaction
+
     # Checkpoint trackers
     calls = []
     code_after_enqueue = []
     code_after_flush = []
+    other_hook_ran = []
+    code_after_atomic = []
 
     def task_a():
         calls.append('a')
@@ -498,18 +502,26 @@ def test_use_on_commit_false():
         intent.task(*intent.args, **intent.kwargs)
 
     with pytest.raises(ValueError, match="Executor failed!"):
-        with airlock.scope(policy=AllowAll(), _cls=DjangoScope, executor=sync_executor):
-            airlock.enqueue(task_a)
-            airlock.enqueue(failing_task)
-            airlock.enqueue(task_c)
-            code_after_enqueue.append(1)
-        # scope.__exit__ flushes, exception propagates immediately
-        code_after_flush.append(1)
+        with transaction.atomic():
+            with airlock.scope(policy=AllowAll(), _cls=DjangoScope, executor=sync_executor):
+                airlock.enqueue(task_a)
+                airlock.enqueue(failing_task)
+                airlock.enqueue(task_c)
+                code_after_enqueue.append(1)
+            # scope.__exit__ flushes and dispatches immediately, exception propagates
+            code_after_flush.append(1)
+
+            # Register another on_commit hook
+            transaction.on_commit(lambda: other_hook_ran.append(1))
+        # atomic.__exit__ would commit, but we never get here
+        code_after_atomic.append(1)
 
     # Verify checkpoints
     assert calls == ['a']  # fail-fast: only task_a ran
     assert code_after_enqueue == [1]  # always runs
-    assert code_after_flush == []  # doesn't run (exception propagated)
+    assert code_after_flush == []  # doesn't run (exception propagated from dispatch)
+    assert other_hook_ran == []  # doesn't run (transaction rolled back)
+    assert code_after_atomic == []  # doesn't run (exception propagated)
 
 
 @override_settings(AIRLOCK={"USE_ON_COMMIT": True, "ROBUST": False})
