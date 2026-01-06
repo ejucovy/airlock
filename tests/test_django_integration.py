@@ -516,10 +516,11 @@ def test_django_scope_executor_exception_propagates_without_on_commit():
 
 
 def test_django_scope_executor_exception_propagates_with_on_commit_default():
-    """Test that executor exceptions PROPAGATE with USE_ON_COMMIT=True (Django default).
+    """Test that executor exceptions PROPAGATE with USE_ON_COMMIT=True.
 
-    Django's transaction.on_commit(robust=False) is the default, which means
-    exceptions DO propagate. This test verifies the actual Django behavior.
+    With robust=False (default), exceptions propagate during transaction commit.
+    This test verifies that behavior - exception happens when transaction commits,
+    BEFORE response is sent (in middleware context).
     """
     from django.db import transaction
 
@@ -544,7 +545,7 @@ def test_django_scope_executor_exception_propagates_with_on_commit_default():
             "USE_ON_COMMIT": True,  # Deferred execution
         }.get(key)
 
-        # Use real atomic transaction
+        # Exception propagates when transaction commits
         with pytest.raises(ValueError, match="Executor failed!"):
             with transaction.atomic():
                 scope = DjangoScope(policy=AllowAll(), executor=sync_executor)
@@ -556,7 +557,7 @@ def test_django_scope_executor_exception_propagates_with_on_commit_default():
                 scope.flush()
                 assert scope._flushed
 
-            # Transaction commits here - on_commit runs, exception propagates!
+            # Transaction commits here, on_commit runs, exception propagates!
 
         # Verify fail-fast: task_a ran, task_c did not
         assert calls == ['a']

@@ -1755,8 +1755,13 @@ with transaction.atomic():
 - `flush()` succeeds (only registers callback, doesn't execute)
 - Execution happens during `transaction.commit()`
 - Exceptions **DO propagate** (Django's `robust=False` default)
-- In middleware: happens during request handling, **before** response sent
-- Errors are **LOUD** (not silent) - will cause request failures
+- In middleware: happens during request handling, **BEFORE response sent**
+- Errors are **LOUD** - will cause request failures
+
+**About `robust=False` (Django's default):**
+- If airlock's callback fails, **other on_commit hooks DON'T run**
+- Exception propagates up to the caller (middleware/view)
+- Airlock uses this default to ensure loud failures
 
 **Tradeoff:**
 - ✅ Transactional safety: tasks only dispatch after commit succeeds
@@ -1767,8 +1772,6 @@ This matches standard Django behavior:
 ```python
 transaction.on_commit(lambda: my_celery_task.delay())  # Exceptions propagate!
 ```
-
-**Note:** Django's `on_commit(robust=True)` would make failures silent (logged only), but airlock uses the default `robust=False` to ensure errors are visible.
 
 ---
 

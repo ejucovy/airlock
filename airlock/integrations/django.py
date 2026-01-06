@@ -160,17 +160,17 @@ class DjangoScope(Scope):
 
             USE_ON_COMMIT=True (deferred dispatch, default):
                 Dispatch is deferred until transaction.on_commit(). Executor exceptions
-                STILL PROPAGATE (Django's default robust=False behavior), but they occur
-                during transaction commit, not during flush().
+                propagate during transaction commit (robust=False is Django's default).
 
                 This means:
                 - flush() succeeds (it only registers the callback)
                 - The exception propagates when the transaction commits
-                - In middleware: this happens during request handling, before response
-                - Errors are LOUD (not silent) - they will cause request failures
+                - In middleware: this happens during request handling, BEFORE response sent
+                - Errors are LOUD - they will cause request failures
 
-                This is the standard Django behavior when using transaction.on_commit()
-                with robust=False (the default).
+                Note: robust=False means if this callback fails, other on_commit hooks
+                are NOT executed. robust=True would continue other hooks but airlock uses
+                the default to ensure loud failures.
 
             Fail-fast behavior:
                 In both cases, if an executor raises an exception, the dispatch loop
