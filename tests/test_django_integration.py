@@ -16,6 +16,7 @@ if not settings.configured:
         INSTALLED_APPS=["django.contrib.contenttypes"],
     )
 
+from django.db import transaction
 from django.test import override_settings
 from airlock.integrations.django import DjangoScope, AirlockMiddleware, get_setting
 
@@ -477,142 +478,109 @@ def test_django_scope_with_multiple_executors_in_sequence():
 # =============================================================================
 
 
-@override_settings(AIRLOCK={"USE_ON_COMMIT": False})
-def test_use_on_commit_false():
-    """Test USE_ON_COMMIT=False: dispatch happens during flush, before commit."""
-    from django.db import transaction
+class TestExecutorExceptionHandling:
+    """Test exception handling with different USE_ON_COMMIT and ROBUST settings."""
 
-    # Checkpoint trackers
-    calls = []
-    code_after_enqueue = []
-    code_after_flush = []
-    other_hook_ran = []
-    code_after_atomic = []
+    def setup_method(self):
+        """Initialize checkpoint trackers and define tasks/executor."""
+        # Checkpoint trackers
+        self.calls = []
+        self.code_after_enqueue = []
+        self.code_after_flush = []
+        self.other_hook_ran = []
+        self.code_after_atomic = []
 
-    def task_a():
-        calls.append('a')
+        # Task definitions
+        def task_a():
+            self.calls.append('a')
 
-    def failing_task():
-        raise ValueError("Executor failed!")
+        def failing_task():
+            raise ValueError("Executor failed!")
 
-    def task_c():
-        calls.append('c')
+        def task_c():
+            self.calls.append('c')
 
-    def sync_executor(intent):
-        intent.task(*intent.args, **intent.kwargs)
+        self.task_a = task_a
+        self.failing_task = failing_task
+        self.task_c = task_c
 
-    with pytest.raises(ValueError, match="Executor failed!"):
+        # Executor
+        def sync_executor(intent):
+            intent.task(*intent.args, **intent.kwargs)
+
+        self.sync_executor = sync_executor
+
+    @override_settings(AIRLOCK={"USE_ON_COMMIT": False})
+    def test_use_on_commit_false(self):
+        """Test USE_ON_COMMIT=False: dispatch happens during flush, before commit."""
+        with pytest.raises(ValueError, match="Executor failed!"):
+            with transaction.atomic():
+                with airlock.scope(policy=AllowAll(), _cls=DjangoScope, executor=self.sync_executor):
+                    airlock.enqueue(self.task_a)
+                    airlock.enqueue(self.failing_task)
+                    airlock.enqueue(self.task_c)
+                    self.code_after_enqueue.append(1)
+                # scope.__exit__ flushes and dispatches immediately, exception propagates
+                self.code_after_flush.append(1)
+
+                # Register another on_commit hook
+                transaction.on_commit(lambda: self.other_hook_ran.append(1))
+            # atomic.__exit__ would commit, but we never get here
+            self.code_after_atomic.append(1)
+
+        # Verify checkpoints
+        assert self.calls == ['a']  # fail-fast: only task_a ran
+        assert self.code_after_enqueue == [1]  # always runs
+        assert self.code_after_flush == []  # doesn't run (exception propagated from dispatch)
+        assert self.other_hook_ran == []  # doesn't run (transaction rolled back)
+        assert self.code_after_atomic == []  # doesn't run (exception propagated)
+
+    @override_settings(AIRLOCK={"USE_ON_COMMIT": True, "ROBUST": False})
+    def test_robust_false(self):
+        """Test ROBUST=False: exception propagates from commit, stops other hooks."""
+        with pytest.raises(ValueError, match="Executor failed!"):
+            with transaction.atomic():
+                with airlock.scope(policy=AllowAll(), _cls=DjangoScope, executor=self.sync_executor):
+                    airlock.enqueue(self.task_a)
+                    airlock.enqueue(self.failing_task)
+                    airlock.enqueue(self.task_c)
+                    self.code_after_enqueue.append(1)
+                # scope.__exit__ flushes, registers on_commit callback
+                self.code_after_flush.append(1)
+
+                # Register another on_commit hook
+                transaction.on_commit(lambda: self.other_hook_ran.append(1))
+            # atomic.__exit__ commits, callbacks run, exception propagates
+            self.code_after_atomic.append(1)
+
+        # Verify checkpoints
+        assert self.calls == ['a']  # fail-fast: only task_a ran
+        assert self.code_after_enqueue == [1]  # always runs
+        assert self.code_after_flush == [1]  # runs (flush succeeded)
+        assert self.other_hook_ran == []  # doesn't run (robust=False stops other hooks)
+        assert self.code_after_atomic == []  # doesn't run (exception propagated)
+
+    @override_settings(AIRLOCK={"USE_ON_COMMIT": True, "ROBUST": True})
+    def test_robust_true(self):
+        """Test ROBUST=True (default): exception logged, other hooks continue."""
+        # No exception propagates with robust=True
         with transaction.atomic():
-            with airlock.scope(policy=AllowAll(), _cls=DjangoScope, executor=sync_executor):
-                airlock.enqueue(task_a)
-                airlock.enqueue(failing_task)
-                airlock.enqueue(task_c)
-                code_after_enqueue.append(1)
-            # scope.__exit__ flushes and dispatches immediately, exception propagates
-            code_after_flush.append(1)
-
-            # Register another on_commit hook
-            transaction.on_commit(lambda: other_hook_ran.append(1))
-        # atomic.__exit__ would commit, but we never get here
-        code_after_atomic.append(1)
-
-    # Verify checkpoints
-    assert calls == ['a']  # fail-fast: only task_a ran
-    assert code_after_enqueue == [1]  # always runs
-    assert code_after_flush == []  # doesn't run (exception propagated from dispatch)
-    assert other_hook_ran == []  # doesn't run (transaction rolled back)
-    assert code_after_atomic == []  # doesn't run (exception propagated)
-
-
-@override_settings(AIRLOCK={"USE_ON_COMMIT": True, "ROBUST": False})
-def test_robust_false():
-    """Test ROBUST=False: exception propagates from commit, stops other hooks."""
-    from django.db import transaction
-
-    # Checkpoint trackers
-    calls = []
-    code_after_enqueue = []
-    code_after_flush = []
-    other_hook_ran = []
-    code_after_atomic = []
-
-    def task_a():
-        calls.append('a')
-
-    def failing_task():
-        raise ValueError("Executor failed!")
-
-    def task_c():
-        calls.append('c')
-
-    def sync_executor(intent):
-        intent.task(*intent.args, **intent.kwargs)
-
-    with pytest.raises(ValueError, match="Executor failed!"):
-        with transaction.atomic():
-            with airlock.scope(policy=AllowAll(), _cls=DjangoScope, executor=sync_executor):
-                airlock.enqueue(task_a)
-                airlock.enqueue(failing_task)
-                airlock.enqueue(task_c)
-                code_after_enqueue.append(1)
+            with airlock.scope(policy=AllowAll(), _cls=DjangoScope, executor=self.sync_executor):
+                airlock.enqueue(self.task_a)
+                airlock.enqueue(self.failing_task)
+                airlock.enqueue(self.task_c)
+                self.code_after_enqueue.append(1)
             # scope.__exit__ flushes, registers on_commit callback
-            code_after_flush.append(1)
+            self.code_after_flush.append(1)
 
             # Register another on_commit hook
-            transaction.on_commit(lambda: other_hook_ran.append(1))
-        # atomic.__exit__ commits, callbacks run, exception propagates
-        code_after_atomic.append(1)
+            transaction.on_commit(lambda: self.other_hook_ran.append(1))
+        # atomic.__exit__ commits, callbacks run, exception logged (not propagated)
+        self.code_after_atomic.append(1)
 
-    # Verify checkpoints
-    assert calls == ['a']  # fail-fast: only task_a ran
-    assert code_after_enqueue == [1]  # always runs
-    assert code_after_flush == [1]  # runs (flush succeeded)
-    assert other_hook_ran == []  # doesn't run (robust=False stops other hooks)
-    assert code_after_atomic == []  # doesn't run (exception propagated)
-
-
-@override_settings(AIRLOCK={"USE_ON_COMMIT": True, "ROBUST": True})
-def test_robust_true():
-    """Test ROBUST=True (default): exception logged, other hooks continue."""
-    from django.db import transaction
-
-    # Checkpoint trackers
-    calls = []
-    code_after_enqueue = []
-    code_after_flush = []
-    other_hook_ran = []
-    code_after_atomic = []
-
-    def task_a():
-        calls.append('a')
-
-    def failing_task():
-        raise ValueError("Executor failed!")
-
-    def task_c():
-        calls.append('c')
-
-    def sync_executor(intent):
-        intent.task(*intent.args, **intent.kwargs)
-
-    # No exception propagates with robust=True
-    with transaction.atomic():
-        with airlock.scope(policy=AllowAll(), _cls=DjangoScope, executor=sync_executor):
-            airlock.enqueue(task_a)
-            airlock.enqueue(failing_task)
-            airlock.enqueue(task_c)
-            code_after_enqueue.append(1)
-        # scope.__exit__ flushes, registers on_commit callback
-        code_after_flush.append(1)
-
-        # Register another on_commit hook
-        transaction.on_commit(lambda: other_hook_ran.append(1))
-    # atomic.__exit__ commits, callbacks run, exception logged (not propagated)
-    code_after_atomic.append(1)
-
-    # Verify checkpoints
-    assert calls == ['a']  # fail-fast: only task_a ran
-    assert code_after_enqueue == [1]  # always runs
-    assert code_after_flush == [1]  # runs (flush succeeded)
-    assert other_hook_ran == [1]  # runs (robust=True allows other hooks)
-    assert code_after_atomic == [1]  # runs (no exception propagated)
+        # Verify checkpoints
+        assert self.calls == ['a']  # fail-fast: only task_a ran
+        assert self.code_after_enqueue == [1]  # always runs
+        assert self.code_after_flush == [1]  # runs (flush succeeded)
+        assert self.other_hook_ran == [1]  # runs (robust=True allows other hooks)
+        assert self.code_after_atomic == [1]  # runs (no exception propagated)
