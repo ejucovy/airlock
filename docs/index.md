@@ -2,7 +2,9 @@
 
 **Express side effects anywhere. Control whether & when they escape.**
 
-## The Idea
+## 30 Second Pitch
+
+Stop worrying about where you call `.delay()`. Write your domain logic naturally, then control side effects at the boundary:
 
 ```python
 import airlock
@@ -15,60 +17,116 @@ class Order:
         airlock.enqueue(send_confirmation_email, self.id)
 ```
 
-The **execution context** decides when (and whether) your side effects actually get dispatched:
+The **execution context** decides what happens:
 
 ```python
-# HTTP endpoint: flush at end of request
+# Production: side effects escape
 with airlock.scope():
     order.process()
-# side effects dispatch here
 
-# Migration script: suppress everything
+# Migration: suppress everything
 with airlock.scope(policy=airlock.DropAll()):
     order.process()
-# nothing dispatched
 
-# Test: fail if anything tries to escape
+# Test: fail if side effects attempted
 with airlock.scope(policy=airlock.AssertNoEffects()):
     test_pure_logic()
-# raises if any enqueue() called
-
-# Admin-facing HTTP endpoint: flush at end of request with selective filtering
-with airlock.scope(policy=airlock.BlockTasks({"send_confirmation_email"})):
-    order.process()
-# warehouse gets notified, customer doesn't get emailed
 ```
 
-!!! note "Django Integration"
-    If you're using Django, you can ignore `with airlock.scope()` -- it'll hook in where you expect. More on this in the [Django integration guide](integrations/django.md).
+## Get Started (Choose Your Path)
 
-## What This Unlocks
+<div class="grid cards" markdown>
 
-Without airlock, "enqueue side effects at the edge" is an important constraint for maintaining predictable timing, auditability, and control. Side effects deep in the call stack are dangerous, so you're forced to hoist them.
+-   :material-language-python:{ .lg .middle } __Raw Python__
 
-With airlock, both patterns are safe:
+    ---
 
-- **Edge-only**: All enqueues in views/handlers. Explicit, visible at the boundary.
-- **Colocated**: Enqueues near domain logic (`save()`, signals, service methods). DRY, encapsulated.
+    Just Python, no framework needed
 
-Choose based on your team's preferences, not out of necessity. See [When You Don't Need This](getting-started/when-not-needed.md) for more on picking your style.
+    [:octicons-arrow-right-24: 5 minute quickstart](quickstart/raw-python.md)
 
-## Integration-Aware Default Boundaries
+-   :simple-django:{ .lg .middle } __Django__
 
-When you use the Django and Celery integrations, effects escape by default where you would expect:
+    ---
 
-| Context | When | Dispatch if | Discard if |
-|---------|------|-------------|------------|
-| **HTTP request** | End of request, deferred to `on_commit` | 1xx/2xx/3xx response | 4xx/5xx or exception |
-| **Management command** | End of `handle()` | Normal exit | Exception (or `--dry-run`) |
-| **Celery task** | End of task | Success | Exception |
+    Auto-scoping with middleware, transaction-aware
 
-Each integration provides sensible defaults. Override with policies or custom scope classes. Or use the lower-level `with airlock.scope()` API to control behaviors explicitly in your own code.
+    [:octicons-arrow-right-24: 5 minute quickstart](quickstart/django.md)
 
-## Quick Links
+-   :material-cog:{ .lg .middle } __Celery__
 
-- [Installation](getting-started/installation.md) - Get started in minutes
-- [Quick Start](getting-started/quick-start.md) - Basic usage examples
-- [Core Concepts](concepts/problem.md) - Understand the problem airlock solves
-- [Integrations](integrations/django.md) - Django, Celery, and more
-- [API Reference](api/context-manager.md) - Complete API documentation
+    ---
+
+    Wrap tasks, migrate `.delay()` calls
+
+    [:octicons-arrow-right-24: 5 minute quickstart](quickstart/celery.md)
+
+</div>
+
+## What Problem Does This Solve?
+
+Side effects in models/services are dangerous:
+
+```python
+class Order:
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        send_email.delay(self.id)  # Fires EVERYWHERE
+```
+
+- ❌ Migrations trigger emails
+- ❌ Tests require mocking
+- ❌ Bulk operations explode
+- ❌ No control at call site
+
+With airlock, effects are **buffered** and escape **where you decide**:
+
+```python
+class Order:
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        airlock.enqueue(send_email, self.id)  # Buffered
+```
+
+- ✅ Test scopes suppress effects
+- ✅ Migrations use `DropAll()` policy
+- ✅ Production flushes at request boundary
+- ✅ Full control + visibility
+
+[Understand the problem →](understanding/the-problem.md){ .md-button }
+
+## How It Works (3 Concerns)
+
+Airlock separates three orthogonal concerns:
+
+| Concern | Controlled By | Question |
+|---------|---------------|----------|
+| **WHEN** | Scope | When do effects escape? (end of request, after commit) |
+| **WHAT** | Policy | Which effects execute? (all, none, filtered) |
+| **HOW** | Executor | How do they run? (sync, Celery, django-q) |
+
+Mix and match freely:
+
+```python
+# Django transaction + Celery dispatch + logging
+with airlock.scope(
+    _cls=DjangoScope,              # WHEN: after transaction.on_commit()
+    executor=celery_executor,      # HOW: via Celery
+    policy=LogOnFlush()            # WHAT: log everything
+):
+    do_stuff()
+```
+
+[Learn the core model →](understanding/core-model.md){ .md-button }
+
+## When You DON'T Need This
+
+You're fine without airlock if:
+
+- ✅ All `.delay()` calls are in views (never models/services)
+- ✅ Tasks never chain (no task → task)
+- ✅ You're happy with constraints above
+
+That's a **valid architecture**. Airlock is for when you want effects closer to domain logic without losing control.
+
+[See alternatives →](alternatives.md)
