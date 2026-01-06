@@ -74,6 +74,7 @@ nav:
     - Basic Usage: guide/basic-usage.md
     - Policies: guide/policies.md
     - Nested Scopes: guide/nested-scopes.md
+    - Dispatch: guide/dispatch.md
 
   - Integrations:
     - Celery:
@@ -90,6 +91,8 @@ nav:
 
   - API Reference:
     - Core Functions: api/core.md
+    - Scope Class: api/scope-class.md
+    - Intent: api/intent.md
     - Policies: api/policies.md
 
   - Alternatives: alternatives.md

@@ -13,7 +13,15 @@
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
+         <loc>https://github.com/thethirdbearsolutions/airlock/api/intent/</loc>
+         <lastmod>2026-01-06</lastmod>
+    </url>
+    <url>
          <loc>https://github.com/thethirdbearsolutions/airlock/api/policies/</loc>
+         <lastmod>2026-01-06</lastmod>
+    </url>
+    <url>
+         <loc>https://github.com/thethirdbearsolutions/airlock/api/scope-class/</loc>
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
@@ -30,6 +38,10 @@
     </url>
     <url>
          <loc>https://github.com/thethirdbearsolutions/airlock/guide/basic-usage/</loc>
+         <lastmod>2026-01-06</lastmod>
+    </url>
+    <url>
+         <loc>https://github.com/thethirdbearsolutions/airlock/guide/dispatch/</loc>
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>

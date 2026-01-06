@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://github.com/thethirdbearsolutions/airlock/api/policies/">
+        <link rel="canonical" href="https://github.com/thethirdbearsolutions/airlock/api/scope-class/">
       
       
-        <link rel="prev" href="../intent/">
+        <link rel="prev" href="../core/">
       
       
-        <link rel="next" href="../../alternatives/">
+        <link rel="next" href="../intent/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Policies - Airlock</title>
+        <title>Scope Class - Airlock</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#policies-api-reference" class="md-skip">
+        <a href="#scope-class-api" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Policies
+              Scope Class
             
           </span>
         </div>
@@ -1518,10 +1518,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../scope-class/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scope Class
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1537,6 +1564,192 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#context-manager-api-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context Manager API (Recommended)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scope-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scope Properties
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#subclassing-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Subclassing API
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Subclassing API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#should_flusherror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        should_flush(error)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#before_descendant_flushesexiting_scope-intents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        before_descendant_flushes(exiting_scope, intents)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_dispatch_allintents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _dispatch_all(intents)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#imperative-api-advanced" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Imperative API (Advanced)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Imperative API (Advanced)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#enter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        enter()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        exit()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#flush" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        flush()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#discard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        discard()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-django-middleware-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example: Django Middleware Pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lifecycle-states" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lifecycle States
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1574,37 +1787,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Policies
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../policies/" class="md-nav__link">
         
   
   
@@ -1620,114 +1806,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#allowall" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        AllowAll
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dropall" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        DropAll
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#assertnoeffects" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        AssertNoEffects
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#blocktasks" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        BlockTasks
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#logonflush" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        LogOnFlush
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#compositepolicy" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        CompositePolicy
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#policy-protocol" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Policy Protocol
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Next Steps
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1794,10 +1872,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#allowall" class="md-nav__link">
+  <a href="#context-manager-api-recommended" class="md-nav__link">
     <span class="md-ellipsis">
       
-        AllowAll
+        Context Manager API (Recommended)
       
     </span>
   </a>
@@ -1805,10 +1883,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#dropall" class="md-nav__link">
+  <a href="#scope-properties" class="md-nav__link">
     <span class="md-ellipsis">
       
-        DropAll
+        Scope Properties
       
     </span>
   </a>
@@ -1816,54 +1894,132 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#assertnoeffects" class="md-nav__link">
+  <a href="#subclassing-api" class="md-nav__link">
     <span class="md-ellipsis">
       
-        AssertNoEffects
+        Subclassing API
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Subclassing API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#should_flusherror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        should_flush(error)
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#blocktasks" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#before_descendant_flushesexiting_scope-intents" class="md-nav__link">
     <span class="md-ellipsis">
       
-        BlockTasks
+        before_descendant_flushes(exiting_scope, intents)
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#logonflush" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#_dispatch_allintents" class="md-nav__link">
     <span class="md-ellipsis">
       
-        LogOnFlush
+        _dispatch_all(intents)
       
     </span>
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#compositepolicy" class="md-nav__link">
+  <a href="#imperative-api-advanced" class="md-nav__link">
     <span class="md-ellipsis">
       
-        CompositePolicy
+        Imperative API (Advanced)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Imperative API (Advanced)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#enter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        enter()
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#policy-protocol" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#exit" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Policy Protocol
+        exit()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#flush" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        flush()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#discard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        discard()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-django-middleware-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example: Django Middleware Pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lifecycle-states" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lifecycle States
       
     </span>
   </a>
@@ -1901,115 +2057,204 @@
   
 
 
-<h1 id="policies-api-reference">Policies API Reference<a class="headerlink" href="#policies-api-reference" title="Permanent link">&para;</a></h1>
-<p>Built-in policies for controlling side effect execution.</p>
-<h2 id="allowall">AllowAll<a class="headerlink" href="#allowall" title="Permanent link">&para;</a></h2>
-<p>Allows all intents (default).</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">AllowAll</span><span class="p">(</span><span class="n">Policy</span><span class="p">)</span>
+<h1 id="scope-class-api">Scope Class API<a class="headerlink" href="#scope-class-api" title="Permanent link">&para;</a></h1>
+<p>The <code>Scope</code> class manages the lifecycle of side effect buffering and dispatch.</p>
+<h2 id="context-manager-api-recommended">Context Manager API (Recommended)<a class="headerlink" href="#context-manager-api-recommended" title="Permanent link">&para;</a></h2>
+<p>Most code should use the context manager:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">()</span> <span class="k">as</span> <span class="n">s</span><span class="p">:</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># Automatic lifecycle management</span>
+</span></code></pre></div>
+<h2 id="scope-properties">Scope Properties<a class="headerlink" href="#scope-properties" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>intents</code></td>
+<td><code>list[Intent]</code></td>
+<td>All buffered intents (own + captured)</td>
+</tr>
+<tr>
+<td><code>own_intents</code></td>
+<td><code>list[Intent]</code></td>
+<td>Intents enqueued directly in this scope</td>
+</tr>
+<tr>
+<td><code>captured_intents</code></td>
+<td><code>list[Intent]</code></td>
+<td>Intents captured from nested scopes</td>
+</tr>
+<tr>
+<td><code>is_flushed</code></td>
+<td><code>bool</code></td>
+<td>True after <code>flush()</code> called</td>
+</tr>
+<tr>
+<td><code>is_discarded</code></td>
+<td><code>bool</code></td>
+<td>True after <code>discard()</code> called</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example:</strong></p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">()</span> <span class="k">as</span> <span class="n">s</span><span class="p">:</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">task_a</span><span class="p">)</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">():</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">task_b</span><span class="p">)</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Own: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">own_intents</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>          <span class="c1"># 1</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Captured: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">captured_intents</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># 1</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">intents</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>            <span class="c1"># 2</span>
+</span></code></pre></div>
+<h2 id="subclassing-api">Subclassing API<a class="headerlink" href="#subclassing-api" title="Permanent link">&para;</a></h2>
+<p>Override these methods to customize behavior:</p>
+<h3 id="should_flusherror">should_flush(error)<a class="headerlink" href="#should_flusherror" title="Permanent link">&para;</a></h3>
+<p>Decide whether to flush or discard on scope exit.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">should_flush</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">error</span><span class="p">:</span> <span class="ne">BaseException</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="sd">    Args:</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="sd">        error: Exception that caused exit, or None for normal exit</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="sd">    Returns:</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="sd">        True to flush, False to discard</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="sd">    Default: flush on success (error is None), discard on error</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    <span class="k">return</span> <span class="n">error</span> <span class="ow">is</span> <span class="kc">None</span>
 </span></code></pre></div>
 <p><strong>Example:</strong></p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">policy</span><span class="o">=</span><span class="n">airlock</span><span class="o">.</span><span class="n">AllowAll</span><span class="p">()):</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">anything</span><span class="p">)</span>  <span class="c1"># Always dispatches</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">AlwaysFlushScope</span><span class="p">(</span><span class="n">Scope</span><span class="p">):</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">should_flush</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>        <span class="k">return</span> <span class="kc">True</span>  <span class="c1"># Flush even on error</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">_cls</span><span class="o">=</span><span class="n">AlwaysFlushScope</span><span class="p">):</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">send_alert</span><span class="p">)</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">()</span>  <span class="c1"># Alert still dispatches</span>
 </span></code></pre></div>
-<h2 id="dropall">DropAll<a class="headerlink" href="#dropall" title="Permanent link">&para;</a></h2>
-<p>Silently drops all intents.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">DropAll</span><span class="p">(</span><span class="n">Policy</span><span class="p">)</span>
+<h3 id="before_descendant_flushesexiting_scope-intents">before_descendant_flushes(exiting_scope, intents)<a class="headerlink" href="#before_descendant_flushesexiting_scope-intents" title="Permanent link">&para;</a></h3>
+<p>Control what happens when nested scopes exit.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">before_descendant_flushes</span><span class="p">(</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="bp">self</span><span class="p">,</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">exiting_scope</span><span class="p">:</span> <span class="n">Scope</span><span class="p">,</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">intents</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Intent</span><span class="p">]</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Intent</span><span class="p">]:</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="sd">    Args:</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="sd">        exiting_scope: The nested scope that is exiting</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="sd">        intents: Intents the nested scope wants to flush</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="sd">    Returns:</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="sd">        Intents to allow through (rest are captured)</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="sd">    Default: return [] (capture all)</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>    <span class="k">return</span> <span class="p">[]</span>
 </span></code></pre></div>
 <p><strong>Example:</strong></p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">policy</span><span class="o">=</span><span class="n">airlock</span><span class="o">.</span><span class="n">DropAll</span><span class="p">()):</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>  <span class="c1"># Buffered but never dispatched</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">IndependentScope</span><span class="p">(</span><span class="n">Scope</span><span class="p">):</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">before_descendant_flushes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exiting_scope</span><span class="p">,</span> <span class="n">intents</span><span class="p">):</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>        <span class="k">return</span> <span class="n">intents</span>  <span class="c1"># Allow all through (don&#39;t capture)</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="k">with</span> <span class="n">IndependentScope</span><span class="p">():</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">():</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>        <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="c1"># task dispatches here (not captured)</span>
 </span></code></pre></div>
-<h2 id="assertnoeffects">AssertNoEffects<a class="headerlink" href="#assertnoeffects" title="Permanent link">&para;</a></h2>
-<p>Raises <code>PolicyViolation</code> if any intent is enqueued.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">AssertNoEffects</span><span class="p">(</span><span class="n">Policy</span><span class="p">)</span>
+<h3 id="_dispatch_allintents">_dispatch_all(intents)<a class="headerlink" href="#_dispatch_allintents" title="Permanent link">&para;</a></h3>
+<p>Customize how intents are dispatched.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">_dispatch_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">intents</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Intent</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="sd">    Args:</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="sd">        intents: Filtered intents to dispatch</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="sd">    Default: iterate and execute via executor</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>    <span class="k">for</span> <span class="n">intent</span> <span class="ow">in</span> <span class="n">intents</span><span class="p">:</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>        <span class="n">_execute</span><span class="p">(</span><span class="n">intent</span><span class="p">,</span> <span class="n">executor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_executor</span><span class="p">)</span>
 </span></code></pre></div>
-<p><strong>Raises:</strong> <code>PolicyViolation</code> immediately on any <code>enqueue()</code> call.</p>
 <p><strong>Example:</strong></p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">policy</span><span class="o">=</span><span class="n">airlock</span><span class="o">.</span><span class="n">AssertNoEffects</span><span class="p">()):</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="n">pure_function</span><span class="p">()</span>  <span class="c1"># OK</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>  <span class="c1"># Raises PolicyViolation</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">django.db</span><span class="w"> </span><span class="kn">import</span> <span class="n">transaction</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">DjangoScope</span><span class="p">(</span><span class="n">Scope</span><span class="p">):</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_dispatch_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">intents</span><span class="p">):</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>        <span class="c1"># Defer to transaction.on_commit()</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>        <span class="k">def</span><span class="w"> </span><span class="nf">do_dispatch</span><span class="p">():</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>            <span class="k">for</span> <span class="n">intent</span> <span class="ow">in</span> <span class="n">intents</span><span class="p">:</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>                <span class="n">_execute</span><span class="p">(</span><span class="n">intent</span><span class="p">,</span> <span class="n">executor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_executor</span><span class="p">)</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>        <span class="n">transaction</span><span class="o">.</span><span class="n">on_commit</span><span class="p">(</span><span class="n">do_dispatch</span><span class="p">)</span>
 </span></code></pre></div>
-<h2 id="blocktasks">BlockTasks<a class="headerlink" href="#blocktasks" title="Permanent link">&para;</a></h2>
-<p>Blocks specific tasks by name.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">BlockTasks</span><span class="p">(</span><span class="n">Policy</span><span class="p">):</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>        <span class="bp">self</span><span class="p">,</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>        <span class="n">blocked_names</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>        <span class="n">raise_on_enqueue</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    <span class="p">)</span>
+<h2 id="imperative-api-advanced">Imperative API (Advanced)<a class="headerlink" href="#imperative-api-advanced" title="Permanent link">&para;</a></h2>
+<p>For framework integrations (middleware, task wrappers):</p>
+<h3 id="enter">enter()<a class="headerlink" href="#enter" title="Permanent link">&para;</a></h3>
+<p>Activate the scope.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">s</span> <span class="o">=</span> <span class="n">Scope</span><span class="p">()</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">s</span><span class="o">.</span><span class="n">enter</span><span class="p">()</span>  <span class="c1"># Scope is now active</span>
 </span></code></pre></div>
-<p><strong>Parameters:</strong></p>
+<h3 id="exit">exit()<a class="headerlink" href="#exit" title="Permanent link">&para;</a></h3>
+<p>Deactivate the scope.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">s</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>  <span class="c1"># Scope is no longer active</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="c1"># Must still call flush() or discard()</span>
+</span></code></pre></div>
+<h3 id="flush">flush()<a class="headerlink" href="#flush" title="Permanent link">&para;</a></h3>
+<p>Apply policy and dispatch intents.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">s</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>  <span class="c1"># Dispatches allowed intents</span>
+</span></code></pre></div>
+<p><strong>Raises:</strong> <code>ScopeStateError</code> if already flushed/discarded or still active.</p>
+<h3 id="discard">discard()<a class="headerlink" href="#discard" title="Permanent link">&para;</a></h3>
+<p>Drop all intents without dispatching.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">s</span><span class="o">.</span><span class="n">discard</span><span class="p">()</span>  <span class="c1"># All intents dropped</span>
+</span></code></pre></div>
+<p><strong>Raises:</strong> <code>ScopeStateError</code> if already flushed/discarded or still active.</p>
+<h3 id="example-django-middleware-pattern">Example: Django Middleware Pattern<a class="headerlink" href="#example-django-middleware-pattern" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">middleware</span><span class="p">(</span><span class="n">get_response</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>    <span class="n">s</span> <span class="o">=</span> <span class="n">Scope</span><span class="p">()</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>    <span class="n">s</span><span class="o">.</span><span class="n">enter</span><span class="p">()</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>    <span class="n">error</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>    <span class="k">try</span><span class="p">:</span>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>        <span class="n">response</span> <span class="o">=</span> <span class="n">get_response</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>    <span class="k">except</span> <span class="ne">BaseException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>        <span class="n">error</span> <span class="o">=</span> <span class="n">e</span>
+</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>        <span class="k">raise</span>
+</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>    <span class="k">finally</span><span class="p">:</span>
+</span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>        <span class="n">s</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>  <span class="c1"># Deactivate first</span>
+</span><span id="__span-12-13"><a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>
+</span><span id="__span-12-14"><a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a>    <span class="c1"># Decide terminal action</span>
+</span><span id="__span-12-15"><a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a>    <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">should_flush</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+</span><span id="__span-12-16"><a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a>        <span class="n">s</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+</span><span id="__span-12-17"><a id="__codelineno-12-17" name="__codelineno-12-17" href="#__codelineno-12-17"></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-12-18"><a id="__codelineno-12-18" name="__codelineno-12-18" href="#__codelineno-12-18"></a>        <span class="n">s</span><span class="o">.</span><span class="n">discard</span><span class="p">()</span>
+</span><span id="__span-12-19"><a id="__codelineno-12-19" name="__codelineno-12-19" href="#__codelineno-12-19"></a>
+</span><span id="__span-12-20"><a id="__codelineno-12-20" name="__codelineno-12-20" href="#__codelineno-12-20"></a>    <span class="k">return</span> <span class="n">response</span>
+</span></code></pre></div>
+<h2 id="lifecycle-states">Lifecycle States<a class="headerlink" href="#lifecycle-states" title="Permanent link">&para;</a></h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>Created → Entered → Exited → Flushed/Discarded
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>          (active)  (inactive)  (terminal)
+</span></code></pre></div>
+<p><strong>State transitions:</strong></p>
 <ul>
-<li><code>blocked_names</code> (Set[str]) - Set of task names to block</li>
-<li><code>raise_on_enqueue</code> (bool) - If <code>True</code>, raise on enqueue. If <code>False</code>, silently drop at flush.</li>
+<li><code>enter()</code>: Created → Entered</li>
+<li><code>exit()</code>: Entered → Exited</li>
+<li><code>flush()</code> or <code>discard()</code>: Exited → Terminal</li>
 </ul>
-<p><strong>Example:</strong></p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Silent drop</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">policy</span> <span class="o">=</span> <span class="n">airlock</span><span class="o">.</span><span class="n">BlockTasks</span><span class="p">({</span><span class="s2">&quot;send_email&quot;</span><span class="p">,</span> <span class="s2">&quot;send_sms&quot;</span><span class="p">})</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># Fail fast</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="n">policy</span> <span class="o">=</span> <span class="n">airlock</span><span class="o">.</span><span class="n">BlockTasks</span><span class="p">({</span><span class="s2">&quot;dangerous_task&quot;</span><span class="p">},</span> <span class="n">raise_on_enqueue</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span></code></pre></div>
-<h2 id="logonflush">LogOnFlush<a class="headerlink" href="#logonflush" title="Permanent link">&para;</a></h2>
-<p>Logs all intents at flush time.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">LogOnFlush</span><span class="p">(</span><span class="n">Policy</span><span class="p">):</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
-</span></code></pre></div>
-<p><strong>Parameters:</strong></p>
+<p><strong>Invariants:</strong></p>
 <ul>
-<li><code>logger</code> (Logger | None) - Logger to use. If None, uses default logger.</li>
+<li>Can only <code>enter()</code> once</li>
+<li>Can only <code>exit()</code> after <code>enter()</code></li>
+<li>Can only <code>flush()</code> or <code>discard()</code> after <code>exit()</code></li>
+<li>Cannot <code>flush()</code> and <code>discard()</code> (terminal states are exclusive)</li>
 </ul>
-<p><strong>Example:</strong></p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">policy</span><span class="o">=</span><span class="n">airlock</span><span class="o">.</span><span class="n">LogOnFlush</span><span class="p">(</span><span class="n">logger</span><span class="p">)):</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>    <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">task_a</span><span class="p">)</span>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>    <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">task_b</span><span class="p">)</span>
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="c1"># Logs: &quot;Flushing intent: task_a&quot;</span>
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="c1"># Logs: &quot;Flushing intent: task_b&quot;</span>
-</span></code></pre></div>
-<h2 id="compositepolicy">CompositePolicy<a class="headerlink" href="#compositepolicy" title="Permanent link">&para;</a></h2>
-<p>Combines multiple policies.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">CompositePolicy</span><span class="p">(</span><span class="n">Policy</span><span class="p">):</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">policies</span><span class="p">:</span> <span class="n">Policy</span><span class="p">)</span>
-</span></code></pre></div>
-<p><strong>Parameters:</strong></p>
-<ul>
-<li><code>*policies</code> (Policy) - Policies to combine</li>
-</ul>
-<p><strong>Behavior:</strong> All policies must allow for intent to execute. If any policy returns <code>False</code> from <code>allows()</code>, the intent is dropped.</p>
-<p><strong>Example:</strong></p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">policy</span> <span class="o">=</span> <span class="n">airlock</span><span class="o">.</span><span class="n">CompositePolicy</span><span class="p">(</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>    <span class="n">airlock</span><span class="o">.</span><span class="n">LogOnFlush</span><span class="p">(</span><span class="n">logger</span><span class="p">),</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>    <span class="n">airlock</span><span class="o">.</span><span class="n">BlockTasks</span><span class="p">({</span><span class="s2">&quot;expensive_task&quot;</span><span class="p">}),</span>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="p">)</span>
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">policy</span><span class="o">=</span><span class="n">policy</span><span class="p">):</span>
-</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>    <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">cheap_task</span><span class="p">)</span>      <span class="c1"># Logged + dispatched</span>
-</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>    <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">expensive_task</span><span class="p">)</span>  <span class="c1"># Logged but blocked</span>
-</span></code></pre></div>
-<h2 id="policy-protocol">Policy Protocol<a class="headerlink" href="#policy-protocol" title="Permanent link">&para;</a></h2>
-<p>To write custom policies, implement this protocol:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">Policy</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_enqueue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">intent</span><span class="p">:</span> <span class="n">Intent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="sd">        Called when intent is added to buffer.</span>
-</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="sd">        Observe or raise. Return value ignored.</span>
-</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>        <span class="o">...</span>
-</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>
-</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">allows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">intent</span><span class="p">:</span> <span class="n">Intent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="sd">        Called at flush time.</span>
-</span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a><span class="sd">        Return True to dispatch, False to drop.</span>
-</span><span id="__span-12-13"><a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="__span-12-14"><a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a>        <span class="o">...</span>
-</span></code></pre></div>
-<p>See <a href="../../extending/custom-policies/">Custom Policies</a> for examples.</p>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../../extending/custom-policies/">Custom Policies Guide</a> - Write your own policies</li>
+<li><a href="../../extending/custom-scopes/">Custom Scopes Guide</a> - Subclassing patterns</li>
 <li><a href="../core/">Core API</a> - Main airlock functions</li>
 <li><a href="../intent/">Intent API</a> - Intent class reference</li>
 </ul>
