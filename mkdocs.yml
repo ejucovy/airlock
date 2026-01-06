@@ -1,8 +1,8 @@
 site_name: Airlock
 site_description: Express side effects anywhere. Control whether & when they escape.
 site_url: https://ejucovy.github.io/airlock/
-repo_url: https://github.com/thethirdbearsolutions/airlock
-repo_name: thethirdbearsolutions/airlock
+repo_url: https://github.com/ejucovy/airlock
+repo_name: ejucovy/airlock
 
 theme:
   name: material

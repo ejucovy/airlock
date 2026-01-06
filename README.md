@@ -42,13 +42,13 @@ pip install airlock
 
 Choose your path:
 
-- **[Raw Python (5 min)](https://github.com/thethirdbearsolutions/airlock/blob/main/docs/quickstart/raw-python.md)** - Just Python, no framework needed
-- **[Django (5 min)](https://github.com/thethirdbearsolutions/airlock/blob/main/docs/quickstart/django.md)** - Auto-scoping with middleware
-- **[Celery (5 min)](https://github.com/thethirdbearsolutions/airlock/blob/main/docs/quickstart/celery.md)** - Wrap tasks, migrate `.delay()` calls
+- **[Raw Python (5 min)](docs/quickstart/raw-python.md)** - Just Python, no framework needed
+- **[Django (5 min)](docs/quickstart/django.md)** - Auto-scoping with middleware
+- **[Celery (5 min)](docs/quickstart/celery.md)** - Wrap tasks, migrate `.delay()` calls
 
 ## Documentation
 
-**[Full documentation →](https://github.com/thethirdbearsolutions/airlock/tree/main/docs)**
+**[Full documentation →](docs/)**
 
 Key pages:
 
