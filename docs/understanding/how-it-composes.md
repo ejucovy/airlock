@@ -1,40 +1,25 @@
 # How It Composes
 
-Airlock scopes nest safely. Understanding composition is key to using airlock effectively.
+With airlock you can nest **scopes** or **policies** arbitrarily.
 
-## The Composition Problem
+## Nested Policies
 
-Without careful design, nested scopes create an **inverse flywheel**:
-
-```python
-# Your code works great ✓
-with TransactionScope():
-    order.save()
-    charge_payment()  # Plain function
-
-# Library adopts airlock... now it breaks ✗
-with TransactionScope():
-    order.save()
-    payment_lib.process(order)  # Creates nested scope!
-    # Effects escaped before transaction committed!
-```
-
-The more code adopts airlock, the less control you have. That's backwards.
-
-## The Solution: Capture by Default
-
-**Parent scopes have authority over nested scopes.**
+Use `with airlock.policy()` to layer additional policies anywhere in your codebase, all in the same scope's buffer:
 
 ```python
-with TransactionScope():
-    order.save()
-    payment_lib.process(order)  # Uses airlock internally? Captured!
-    # Effects held until transaction commits ✓
+with airlock.scope():
+    airlock.enqueue(task_a)  
+
+    with airlock.policy(airlock.DropAll()):
+        airlock.enqueue(task_b)  
+
+    airlock.enqueue(task_c) 
+# `task_a` executes, `task_b` is dropped, `task_c` executes
 ```
 
-Nested scopes **don't flush independently by default**. They're captured by their parent.
+## Nested Scopes
 
-## Default Behavior
+Your `with airlock.scope()` contexts can also be nested. Nested scopes **don't flush independently by default**. They're captured by their parent instead.
 
 ```python
 with airlock.scope() as outer:
@@ -44,16 +29,32 @@ with airlock.scope() as outer:
         airlock.enqueue(task_b)
     # Inner scope exits, but task_b is CAPTURED by outer
 
-# Both task_a and task_b dispatch together here
+# `task_a` and `task_b` both execute here
 ```
 
-This is the **controlled default**. Library code can't bypass your boundaries.
+This logic applies recursively; the outermost `airlock.scope` has ultimate authority:
 
-## Why Capture is Safe
+```python
+def code_with_side_effects(a):
+    with airlock.scope():
+        airlock.enqueue(task_c)
+        return a * 2
 
-### Compositional Atomicity
+with airlock.scope() as outer:
+    airlock.enqueue(task_a)
 
-Multi-step operations stay atomic even when callees use scopes:
+    with airlock.scope() as inner:
+        airlock.enqueue(task_b)
+        code_with_side_effects(5)
+
+# `task_a`, `task_b`, and `task_c` all execute here
+```
+
+### Wait, what? Why not local control?
+
+If nested scopes were to flush by default, we would have an inverse flywheel -- the more library code adopts airlock, the less control you have. Airlock scopes defined deep in call stacks would recreate the same "side effects might get released anywhere" problem that airlock tries to solve.
+
+With "outermost scope controls", multi-step operations stay well defined even when callees use scopes, without callers needing to know:
 
 ```python
 def checkout_cart(cart_id):
@@ -61,34 +62,19 @@ def checkout_cart(cart_id):
         validate_inventory(cart_id)     # May use scopes internally
         charge_payment(cart_id)         # May use scopes internally
         send_confirmation(cart_id)      # May use scopes internally
-    # All effects dispatch atomically ✓
-
-checkout_cart(123)  # Safe regardless of implementation
+    # All effects dispatch only if we reach the end successfully
 ```
 
-### Transaction Safety
+### Provenance Tracking
 
-All effects wait for commit:
-
-```python
-with transaction.atomic():
-    with airlock.scope(_cls=DjangoScope):
-        order.save()
-        third_party_lib.notify(order)  # Uses airlock? Captured!
-    # Nothing dispatches yet
-# All effects dispatch after commit ✓
-```
-
-## Provenance Tracking
-
-Parent scopes can distinguish their own intents from captured ones:
+After capturing a nested scope's intents, a parent scope can distinguish its own intents from captured ones:
 
 ```python
 with airlock.scope() as outer:
-    airlock.enqueue(task_a)  # Outer's own intent
+    airlock.enqueue(task_a)  
 
     with airlock.scope() as inner:
-        airlock.enqueue(task_b)  # Captured from inner
+        airlock.enqueue(task_b) 
 
     print(f"Own: {len(outer.own_intents)}")          # 1
     print(f"Captured: {len(outer.captured_intents)}")  # 1
@@ -100,9 +86,9 @@ This enables:
 - Different handling for own vs captured
 - Debugging nested behavior
 
-## The `before_descendant_flushes` Hook
+### The `before_descendant_flushes` Hook
 
-Advanced: control what happens when nested scopes exit.
+If you want to change this behavior, create your own scope class to define what happens when nested scopes exit.
 
 ```python
 class Scope:
