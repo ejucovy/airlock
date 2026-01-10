@@ -1,6 +1,8 @@
 import pytest
 from unittest.mock import MagicMock, patch
 
+pytest.importorskip("celery")
+
 import airlock
 from airlock import DropAll
 from airlock.integrations.celery import (

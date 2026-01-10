@@ -2,6 +2,12 @@
 
 import pytest
 
+try:
+    import celery
+    HAS_CELERY = True
+except ImportError:
+    HAS_CELERY = False
+
 import airlock
 from airlock import enqueue, PolicyEnqueueError, NoScopeError, PolicyViolation, scope, AllowAll, AssertNoEffects
 from airlock import _in_policy
@@ -205,9 +211,10 @@ class TestDispatchOptions:
         intent = s.intents[0]
         assert intent.dispatch_options is None
 
+    @pytest.mark.skipif(not HAS_CELERY, reason="celery not installed")
     def test_dispatch_options_passed_to_apply_async(self):
         """Test that dispatch_options are passed to apply_async."""
-        from airlock.integrations.executors import celery_executor
+        from airlock.integrations.executors.celery import celery_executor
 
         apply_async_calls = []
 
@@ -253,9 +260,10 @@ class TestDispatchOptions:
         assert len(calls) == 1
         assert calls[0] == (("arg1",), {"key": "value"})
 
+    @pytest.mark.skipif(not HAS_CELERY, reason="celery not installed")
     def test_dispatch_options_prefers_apply_async_over_delay(self):
         """Test that apply_async is used when dispatch_options are present."""
-        from airlock.integrations.executors import celery_executor
+        from airlock.integrations.executors.celery import celery_executor
 
         delay_calls = []
         apply_async_calls = []
@@ -278,9 +286,10 @@ class TestDispatchOptions:
         assert len(delay_calls) == 0
         assert len(apply_async_calls) == 1
 
+    @pytest.mark.skipif(not HAS_CELERY, reason="celery not installed")
     def test_delay_used_without_dispatch_options(self):
         """Test that delay is used when no dispatch_options are present."""
-        from airlock.integrations.executors import celery_executor
+        from airlock.integrations.executors.celery import celery_executor
 
         delay_calls = []
         apply_async_calls = []
