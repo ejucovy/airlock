@@ -35,6 +35,12 @@ AIRLOCK = {
 }
 ```
 
+### Middleware placement
+
+The default placement works for most apps. Django's built-in exception handling converts exceptions to 4xx/5xx responses automatically (this happens in the [request handler](https://docs.djangoproject.com/en/5.0/topics/http/middleware/#exception-handling), not middleware), so AirlockMiddleware sees the correct status code and discards appropriately.
+
+Only adjust placement if you have **custom middleware that catches exceptions and returns 2xx responses**. In that case, place AirlockMiddleware before (higher in the list than) such middleware, so it sees the exception rather than the misleading success response.
+
 ### Basic usage
 
 Anywhere in your models/views/services/etc, pass your task functions to `airlock.enqueue()`:
@@ -69,7 +75,7 @@ the default database.
 # settings.py
 AIRLOCK = {
     # Just call functions synchronously at dispatch time
-    "TASK_BACKEND": "airlock.integrations.executors.sync.sync_executor", 
+    "TASK_BACKEND": "airlock.integrations.executors.sync.sync_executor",
     # Other built in options:
     # "TASK_BACKEND": "airlock.integrations.executors.celery.celery_executor",
     # "TASK_BACKEND": "airlock.integrations.executors.django_q.django_q_executor",
@@ -77,16 +83,7 @@ AIRLOCK = {
     # "TASK_BACKEND": "airlock.integrations.executors.dramatiq.dramatiq_executor",
     # "TASK_BACKEND": "airlock.integrations.executors.django_tasks.django_tasks_executor",
 
-    "DEFAULT_POLICY": "airlock.AllowAll", 
-
-    # Defer to transaction.on_commit()
-    "USE_ON_COMMIT": True,
-
-    # The `robust` parameter passed to `on_commit`
-    "ROBUST": True,
-
-    # Database for on_commit
-    "DATABASE_ALIAS": "default",
+    "DEFAULT_POLICY": "airlock.AllowAll",
 }
 ```
 

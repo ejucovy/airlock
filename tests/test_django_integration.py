@@ -104,66 +104,6 @@ def test_middleware_real_discard_on_exception(mock_transaction):
 
 
 # =============================================================================
-# Mock-based tests (for verifying flush/discard is called)
-# =============================================================================
-
-
-def test_middleware_flushes_on_success():
-    """Test that middleware flushes on 200 OK."""
-    get_response = MagicMock()
-    get_response.return_value.status_code = 200
-
-    middleware = AirlockMiddleware(get_response)
-    request = MagicMock()
-
-    with patch("airlock.integrations.django.airlock.scope") as mock_scope_cm:
-        mock_s = MagicMock()
-        mock_scope_cm.return_value.__enter__.return_value = mock_s
-
-        middleware(request)
-
-        mock_s.flush.assert_called_once()
-        mock_s.discard.assert_not_called()
-
-
-def test_middleware_discards_on_error():
-    """Test that middleware discards on 500 Error."""
-    get_response = MagicMock()
-    get_response.return_value.status_code = 500
-
-    middleware = AirlockMiddleware(get_response)
-    request = MagicMock()
-
-    with patch("airlock.integrations.django.airlock.scope") as mock_scope_cm:
-        mock_s = MagicMock()
-        mock_scope_cm.return_value.__enter__.return_value = mock_s
-
-        middleware(request)
-
-        mock_s.flush.assert_not_called()
-        mock_s.discard.assert_called_once()
-
-
-def test_middleware_discards_on_exception():
-    """Test that middleware discards on exception."""
-    get_response = MagicMock()
-    get_response.side_effect = ValueError("boom")
-
-    middleware = AirlockMiddleware(get_response)
-    request = MagicMock()
-
-    with patch("airlock.integrations.django.airlock.scope") as mock_scope_cm:
-        mock_s = MagicMock()
-        mock_scope_cm.return_value.__enter__.return_value = mock_s
-
-        with pytest.raises(ValueError):
-            middleware(request)
-
-        mock_s.flush.assert_not_called()
-        mock_s.discard.assert_called_once()
-
-
-# =============================================================================
 # get_executor() tests
 # =============================================================================
 
@@ -275,8 +215,6 @@ def test_django_scope_uses_sync_executor_by_default(mock_transaction):
     with patch("airlock.integrations.django.get_setting") as mock_get_setting:
         mock_get_setting.side_effect = lambda key: {
             "TASK_BACKEND": None,
-            "DATABASE_ALIAS": "default",
-            "USE_ON_COMMIT": True,
         }.get(key)
 
         scope = DjangoScope(policy=AllowAll())
@@ -291,8 +229,6 @@ def test_django_scope_uses_celery_executor_from_setting(mock_transaction):
     with patch("airlock.integrations.django.get_setting") as mock_get_setting:
         mock_get_setting.side_effect = lambda key: {
             "TASK_BACKEND": "airlock.integrations.executors.celery.celery_executor",
-            "DATABASE_ALIAS": "default",
-            "USE_ON_COMMIT": True,
         }.get(key)
 
         scope = DjangoScope(policy=AllowAll())
@@ -305,8 +241,6 @@ def test_django_scope_uses_django_q_executor_from_setting(mock_transaction):
     with patch("airlock.integrations.django.get_setting") as mock_get_setting:
         mock_get_setting.side_effect = lambda key: {
             "TASK_BACKEND": "airlock.integrations.executors.django_q.django_q_executor",
-            "DATABASE_ALIAS": "default",
-            "USE_ON_COMMIT": True,
         }.get(key)
 
         with patch("airlock.integrations.executors.django_q.async_task"):
@@ -324,8 +258,6 @@ def test_django_scope_explicit_executor_overrides_setting(mock_transaction):
     with patch("airlock.integrations.django.get_setting") as mock_get_setting:
         mock_get_setting.side_effect = lambda key: {
             "TASK_BACKEND": "airlock.integrations.executors.celery.celery_executor",
-            "DATABASE_ALIAS": "default",
-            "USE_ON_COMMIT": True,
         }.get(key)
 
         # Explicitly pass huey_executor, should override celery from setting
@@ -334,7 +266,7 @@ def test_django_scope_explicit_executor_overrides_setting(mock_transaction):
         assert scope._executor is huey_executor
 
 
-def test_django_scope_dispatches_with_configured_executor(mock_transaction):
+def test_django_scope_dispatches_with_configured_executor():
     """Test DjangoScope dispatches intents using configured executor."""
 
     # Create a custom executor we can track
@@ -346,15 +278,15 @@ def test_django_scope_dispatches_with_configured_executor(mock_transaction):
     with patch("airlock.integrations.django.get_setting") as mock_get_setting:
         mock_get_setting.side_effect = lambda key: {
             "TASK_BACKEND": None,  # Will be overridden by explicit executor
-            "DATABASE_ALIAS": "default",
-            "USE_ON_COMMIT": False,  # Dispatch immediately
         }.get(key)
 
-        scope = DjangoScope(policy=AllowAll(), executor=tracking_executor)
-        scope._add(Intent(task=dummy_task, args=(), kwargs={}))
-        scope._add(Intent(task=dummy_task_with_args, args=(1, 2), kwargs={}))
-
-        scope.flush()
+        # Wrap in transaction.atomic() so on_commit callback fires
+        with transaction.atomic():
+            scope = DjangoScope(policy=AllowAll(), executor=tracking_executor)
+            scope._add(Intent(task=dummy_task, args=(), kwargs={}))
+            scope._add(Intent(task=dummy_task_with_args, args=(1, 2), kwargs={}))
+            scope.flush()
+        # on_commit callbacks fire here when atomic block exits
 
         # Should have dispatched both intents using our tracking executor
         assert len(executed_intents) == 2
@@ -441,36 +373,34 @@ def test_django_scope_with_multiple_executors_in_sequence():
     from airlock.integrations.executors.sync import sync_executor
     from airlock.integrations.executors.celery import celery_executor
 
-    with patch("airlock.integrations.django.get_setting") as mock_get_setting:
-        mock_get_setting.side_effect = lambda key: {
-            "DATABASE_ALIAS": "default",
-            "USE_ON_COMMIT": False,
-        }.get(key)
+    # First scope with tracking executor
+    executed_sync = []
 
-        # First scope with sync executor
-        executed_sync = []
+    def tracking_sync(intent):
+        executed_sync.append(intent)
 
-        def tracking_sync(intent):
-            executed_sync.append(intent)
-
+    with transaction.atomic():
         scope1 = DjangoScope(policy=AllowAll(), executor=tracking_sync)
         scope1._add(Intent(task=dummy_task, args=(), kwargs={}))
         scope1.flush()
+    # on_commit fires here
 
-        assert len(executed_sync) == 1
+    assert len(executed_sync) == 1
 
-        # Second scope with celery executor
-        mock_celery_task = MagicMock()
-        mock_celery_task.apply_async = MagicMock()
+    # Second scope with celery executor
+    mock_celery_task = MagicMock()
+    mock_celery_task.apply_async = MagicMock()
 
+    with transaction.atomic():
         scope2 = DjangoScope(policy=AllowAll(), executor=celery_executor)
         scope2._add(Intent(task=mock_celery_task, args=(1,), kwargs={}))
         scope2.flush()
+    # on_commit fires here
 
-        mock_celery_task.apply_async.assert_called_once_with(
-            args=(1,),
-            kwargs={}
-        )
+    mock_celery_task.apply_async.assert_called_once_with(
+        args=(1,),
+        kwargs={}
+    )
 
 
 # =============================================================================
@@ -479,7 +409,7 @@ def test_django_scope_with_multiple_executors_in_sequence():
 
 
 class TestExecutorExceptionHandling:
-    """Test exception handling with different USE_ON_COMMIT and ROBUST settings."""
+    """Test exception handling in DjangoScope dispatch."""
 
     def setup_method(self):
         """Initialize checkpoint trackers and define tasks/executor."""
@@ -510,60 +440,10 @@ class TestExecutorExceptionHandling:
 
         self.sync_executor = sync_executor
 
-    @override_settings(AIRLOCK={"USE_ON_COMMIT": False})
-    def test_use_on_commit_false(self):
-        """Test USE_ON_COMMIT=False: dispatch happens during flush, before commit."""
-        with pytest.raises(ValueError, match="Executor failed!"):
-            with transaction.atomic():
-                with airlock.scope(policy=AllowAll(), _cls=DjangoScope, executor=self.sync_executor):
-                    airlock.enqueue(self.task_a)
-                    airlock.enqueue(self.failing_task)
-                    airlock.enqueue(self.task_c)
-                    self.code_after_enqueue.append(1)
-                # scope.__exit__ flushes and dispatches immediately, exception propagates
-                self.code_after_flush.append(1)
-
-                # Register another on_commit hook
-                transaction.on_commit(lambda: self.other_hook_ran.append(1))
-            # atomic.__exit__ would commit, but we never get here
-            self.code_after_atomic.append(1)
-
-        # Verify checkpoints
-        assert self.calls == ['a']  # fail-fast: only task_a ran
-        assert self.code_after_enqueue == [1]  # always runs
-        assert self.code_after_flush == []  # doesn't run (exception propagated from dispatch)
-        assert self.other_hook_ran == []  # doesn't run (transaction rolled back)
-        assert self.code_after_atomic == []  # doesn't run (exception propagated)
-
-    @override_settings(AIRLOCK={"USE_ON_COMMIT": True, "ROBUST": False})
-    def test_robust_false(self):
-        """Test ROBUST=False: exception propagates from commit, stops other hooks."""
-        with pytest.raises(ValueError, match="Executor failed!"):
-            with transaction.atomic():
-                with airlock.scope(policy=AllowAll(), _cls=DjangoScope, executor=self.sync_executor):
-                    airlock.enqueue(self.task_a)
-                    airlock.enqueue(self.failing_task)
-                    airlock.enqueue(self.task_c)
-                    self.code_after_enqueue.append(1)
-                # scope.__exit__ flushes, registers on_commit callback
-                self.code_after_flush.append(1)
-
-                # Register another on_commit hook
-                transaction.on_commit(lambda: self.other_hook_ran.append(1))
-            # atomic.__exit__ commits, callbacks run, exception propagates
-            self.code_after_atomic.append(1)
-
-        # Verify checkpoints
-        assert self.calls == ['a']  # fail-fast: only task_a ran
-        assert self.code_after_enqueue == [1]  # always runs
-        assert self.code_after_flush == [1]  # runs (flush succeeded)
-        assert self.other_hook_ran == []  # doesn't run (robust=False stops other hooks)
-        assert self.code_after_atomic == []  # doesn't run (exception propagated)
-
-    @override_settings(AIRLOCK={"USE_ON_COMMIT": True, "ROBUST": True})
-    def test_robust_true(self):
-        """Test ROBUST=True (default): exception logged, other hooks continue."""
-        # No exception propagates with robust=True
+    def test_executor_exception_does_not_propagate(self):
+        """Test that executor exceptions are logged but don't propagate (robust=True behavior)."""
+        # DjangoScope always uses robust=True, so exceptions in dispatch
+        # are logged but don't prevent other on_commit callbacks from running
         with transaction.atomic():
             with airlock.scope(policy=AllowAll(), _cls=DjangoScope, executor=self.sync_executor):
                 airlock.enqueue(self.task_a)

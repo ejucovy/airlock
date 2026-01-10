@@ -10,9 +10,6 @@ Provides:
 Settings (in settings.py):
     AIRLOCK = {
         "DEFAULT_POLICY": "airlock.AllowAll",  # Dotted path or callable
-        "USE_ON_COMMIT": True,              # Defer dispatch to transaction.on_commit
-        "ROBUST": True,                     # on_commit robust parameter
-        "DATABASE_ALIAS": "default",        # Database for on_commit
         "TASK_BACKEND": None,               # Dotted path to executor callable
     }
 
@@ -42,9 +39,6 @@ from airlock import Scope, Intent, Executor, AllowAll, DropAll, _execute
 
 DEFAULTS = {
     "DEFAULT_POLICY": "airlock.AllowAll",
-    "USE_ON_COMMIT": True,
-    "ROBUST": True,  # Django's on_commit robust parameter
-    "DATABASE_ALIAS": DEFAULT_DB_ALIAS,
     "TASK_BACKEND": None,  # Dotted path to executor callable, or None for sync
 }
 
@@ -125,10 +119,13 @@ class DjangoScope(Scope):
     A Django-specific scope that respects database transactions.
 
     Defers dispatch to transaction.on_commit() so side effects only
-    fire after the transaction commits successfully.
+    fire after the transaction commits successfully. When called outside
+    a transaction (autocommit mode), on_commit executes immediately.
 
     If no executor is provided, uses get_executor() to select one based
     on TASK_BACKEND setting.
+
+    Subclass and override dispatch_intent() to customize dispatch behavior.
     """
 
     def __init__(
@@ -143,29 +140,30 @@ class DjangoScope(Scope):
             executor = get_executor()
 
         super().__init__(executor=executor, **kwargs)
-        self.using = using or get_setting("DATABASE_ALIAS")
+        self.using = using or DEFAULT_DB_ALIAS
+
+    def dispatch_intent(self, intent: Intent) -> None:
+        """
+        Dispatch a single intent. Override to customize dispatch behavior.
+
+        By default, calls the executor directly. This method is called from
+        within on_commit, so it runs after the transaction commits.
+        """
+        self._executor(intent)
 
     def _dispatch_all(self, intents: list[Intent]) -> None:
         """
-        Dispatch intents, optionally deferring to on_commit.
+        Dispatch intents via transaction.on_commit().
 
-        Settings:
-            USE_ON_COMMIT: If True, defer dispatch to transaction.on_commit()
-            ROBUST: Passed to Django's on_commit(robust=...) parameter
-
+        Uses on_commit(robust=True) so exceptions in dispatch don't prevent
+        other on_commit callbacks from running. When called outside a
+        transaction (autocommit mode), on_commit executes immediately.
         """
-        if get_setting("USE_ON_COMMIT"):
-            def do_dispatch():
-                for intent in intents:
-                    self._executor(intent)
-            transaction.on_commit(
-                do_dispatch,
-                using=self.using,
-                robust=get_setting("ROBUST")
-            )
-        else:
+        def do_dispatch():
             for intent in intents:
-                self._executor(intent)
+                self.dispatch_intent(intent)
+
+        transaction.on_commit(do_dispatch, using=self.using, robust=True)
 
 
 # =============================================================================
@@ -238,15 +236,9 @@ def airlock_command(
     Wraps the handle() method in an airlock scope.
     If options[dry_run_kwarg] is True, uses DropAll policy.
 
-    Transaction semantics:
-        Flush occurs at the end of handle(). If USE_ON_COMMIT is True (default),
-        dispatch is deferred to transaction.on_commit(). This means:
-
+    Dispatch is deferred to transaction.on_commit():
         - With an active transaction: dispatch occurs after commit
-        - Without a transaction: dispatch occurs immediately at end of handle()
-
-        In practice, for most management commands that don't wrap their logic
-        in transaction.atomic(), the mental boundary is still "end of handle()".
+        - Without a transaction (most commands): dispatch occurs immediately
 
     Usage:
         class Command(BaseCommand):
