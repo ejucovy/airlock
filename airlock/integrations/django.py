@@ -58,8 +58,8 @@ def import_string(dotted_path: str) -> Any:
     return getattr(module, class_name)
 
 
-def get_default_policy():
-    """Get the default policy instance."""
+def get_policy():
+    """Get the policy instance based on POLICY setting."""
     policy_setting = get_setting("POLICY")
     if callable(policy_setting):
         return policy_setting()
@@ -191,7 +191,7 @@ class AirlockMiddleware:
         return response.status_code < 400
 
     def __call__(self, request):
-        policy = get_default_policy()
+        policy = get_policy()
         scope_class = get_scope_class()
 
         # Use imperative API for manual terminal state handling.

@@ -210,6 +210,74 @@ def test_get_executor_custom_executor():
 
 
 # =============================================================================
+# get_scope_class() tests
+# =============================================================================
+
+
+def test_get_scope_class_returns_django_scope_by_default():
+    """Test get_scope_class returns DjangoScope when using default SCOPE setting."""
+    from airlock.integrations.django import get_scope_class
+
+    with patch("airlock.integrations.django.get_setting") as mock_get_setting:
+        mock_get_setting.return_value = "airlock.integrations.django.DjangoScope"
+
+        scope_class = get_scope_class()
+
+        assert scope_class is DjangoScope
+
+
+def test_get_scope_class_imports_custom_scope():
+    """Test get_scope_class imports custom scope from dotted path."""
+    from airlock.integrations.django import get_scope_class
+
+    # Create a mock custom scope class
+    class CustomScope(DjangoScope):
+        pass
+
+    mock_module = MagicMock()
+    mock_module.CustomScope = CustomScope
+
+    with patch("airlock.integrations.django.get_setting") as mock_get_setting:
+        mock_get_setting.return_value = "myapp.scopes.CustomScope"
+
+        with patch("airlock.integrations.django.import_string") as mock_import:
+            mock_import.return_value = CustomScope
+
+            scope_class = get_scope_class()
+
+            assert scope_class is CustomScope
+            mock_import.assert_called_once_with("myapp.scopes.CustomScope")
+
+
+def test_middleware_uses_scope_class_from_setting(mock_transaction):
+    """Test AirlockMiddleware uses scope class from SCOPE setting."""
+    # Create a custom scope class that tracks instantiation
+    instantiated = []
+
+    class TrackingScope(DjangoScope):
+        def __init__(self, **kwargs):
+            instantiated.append(self)
+            super().__init__(**kwargs)
+
+    get_response = MagicMock()
+    get_response.return_value.status_code = 200
+
+    with patch("airlock.integrations.django.get_scope_class") as mock_get_scope:
+        mock_get_scope.return_value = TrackingScope
+        with patch("airlock.integrations.django.get_policy") as mock_get_policy:
+            mock_get_policy.return_value = AllowAll()
+
+            middleware = AirlockMiddleware(get_response)
+            request = MagicMock()
+
+            middleware(request)
+
+            # Should have instantiated our custom scope
+            assert len(instantiated) == 1
+            assert isinstance(instantiated[0], TrackingScope)
+
+
+# =============================================================================
 # EXECUTOR setting integration tests
 # =============================================================================
 
