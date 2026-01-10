@@ -256,9 +256,10 @@ def airlock_command(
         @wraps(handle_func)
         def wrapper(self, *args, **options):
             is_dry_run = options.get(dry_run_kwarg, False)
-            policy = DropAll() if is_dry_run else get_default_policy()
+            policy = DropAll() if is_dry_run else get_policy()
+            scope_class = get_scope_class()
 
-            with airlock.scope(policy=policy, _cls=DjangoScope):
+            with airlock.scope(policy=policy, _cls=scope_class):
                 return handle_func(self, *args, **options)
 
         return wrapper
