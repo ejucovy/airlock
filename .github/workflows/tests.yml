@@ -24,7 +24,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -e ".[dev]"
-          pip install django celery huey dramatiq
+          pip install django celery huey dramatiq django-q2
 
       - name: Run tests with coverage
         run: |
