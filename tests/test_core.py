@@ -2,12 +2,6 @@
 
 import pytest
 
-try:
-    import celery
-    HAS_CELERY = True
-except ImportError:
-    HAS_CELERY = False
-
 import airlock
 from airlock import enqueue, PolicyEnqueueError, NoScopeError, PolicyViolation, scope, AllowAll, AssertNoEffects
 from airlock import _in_policy
@@ -211,36 +205,6 @@ class TestDispatchOptions:
         intent = s.intents[0]
         assert intent.dispatch_options is None
 
-    @pytest.mark.skipif(not HAS_CELERY, reason="celery not installed")
-    def test_dispatch_options_passed_to_apply_async(self):
-        """Test that dispatch_options are passed to apply_async."""
-        from airlock.integrations.executors.celery import celery_executor
-
-        apply_async_calls = []
-
-        class FakeCeleryTask:
-            name = "test.task"
-
-            def apply_async(self, args=None, kwargs=None, **options):
-                apply_async_calls.append((args, kwargs, options))
-
-        task = FakeCeleryTask()
-
-        with scope(policy=AllowAll(), executor=celery_executor):
-            enqueue(
-                task,
-                "arg1",
-                _dispatch_options={"countdown": 30, "queue": "high"},
-                user_id=123,
-            )
-
-        # Verify apply_async was called with options
-        assert len(apply_async_calls) == 1
-        args, kwargs, options = apply_async_calls[0]
-        assert args == ("arg1",)
-        assert kwargs == {"user_id": 123}
-        assert options == {"countdown": 30, "queue": "high"}
-
     def test_dispatch_options_ignored_for_plain_callable(self):
         """Test that dispatch_options are silently ignored for plain callables."""
         calls = []
@@ -259,55 +223,3 @@ class TestDispatchOptions:
         # Plain callable was called normally
         assert len(calls) == 1
         assert calls[0] == (("arg1",), {"key": "value"})
-
-    @pytest.mark.skipif(not HAS_CELERY, reason="celery not installed")
-    def test_dispatch_options_prefers_apply_async_over_delay(self):
-        """Test that apply_async is used when dispatch_options are present."""
-        from airlock.integrations.executors.celery import celery_executor
-
-        delay_calls = []
-        apply_async_calls = []
-
-        class FakeTask:
-            name = "test.task"
-
-            def delay(self, *args, **kwargs):
-                delay_calls.append((args, kwargs))
-
-            def apply_async(self, args=None, kwargs=None, **options):
-                apply_async_calls.append((args, kwargs, options))
-
-        task = FakeTask()
-
-        with scope(policy=AllowAll(), executor=celery_executor):
-            enqueue(task, "arg", _dispatch_options={"countdown": 10})
-
-        # apply_async should be used, not delay
-        assert len(delay_calls) == 0
-        assert len(apply_async_calls) == 1
-
-    @pytest.mark.skipif(not HAS_CELERY, reason="celery not installed")
-    def test_delay_used_without_dispatch_options(self):
-        """Test that delay is used when no dispatch_options are present."""
-        from airlock.integrations.executors.celery import celery_executor
-
-        delay_calls = []
-        apply_async_calls = []
-
-        class FakeTask:
-            name = "test.task"
-
-            def delay(self, *args, **kwargs):
-                delay_calls.append((args, kwargs))
-
-            def apply_async(self, args=None, kwargs=None, **options):
-                apply_async_calls.append((args, kwargs, options))
-
-        task = FakeTask()
-
-        with scope(policy=AllowAll(), executor=celery_executor):
-            enqueue(task, "arg", key="val")
-
-        # delay should be used when no options
-        assert len(delay_calls) == 1
-        assert len(apply_async_calls) == 0

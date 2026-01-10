@@ -102,3 +102,90 @@ def test_celery_executor_implements_protocol():
     from airlock.integrations.executors.celery import celery_executor
 
     assert isinstance(celery_executor, Executor)
+
+
+# =============================================================================
+# Integration tests (scope + enqueue + executor)
+# =============================================================================
+
+
+def test_integration_dispatch_options_passed_to_apply_async():
+    """Test dispatch_options flow through scope/enqueue to apply_async."""
+    from airlock import scope, enqueue, AllowAll
+    from airlock.integrations.executors.celery import celery_executor
+
+    apply_async_calls = []
+
+    class FakeCeleryTask:
+        name = "test.task"
+
+        def apply_async(self, args=None, kwargs=None, **options):
+            apply_async_calls.append((args, kwargs, options))
+
+    task = FakeCeleryTask()
+
+    with scope(policy=AllowAll(), executor=celery_executor):
+        enqueue(
+            task,
+            "arg1",
+            _dispatch_options={"countdown": 30, "queue": "high"},
+            user_id=123,
+        )
+
+    assert len(apply_async_calls) == 1
+    args, kwargs, options = apply_async_calls[0]
+    assert args == ("arg1",)
+    assert kwargs == {"user_id": 123}
+    assert options == {"countdown": 30, "queue": "high"}
+
+
+def test_integration_prefers_apply_async_over_delay():
+    """Test apply_async is used over delay when dispatch_options present."""
+    from airlock import scope, enqueue, AllowAll
+    from airlock.integrations.executors.celery import celery_executor
+
+    delay_calls = []
+    apply_async_calls = []
+
+    class FakeTask:
+        name = "test.task"
+
+        def delay(self, *args, **kwargs):
+            delay_calls.append((args, kwargs))
+
+        def apply_async(self, args=None, kwargs=None, **options):
+            apply_async_calls.append((args, kwargs, options))
+
+    task = FakeTask()
+
+    with scope(policy=AllowAll(), executor=celery_executor):
+        enqueue(task, "arg", _dispatch_options={"countdown": 10})
+
+    assert len(delay_calls) == 0
+    assert len(apply_async_calls) == 1
+
+
+def test_integration_delay_used_without_dispatch_options():
+    """Test delay is used when no dispatch_options provided."""
+    from airlock import scope, enqueue, AllowAll
+    from airlock.integrations.executors.celery import celery_executor
+
+    delay_calls = []
+    apply_async_calls = []
+
+    class FakeTask:
+        name = "test.task"
+
+        def delay(self, *args, **kwargs):
+            delay_calls.append((args, kwargs))
+
+        def apply_async(self, args=None, kwargs=None, **options):
+            apply_async_calls.append((args, kwargs, options))
+
+    task = FakeTask()
+
+    with scope(policy=AllowAll(), executor=celery_executor):
+        enqueue(task, "arg", key="val")
+
+    assert len(delay_calls) == 1
+    assert len(apply_async_calls) == 0
