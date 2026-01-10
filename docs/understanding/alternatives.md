@@ -42,15 +42,16 @@ Signals move *where* the side effect lives, not *whether* or *when* it fires. Th
 
 If your tasks trigger other tasks, consider whether the workflow should be defined upfront instead. `chain(task_a.s(), task_b.s())` makes the cascade explicit with no hidden enqueues.
 
-Airlock helps when that's not practical: triggers deep in the call stack that can't be hoisted trivially, dynamic cascades, tasks that conditionally trigger others, or legacy code where tasks already enqueue tasks.
+Airlock helps when that's not practical: triggers deep in the call stack that can't be extracted trivially; tasks that conditionally trigger others; or when you legitimately want to keep your side effect intents DRY across all callers.
 
 ## When you don't need this
 
 You might not need airlock if:
 
-- **Views are the only place you enqueue.** All `.delay()` calls (or `on_commit(lambda: task.delay(...))`) are in views, never in models or reusable services.
-- **Tasks don't chain.** No task triggers another task within its code.
+- **Views are the only place you enqueue.** All `.delay()` calls are in views, never in models or reusable services.
+- **Tasks don't chain internally.** No task triggers another task within its code.
 - **You use `ATOMIC_REQUESTS`.** Transaction boundaries are already request-scoped, so `on_commit` behaves predictably.
+- **You always remember to hook into `transaction.on_commit`**. All your view code reliably runs `transaction.on_commit(functools.partial(task.delay, ...))` so side effects never escape out of an incomplete or rolled-back transaction.
 - **You're happy with these constraints.** You accept that domain intent ("notify warehouse when order ships") lives in views, not models.
 
 In this scenario, the view plus the database transaction *is* your boundary.
