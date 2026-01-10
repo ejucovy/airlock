@@ -3,6 +3,17 @@
 import pytest
 from unittest.mock import Mock, patch
 
+# Configure Django settings before importing django_q
+import django
+from django.conf import settings
+if not settings.configured:
+    settings.configure(
+        SECRET_KEY="test-secret-key",
+        DATABASES={"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}},
+        INSTALLED_APPS=["django.contrib.contenttypes"],
+    )
+    django.setup()
+
 pytest.importorskip("django_q")
 
 from airlock import Intent

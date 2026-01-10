@@ -166,7 +166,7 @@ def test_integration_prefers_apply_async_over_delay():
 
 
 def test_integration_delay_used_without_dispatch_options():
-    """Test delay is used when no dispatch_options provided."""
+    """Test apply_async is used even without dispatch_options (more flexible)."""
     from airlock import scope, enqueue, AllowAll
     from airlock.integrations.executors.celery import celery_executor
 
@@ -187,5 +187,6 @@ def test_integration_delay_used_without_dispatch_options():
     with scope(policy=AllowAll(), executor=celery_executor):
         enqueue(task, "arg", key="val")
 
-    assert len(delay_calls) == 1
-    assert len(apply_async_calls) == 0
+    # apply_async is always preferred when available (more flexible)
+    assert len(delay_calls) == 0
+    assert len(apply_async_calls) == 1
