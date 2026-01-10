@@ -442,15 +442,15 @@ class TestExecutorExceptionHandling:
 
     def test_executor_exception_does_not_propagate(self):
         """Test that executor exceptions are logged but don't propagate (robust=True behavior)."""
-        # DjangoScope always uses robust=True, so exceptions in dispatch
-        # are logged but don't prevent other on_commit callbacks from running
+        # DjangoScope schedules each intent orthogonally with robust=True,
+        # so one failing doesn't prevent others from running
         with transaction.atomic():
             with airlock.scope(policy=AllowAll(), _cls=DjangoScope, executor=self.sync_executor):
                 airlock.enqueue(self.task_a)
                 airlock.enqueue(self.failing_task)
                 airlock.enqueue(self.task_c)
                 self.code_after_enqueue.append(1)
-            # scope.__exit__ flushes, registers on_commit callback
+            # scope.__exit__ flushes, registers on_commit callbacks
             self.code_after_flush.append(1)
 
             # Register another on_commit hook
@@ -459,7 +459,7 @@ class TestExecutorExceptionHandling:
         self.code_after_atomic.append(1)
 
         # Verify checkpoints
-        assert self.calls == ['a']  # fail-fast: only task_a ran
+        assert self.calls == ['a', 'c']  # both run; failing_task logged but didn't block
         assert self.code_after_enqueue == [1]  # always runs
         assert self.code_after_flush == [1]  # runs (flush succeeded)
         assert self.other_hook_ran == [1]  # runs (robust=True allows other hooks)

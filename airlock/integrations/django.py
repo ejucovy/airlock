@@ -27,7 +27,7 @@ from typing import Any, Callable
 from importlib import import_module
 
 from django.conf import settings
-from django.db import transaction, DEFAULT_DB_ALIAS
+from django.db import transaction
 
 import airlock
 from airlock import Scope, Intent, Executor, AllowAll, DropAll, _execute
@@ -131,7 +131,6 @@ class DjangoScope(Scope):
     def __init__(
         self,
         *,
-        using: str | None = None,
         executor: Executor | None = None,
         **kwargs: Any
     ) -> None:
@@ -140,7 +139,6 @@ class DjangoScope(Scope):
             executor = get_executor()
 
         super().__init__(executor=executor, **kwargs)
-        self.using = using or DEFAULT_DB_ALIAS
 
     def schedule_dispatch(self, callback: Callable[[], None]) -> None:
         """
@@ -152,15 +150,13 @@ class DjangoScope(Scope):
 
         Override to change timing, robust behavior, or skip on_commit entirely.
         """
-        transaction.on_commit(callback, using=self.using, robust=True)
+        transaction.on_commit(callback, robust=True)
 
     def _dispatch_all(self, intents: list[Intent]) -> None:
-        """Dispatch intents via schedule_dispatch()."""
-        def do_dispatch():
-            for intent in intents:
-                self._executor(intent)
-
-        self.schedule_dispatch(do_dispatch)
+        """Dispatch each intent via schedule_dispatch(), orthogonally."""
+        for intent in intents:
+            # Wrap in lambda to give Django's on_commit logging a __qualname__
+            self.schedule_dispatch(lambda i=intent: self._executor(i))
 
 
 # =============================================================================
