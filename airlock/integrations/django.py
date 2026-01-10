@@ -125,7 +125,7 @@ class DjangoScope(Scope):
     If no executor is provided, uses get_executor() to select one based
     on TASK_BACKEND setting.
 
-    Subclass and override dispatch_intent() to customize dispatch behavior.
+    Subclass and override schedule_dispatch() to customize dispatch timing.
     """
 
     def __init__(
@@ -142,28 +142,25 @@ class DjangoScope(Scope):
         super().__init__(executor=executor, **kwargs)
         self.using = using or DEFAULT_DB_ALIAS
 
-    def dispatch_intent(self, intent: Intent) -> None:
+    def schedule_dispatch(self, callback: Callable[[], None]) -> None:
         """
-        Dispatch a single intent. Override to customize dispatch behavior.
+        Schedule the dispatch callback. Override to customize dispatch timing.
 
-        By default, calls the executor directly. This method is called from
-        within on_commit, so it runs after the transaction commits.
+        By default, uses transaction.on_commit(robust=True). This defers
+        dispatch until the transaction commits, or runs immediately if
+        outside a transaction (autocommit mode).
+
+        Override to change timing, robust behavior, or skip on_commit entirely.
         """
-        self._executor(intent)
+        transaction.on_commit(callback, using=self.using, robust=True)
 
     def _dispatch_all(self, intents: list[Intent]) -> None:
-        """
-        Dispatch intents via transaction.on_commit().
-
-        Uses on_commit(robust=True) so exceptions in dispatch don't prevent
-        other on_commit callbacks from running. When called outside a
-        transaction (autocommit mode), on_commit executes immediately.
-        """
+        """Dispatch intents via schedule_dispatch()."""
         def do_dispatch():
             for intent in intents:
-                self.dispatch_intent(intent)
+                self._executor(intent)
 
-        transaction.on_commit(do_dispatch, using=self.using, robust=True)
+        self.schedule_dispatch(do_dispatch)
 
 
 # =============================================================================

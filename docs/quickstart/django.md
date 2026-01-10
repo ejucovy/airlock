@@ -37,9 +37,11 @@ AIRLOCK = {
 
 ### Middleware placement
 
-The default placement works for most apps. Django's built-in exception handling converts exceptions to 4xx/5xx responses automatically (this happens in the [request handler](https://docs.djangoproject.com/en/5.0/topics/http/middleware/#exception-handling), not middleware), so AirlockMiddleware sees the correct status code and discards appropriately.
+Any placement works for most apps. Django's request handler converts uncaught exceptions to 4xx/5xx responses, so AirlockMiddleware typically sees the correct status code and discards appropriately.
 
-Only adjust placement if you have **custom middleware that catches exceptions and returns 2xx responses**. In that case, place AirlockMiddleware before (higher in the list than) such middleware, so it sees the exception rather than the misleading success response.
+Placement matters if you have **custom middleware with `process_exception()`** that catches view exceptions and returns 2xx responses. In that case, place AirlockMiddleware higher (earlier) in the list than such middleware, so it sees the exception via its own `process_exception` before another middleware converts it to a misleading success response.
+
+Note: Exceptions raised by views walk up the middleware chain via `process_exception()` until one returns a response. If you care about exceptions from middleware themselves (not just views), or if you use `ATOMIC_REQUESTS=False` and want finer control over transaction boundaries, you may need to think more carefully about ordering.
 
 ### Basic usage
 
