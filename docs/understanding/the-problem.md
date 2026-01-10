@@ -51,8 +51,8 @@ class Order:
 
 Now these methods are a *legitimate* and *safe* place to express domain intent:
 
-- **Colocation.** The model knows when it needs side effects. That knowledge sometimes belongs here.
-- **DRY.** Every code path that saves an Order gets the side effects. You can't forget.
+- **Colocation.** The model knows when it needs side effects. You may want that knowledge to belong here.
+- **DRY.** Every code path that saves an Order expresses the side effects. You can't forget.
 - **Control.** The *scope* decides what escapes, not the call site.
 - **Visibility.** You can inspect the buffer before it flushes... run a model method and compare before-and-after... great for tests!
 - **Control again.** Define your own nested scopes for surgically stacked policies, or even define multiple execution boundaries.
@@ -61,7 +61,7 @@ Side effects can be defined close to the source, and still escape in one place.
 
 ## What this unlocks
 
-Without airlock, "enqueue side effects at the edge" is an important constraint for maintaining predictable timing, auditability, and control. Side effects deep in the call stack are dangerous, so you're forced to hoist them.
+Without airlock, "enqueue all side effects at the edge" is an important constraint for maintaining predictable timing, auditability, and control. Side effects deep in the call stack are dangerous, so you're forced to pull them out.
 
 With airlock, both patterns are safe:
 
