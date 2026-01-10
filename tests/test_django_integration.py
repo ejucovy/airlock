@@ -554,3 +554,94 @@ class TestExecutorExceptionHandling:
         assert self.code_after_flush == [1]  # runs (flush succeeded)
         assert self.other_hook_ran == [1]  # runs (robust=True allows other hooks)
         assert self.code_after_atomic == [1]  # runs (no exception propagated)
+
+
+# =============================================================================
+# airlock_command decorator tests
+# =============================================================================
+
+
+def test_airlock_command_uses_get_policy(mock_transaction):
+    """Test airlock_command uses get_policy() for policy."""
+    from airlock.integrations.django import airlock_command
+
+    executed = []
+
+    class FakeCommand:
+        @airlock_command
+        def handle(self, *args, **options):
+            executed.append(1)
+            airlock.enqueue(dummy_task)
+
+    with patch("airlock.integrations.django.get_policy") as mock_get_policy:
+        mock_get_policy.return_value = AllowAll()
+        with patch("airlock.integrations.django.get_scope_class") as mock_get_scope:
+            mock_get_scope.return_value = DjangoScope
+
+            cmd = FakeCommand()
+            cmd.handle()
+
+            mock_get_policy.assert_called_once()
+            mock_get_scope.assert_called_once()
+
+    assert executed == [1]
+
+
+def test_airlock_command_uses_get_scope_class(mock_transaction):
+    """Test airlock_command uses get_scope_class() for scope."""
+    from airlock.integrations.django import airlock_command
+
+    instantiated = []
+
+    class TrackingScope(DjangoScope):
+        def __init__(self, **kwargs):
+            instantiated.append(self)
+            super().__init__(**kwargs)
+
+    class FakeCommand:
+        @airlock_command
+        def handle(self, *args, **options):
+            airlock.enqueue(dummy_task)
+
+    with patch("airlock.integrations.django.get_policy") as mock_get_policy:
+        mock_get_policy.return_value = AllowAll()
+        with patch("airlock.integrations.django.get_scope_class") as mock_get_scope:
+            mock_get_scope.return_value = TrackingScope
+
+            cmd = FakeCommand()
+            cmd.handle()
+
+    assert len(instantiated) == 1
+    assert isinstance(instantiated[0], TrackingScope)
+
+
+def test_airlock_command_dry_run_uses_drop_all(mock_transaction):
+    """Test airlock_command uses DropAll policy when dry_run=True."""
+    from airlock.integrations.django import airlock_command
+    from airlock import DropAll
+
+    policy_used = []
+
+    class TrackingScope(DjangoScope):
+        def __init__(self, policy, **kwargs):
+            policy_used.append(policy)
+            super().__init__(policy=policy, **kwargs)
+
+    class FakeCommand:
+        @airlock_command
+        def handle(self, *args, **options):
+            airlock.enqueue(dummy_task)
+
+    with patch("airlock.integrations.django.get_policy") as mock_get_policy:
+        mock_get_policy.return_value = AllowAll()
+        with patch("airlock.integrations.django.get_scope_class") as mock_get_scope:
+            mock_get_scope.return_value = TrackingScope
+
+            cmd = FakeCommand()
+            cmd.handle(dry_run=True)
+
+            # get_policy should NOT be called when dry_run=True
+            mock_get_policy.assert_not_called()
+
+    assert len(policy_used) == 1
+    assert isinstance(policy_used[0], DropAll)
