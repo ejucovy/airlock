@@ -109,7 +109,7 @@ def test_middleware_real_discard_on_exception(mock_transaction):
 
 
 def test_get_executor_returns_sync_when_backend_is_none():
-    """Test get_executor returns sync_executor when TASK_BACKEND is None."""
+    """Test get_executor returns sync_executor when EXECUTOR is None."""
     from airlock.integrations.django import get_executor
     from airlock.integrations.executors.sync import sync_executor
 
@@ -210,17 +210,17 @@ def test_get_executor_custom_executor():
 
 
 # =============================================================================
-# TASK_BACKEND setting integration tests
+# EXECUTOR setting integration tests
 # =============================================================================
 
 
 def test_django_scope_uses_sync_executor_by_default(mock_transaction):
-    """Test DjangoScope uses sync_executor when TASK_BACKEND is None."""
+    """Test DjangoScope uses sync_executor when EXECUTOR is None."""
     from airlock.integrations.executors.sync import sync_executor
 
     with patch("airlock.integrations.django.get_setting") as mock_get_setting:
         mock_get_setting.side_effect = lambda key: {
-            "TASK_BACKEND": None,
+            "EXECUTOR": None,
         }.get(key)
 
         scope = DjangoScope(policy=AllowAll())
@@ -229,12 +229,12 @@ def test_django_scope_uses_sync_executor_by_default(mock_transaction):
 
 
 def test_django_scope_uses_celery_executor_from_setting(mock_transaction):
-    """Test DjangoScope uses celery_executor when configured in TASK_BACKEND."""
+    """Test DjangoScope uses celery_executor when configured in EXECUTOR."""
     from airlock.integrations.executors.celery import celery_executor
 
     with patch("airlock.integrations.django.get_setting") as mock_get_setting:
         mock_get_setting.side_effect = lambda key: {
-            "TASK_BACKEND": "airlock.integrations.executors.celery.celery_executor",
+            "EXECUTOR": "airlock.integrations.executors.celery.celery_executor",
         }.get(key)
 
         scope = DjangoScope(policy=AllowAll())
@@ -243,7 +243,7 @@ def test_django_scope_uses_celery_executor_from_setting(mock_transaction):
 
 
 def test_django_scope_uses_django_q_executor_from_setting(mock_transaction):
-    """Test DjangoScope uses django_q_executor when configured in TASK_BACKEND."""
+    """Test DjangoScope uses django_q_executor when configured in EXECUTOR."""
     import sys
 
     # Mock django_q.tasks module before importing the executor
@@ -254,7 +254,7 @@ def test_django_scope_uses_django_q_executor_from_setting(mock_transaction):
 
         with patch("airlock.integrations.django.get_setting") as mock_get_setting:
             mock_get_setting.side_effect = lambda key: {
-                "TASK_BACKEND": "airlock.integrations.executors.django_q.django_q_executor",
+                "EXECUTOR": "airlock.integrations.executors.django_q.django_q_executor",
             }.get(key)
 
             scope = DjangoScope(policy=AllowAll())
@@ -264,13 +264,13 @@ def test_django_scope_uses_django_q_executor_from_setting(mock_transaction):
 
 
 def test_django_scope_explicit_executor_overrides_setting(mock_transaction):
-    """Test explicit executor parameter overrides TASK_BACKEND setting."""
+    """Test explicit executor parameter overrides EXECUTOR setting."""
     from airlock.integrations.executors.celery import celery_executor
     from airlock.integrations.executors.huey import huey_executor
 
     with patch("airlock.integrations.django.get_setting") as mock_get_setting:
         mock_get_setting.side_effect = lambda key: {
-            "TASK_BACKEND": "airlock.integrations.executors.celery.celery_executor",
+            "EXECUTOR": "airlock.integrations.executors.celery.celery_executor",
         }.get(key)
 
         # Explicitly pass huey_executor, should override celery from setting
@@ -290,7 +290,7 @@ def test_django_scope_dispatches_with_configured_executor():
 
     with patch("airlock.integrations.django.get_setting") as mock_get_setting:
         mock_get_setting.side_effect = lambda key: {
-            "TASK_BACKEND": None,  # Will be overridden by explicit executor
+            "EXECUTOR": None,  # Will be overridden by explicit executor
         }.get(key)
 
         # Wrap in transaction.atomic() so on_commit callback fires

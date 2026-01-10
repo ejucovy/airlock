@@ -5,15 +5,16 @@ Provides:
 - DjangoScope: Defers dispatch to transaction.on_commit()
 - AirlockMiddleware: Wraps requests in a scope
 - airlock_command: Decorator for management commands
-- get_executor(): Helper to select executor based on TASK_BACKEND setting
+- get_executor(): Helper to select executor based on EXECUTOR setting
 
 Settings (in settings.py):
     AIRLOCK = {
-        "DEFAULT_POLICY": "airlock.AllowAll",  # Dotted path or callable
-        "TASK_BACKEND": None,               # Dotted path to executor callable
+        "POLICY": "airlock.AllowAll",  # Dotted path or callable
+        "EXECUTOR": None,              # Dotted path to executor callable
+        "SCOPE": "airlock.integrations.django.DjangoScope",  # Scope class for middleware
     }
 
-TASK_BACKEND is a dotted import path to an executor callable:
+EXECUTOR is a dotted import path to an executor callable:
     - None (default): sync_executor (synchronous execution)
     - "airlock.integrations.executors.celery.celery_executor"
     - "airlock.integrations.executors.django_q.django_q_executor"
@@ -38,8 +39,9 @@ from airlock import Scope, Intent, Executor, AllowAll, DropAll, _execute
 # =============================================================================
 
 DEFAULTS = {
-    "DEFAULT_POLICY": "airlock.AllowAll",
-    "TASK_BACKEND": None,  # Dotted path to executor callable, or None for sync
+    "POLICY": "airlock.AllowAll",
+    "EXECUTOR": None,  # Dotted path to executor callable, or None for sync
+    "SCOPE": "airlock.integrations.django.DjangoScope",
 }
 
 
@@ -58,7 +60,7 @@ def import_string(dotted_path: str) -> Any:
 
 def get_default_policy():
     """Get the default policy instance."""
-    policy_setting = get_setting("DEFAULT_POLICY")
+    policy_setting = get_setting("POLICY")
     if callable(policy_setting):
         return policy_setting()
     if isinstance(policy_setting, str):
@@ -74,39 +76,45 @@ def get_default_policy():
 
 def get_executor() -> Executor:
     """
-    Get the appropriate executor based on TASK_BACKEND setting.
+    Get the appropriate executor based on EXECUTOR setting.
 
-    TASK_BACKEND should be a dotted import path to an executor callable,
+    EXECUTOR should be a dotted import path to an executor callable,
     or None for synchronous execution.
 
     Examples:
         AIRLOCK = {
-            'TASK_BACKEND': 'airlock.integrations.executors.django_q.django_q_executor',
+            'EXECUTOR': 'airlock.integrations.executors.django_q.django_q_executor',
         }
 
         # Or use a custom executor
         AIRLOCK = {
-            'TASK_BACKEND': 'myapp.executors.custom_executor',
+            'EXECUTOR': 'myapp.executors.custom_executor',
         }
 
     Returns:
-        Executor function based on TASK_BACKEND
+        Executor function based on EXECUTOR setting
 
     Raises:
         ImportError: If the executor module/callable cannot be imported
     """
     from importlib import import_module
 
-    backend = get_setting("TASK_BACKEND")
+    executor_path = get_setting("EXECUTOR")
 
-    if backend is None:
+    if executor_path is None:
         from airlock.integrations.executors.sync import sync_executor
         return sync_executor
 
     # Import the callable from dotted path
-    module_path, callable_name = backend.rsplit(".", 1)
+    module_path, callable_name = executor_path.rsplit(".", 1)
     module = import_module(module_path)
     return getattr(module, callable_name)
+
+
+def get_scope_class():
+    """Get the scope class to use, based on SCOPE setting."""
+    scope_class_path = get_setting("SCOPE")
+    return import_string(scope_class_path)
 
 
 # =============================================================================
@@ -184,10 +192,11 @@ class AirlockMiddleware:
 
     def __call__(self, request):
         policy = get_default_policy()
+        scope_class = get_scope_class()
 
         # Use imperative API for manual terminal state handling.
         # This allows us to decide flush vs discard based on response status.
-        s = DjangoScope(policy=policy)
+        s = scope_class(policy=policy)
         s.enter()
         request.airlock_scope = s
 

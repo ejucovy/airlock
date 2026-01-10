@@ -31,7 +31,7 @@ MIDDLEWARE = [
 ]
 
 AIRLOCK = {
-    "TASK_BACKEND": "airlock.integrations.executors.celery.celery_executor",
+    "EXECUTOR": "airlock.integrations.executors.celery.celery_executor",
 }
 ```
 
@@ -77,15 +77,15 @@ the default database.
 # settings.py
 AIRLOCK = {
     # Just call functions synchronously at dispatch time
-    "TASK_BACKEND": "airlock.integrations.executors.sync.sync_executor",
+    "EXECUTOR": "airlock.integrations.executors.sync.sync_executor",
     # Other built in options:
-    # "TASK_BACKEND": "airlock.integrations.executors.celery.celery_executor",
-    # "TASK_BACKEND": "airlock.integrations.executors.django_q.django_q_executor",
-    # "TASK_BACKEND": "airlock.integrations.executors.huey.huey_executor",
-    # "TASK_BACKEND": "airlock.integrations.executors.dramatiq.dramatiq_executor",
-    # "TASK_BACKEND": "airlock.integrations.executors.django_tasks.django_tasks_executor",
+    # "EXECUTOR": "airlock.integrations.executors.celery.celery_executor",
+    # "EXECUTOR": "airlock.integrations.executors.django_q.django_q_executor",
+    # "EXECUTOR": "airlock.integrations.executors.huey.huey_executor",
+    # "EXECUTOR": "airlock.integrations.executors.dramatiq.dramatiq_executor",
+    # "EXECUTOR": "airlock.integrations.executors.django_tasks.django_tasks_executor",
 
-    "DEFAULT_POLICY": "airlock.AllowAll",
+    "POLICY": "airlock.AllowAll",
 }
 ```
 
