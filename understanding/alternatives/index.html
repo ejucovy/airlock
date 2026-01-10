@@ -1755,13 +1755,14 @@
 <p>Signals move <em>where</em> the side effect lives, not <em>whether</em> or <em>when</em> it fires. This is a powerful tool for code organization, but it doesn't address the core problems.</p>
 <h2 id="celery-chordschains">Celery chords/chains<a class="headerlink" href="#celery-chordschains" title="Permanent link">&para;</a></h2>
 <p>If your tasks trigger other tasks, consider whether the workflow should be defined upfront instead. <code>chain(task_a.s(), task_b.s())</code> makes the cascade explicit with no hidden enqueues.</p>
-<p>Airlock helps when that's not practical: triggers deep in the call stack that can't be hoisted trivially, dynamic cascades, tasks that conditionally trigger others, or legacy code where tasks already enqueue tasks.</p>
+<p>Airlock helps when that's not practical: triggers deep in the call stack that can't be extracted trivially; tasks that conditionally trigger others; or when you legitimately want to keep your side effect intents DRY across all callers.</p>
 <h2 id="when-you-dont-need-this">When you don't need this<a class="headerlink" href="#when-you-dont-need-this" title="Permanent link">&para;</a></h2>
 <p>You might not need airlock if:</p>
 <ul>
-<li><strong>Views are the only place you enqueue.</strong> All <code>.delay()</code> calls (or <code>on_commit(lambda: task.delay(...))</code>) are in views, never in models or reusable services.</li>
-<li><strong>Tasks don't chain.</strong> No task triggers another task within its code.</li>
+<li><strong>Views are the only place you enqueue.</strong> All <code>.delay()</code> calls are in views, never in models or reusable services.</li>
+<li><strong>Tasks don't chain internally.</strong> No task triggers another task within its code.</li>
 <li><strong>You use <code>ATOMIC_REQUESTS</code>.</strong> Transaction boundaries are already request-scoped, so <code>on_commit</code> behaves predictably.</li>
+<li><strong>You always remember to hook into <code>transaction.on_commit</code></strong>. All your view code reliably runs <code>transaction.on_commit(functools.partial(task.delay, ...))</code> so side effects never escape out of an incomplete or rolled-back transaction.</li>
 <li><strong>You're happy with these constraints.</strong> You accept that domain intent ("notify warehouse when order ships") lives in views, not models.</li>
 </ul>
 <p>In this scenario, the view plus the database transaction <em>is</em> your boundary.</p>
