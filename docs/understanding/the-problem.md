@@ -12,7 +12,7 @@ class Order:
         send_confirmation_email(self.id)
 ```
 
-Conditional logic is tempting too. Also dangerous!
+It's also tempting to centralize "conditional side effect dispatch" in a deep method. Also dangerous!
 
 ```python
 class Order:
