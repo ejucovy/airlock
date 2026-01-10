@@ -39,6 +39,7 @@ include = ["airlock*"]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
+addopts = "--cov=airlock --cov-report=term-missing"
 
 [tool.coverage.run]
 source = ["airlock"]
