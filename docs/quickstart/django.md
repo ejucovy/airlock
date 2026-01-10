@@ -1,82 +1,124 @@
-# Django Quickstart
+# Django integration
 
-**Goal:** Get airlock working in Django in 5 minutes with automatic request scoping.
+Airlock provides a Django middleware that automatically creates a scopes for your view code. 
+Out of the box, Airlock is compatible with many popular task frameworks including Celery, 
+django-q, Dramatiq, huey, and Django Tasks.
 
-## Install
+## How it works
+
+The middleware automatically wraps each request in a scope with the following behaviors:
+
+* All side effects enqueued during a request remain buffered until the end of the request.
+* When the Response reaches airlock's middleware:
+  * If the response is an error (4xx/5xx or unhandled exception) side effects are discarded.
+  * If the response is successful (1xx/2xx/3xx) side effects are dispatched.
+    * If you're in a database transaction, side effects will be deferred to `transaction.on_commit()` automatically.
+
+These default behaviors are [configurable](#configuration).
+
+## Installation & setup
 
 ```bash
 pip install airlock
 ```
 
-## Setup
-
-Add middleware to `settings.py`:
+In `settings.py`, add middleware and configure your task framework:
 
 ```python
 MIDDLEWARE = [
     # ... other middleware ...
     "airlock.integrations.django.AirlockMiddleware",
 ]
+
+AIRLOCK = {
+    "TASK_BACKEND": "airlock.integrations.executors.celery.celery_executor",
+}
 ```
 
-Done. Every request now has automatic scoping.
+### Basic usage
 
-## How It Works
-
-The middleware automatically wraps each request in a scope:
-
-- ✅ Flushes on success (1xx/2xx/3xx responses)
-- ❌ Discards on error (4xx/5xx or exception)
-- 🔄 Defers to `transaction.on_commit()` automatically
-
-## Basic Usage
-
-In your models/views/services, replace `.delay()` with `airlock.enqueue()`:
+Anywhere in your models/views/services/etc, pass your task functions to `airlock.enqueue()`:
 
 ```python
+## models.py
 import airlock
+import .tasks
 
 class Order(models.Model):
     def process(self):
         self.status = "processed"
         self.save()
-        airlock.enqueue(send_confirmation_email, order_id=self.id)
-        airlock.enqueue(notify_warehouse, order_id=self.id)
+        airlock.enqueue(tasks.send_confirmation_email, order_id=self.id)
+        airlock.enqueue(tasks.notify_warehouse, order_id=self.id)
 
-# In view
+## views.py
 def checkout(request):
     order = Order.objects.get(id=request.POST['order_id'])
     order.process()
     return HttpResponse("OK")
-# Side effects dispatch here after response + transaction commit
+# All side effects dispatch here after response + transaction commit
 ```
 
-## Configuration
+### Configuration
 
-Optional settings:
+With zero configuration, all tasks execute synchronously as plain callables
+at dispatch time, hooked in to `transaction.on_commit(robust=True)` against
+the default database.
 
 ```python
 # settings.py
 AIRLOCK = {
-    # Use Celery for dispatch
-    "TASK_BACKEND": "airlock.integrations.executors.celery.celery_executor",
-
-    # Or use django-q
+    # Just call functions synchronously at dispatch time
+    "TASK_BACKEND": "airlock.integrations.executors.sync.sync_executor", 
+    # Other built in options:
+    # "TASK_BACKEND": "airlock.integrations.executors.celery.celery_executor",
     # "TASK_BACKEND": "airlock.integrations.executors.django_q.django_q_executor",
+    # "TASK_BACKEND": "airlock.integrations.executors.huey.huey_executor",
+    # "TASK_BACKEND": "airlock.integrations.executors.dramatiq.dramatiq_executor",
+    # "TASK_BACKEND": "airlock.integrations.executors.django_tasks.django_tasks_executor",
 
-    # Defer to transaction.on_commit() (default: True)
+    "DEFAULT_POLICY": "airlock.AllowAll", 
+
+    # Defer to transaction.on_commit()
     "USE_ON_COMMIT": True,
 
-    # Database for on_commit (default: "default")
+    # The `robust` parameter passed to `on_commit`
+    "ROBUST": True,
+
+    # Database for on_commit
     "DATABASE_ALIAS": "default",
 }
 ```
 
-Without `TASK_BACKEND`, tasks run synchronously. Set it to use your queue.
+### Overriding 4xx/5xx behavior
 
-## Management Commands
+By default airlock's Django middleware discards side effects 
+on 4xx/5xx responses and on exceptions. To customize this behavior,
+subclass `AirlockMiddleware` and override `should_flush`:
+
+```python
+## middleware.py
+from airlock.integrations.django import AirlockMiddleware
+class UnconditionallyDispatchingAirlockMiddleware(AirlockMiddleware):
+    def should_flush(self, request, response):
+        return True
+
+## settings.py
+MIDDLEWARE = [
+    # ...
+    "my_app.middleware.UnconditionallyDispatchingAirlockMiddleware",
+    # ...
+]
+
+## Airlock in management commands
 
 Wrap commands with `@airlock_command` for automatic scoping:
+
+* All side effects enqueued during a command remain buffered until the end of the command.
+* When the command finishes:
+  * If there was an unhandled exception, side effects are discarded.
+  * If the command is successful, side effects are dispatched.
+* If your command supports a `--dry-run` flag, airlock will discard side effects when your command executes in dry-run mode.
 
 ```python
 from django.core.management.base import BaseCommand
@@ -88,129 +130,36 @@ class Command(BaseCommand):
 
     @airlock_command
     def handle(self, *args, **options):
-        # If --dry-run, all side effects dropped automatically
-        Order.objects.filter(status='pending').update(status='processed')
+        # If --dry-run, all side effects will drop automatically
+        # Otherwise, all side effects will dispatch at the end of the script
+        for order in Order.objects.filter(status='pending'):
+            order.process()
 ```
 
-The decorator:
-- Creates scope for command
-- Respects `--dry-run` (uses `DropAll()` policy)
-- Flushes on success, discards on error
+## Manual scoping
 
-## Manual Scoping
-
-Sometimes you need explicit control outside requests:
+You can always maintain explicit control too with the context manager API. 
+Use `DjangoScope` to pick up settings and transaction-aware dispatch timing:
 
 ```python
 from airlock.integrations.django import DjangoScope
 
-# In a Celery task, cron job, etc.
+# In a script, task, etc:
 def background_job():
     with airlock.scope(_cls=DjangoScope):
         do_stuff()
     # Effects dispatch after transaction commit
-```
 
-## Testing
-
-### Suppress side effects in tests
-
-```python
-from django.test import TestCase
-import airlock
-
-class OrderTest(TestCase):
-    def test_processing_logic(self):
-        with airlock.scope(policy=airlock.AssertNoEffects()):
-            # Test pure business logic without side effects
-            order = Order.objects.create(...)
-            order.process()
-        # Would raise if any airlock.enqueue() called
-```
-
-### Inspect buffered effects
-
-```python
-def test_correct_emails_sent(self):
-    with airlock.scope() as s:
+# Or in a view with finer-grained control:
+def checkout(request):
+    order = Order.objects.get(id=request.POST['order_id'])
+    with airlock.scope(_cls=DjangoScope):
         order.process()
-
-        # Verify what was enqueued
-        assert len(s.intents) == 2
-        assert s.intents[0].task.__name__ == "send_confirmation_email"
-        assert s.intents[1].task.__name__ == "notify_warehouse"
-    # Can verify without actually sending emails
+    with airlock.scope(_cls=DjangoScope):
+        ping_analytics(request.user)
+    return HttpResponse("OK")
 ```
 
-## Common Patterns
-
-### Suppress emails in admin
-
-```python
-# myapp/middleware.py
-from airlock.integrations.django import AirlockMiddleware
-import airlock
-
-class AdminAirlockMiddleware(AirlockMiddleware):
-    def get_policy(self, request):
-        if request.path.startswith('/admin/'):
-            return airlock.BlockTasks({"send_confirmation_email"})
-        return super().get_policy(request)
-```
-
-### Custom flush behavior
-
-```python
-class MyAirlockMiddleware(AirlockMiddleware):
-    def should_flush(self, request, response):
-        # Only flush on 2xx (not 3xx redirects)
-        return 200 <= response.status_code < 300
-```
-
-## With django-q
-
-Using django-q as your task backend:
-
-```python
-# settings.py
-AIRLOCK = {
-    "TASK_BACKEND": "airlock.integrations.executors.django_q.django_q_executor",
-}
-```
-
-Now all `airlock.enqueue()` calls dispatch via `async_task()`:
-
-```python
-def process_order(order_id):
-    # Plain function, no decorator needed
-    order = Order.objects.get(id=order_id)
-    order.status = "processed"
-    order.save()
-
-# In view/command
-with transaction.atomic():
-    order.save()
-    airlock.enqueue(process_order, order_id=order.id)
-# Dispatches via async_task() after commit
-```
-
-Pass django-q options:
-
-```python
-airlock.enqueue(
-    heavy_task,
-    data=payload,
-    _dispatch_options={
-        "group": "heavy-jobs",
-        "timeout": 300,
-        "hook": "my_app.tasks.cleanup_hook"
-    }
-)
-```
-
-## Next Steps
-
-- [Using with Celery](celery.md) - Celery integration
-- [Migration guide](../migration/from-direct-delay.md) - Migrate existing code
-- [Nested scopes](../guide/nested-scopes.md) - Transaction boundaries
-- [Custom policies](../extending/custom-policies.md) - Write your own policies
+This pattern can also be combined with middleware-based implicit scopes.
+You'll want to read more about [how nested scopes work](../guide/nested-scopes.md)
+in that case!
