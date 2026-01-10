@@ -137,13 +137,18 @@ def test_get_executor_imports_celery_executor():
 
 def test_get_executor_imports_django_q_executor():
     """Test get_executor imports django_q_executor from dotted path."""
+    import sys
     from airlock.integrations.django import get_executor
 
-    with patch("airlock.integrations.django.get_setting") as mock_get_setting:
-        mock_get_setting.return_value = "airlock.integrations.executors.django_q.django_q_executor"
+    # Mock django_q.tasks module before importing the executor
+    mock_django_q_tasks = MagicMock()
+    with patch.dict(sys.modules, {"django_q": MagicMock(), "django_q.tasks": mock_django_q_tasks}):
+        # Clear any cached import of the executor module
+        sys.modules.pop("airlock.integrations.executors.django_q", None)
 
-        # Need to patch the django_q import since it may not be installed
-        with patch("airlock.integrations.executors.django_q.async_task"):
+        with patch("airlock.integrations.django.get_setting") as mock_get_setting:
+            mock_get_setting.return_value = "airlock.integrations.executors.django_q.django_q_executor"
+
             executor = get_executor()
 
             # Should import and return the actual django_q_executor
@@ -194,7 +199,8 @@ def test_get_executor_custom_executor():
     with patch("airlock.integrations.django.get_setting") as mock_get_setting:
         mock_get_setting.return_value = "myapp.executors.my_custom_executor"
 
-        with patch("airlock.integrations.django.import_module") as mock_import:
+        # Patch importlib.import_module since get_executor imports it locally
+        with patch("importlib.import_module") as mock_import:
             mock_import.return_value = mock_module
 
             executor = get_executor()
@@ -238,12 +244,19 @@ def test_django_scope_uses_celery_executor_from_setting(mock_transaction):
 
 def test_django_scope_uses_django_q_executor_from_setting(mock_transaction):
     """Test DjangoScope uses django_q_executor when configured in TASK_BACKEND."""
-    with patch("airlock.integrations.django.get_setting") as mock_get_setting:
-        mock_get_setting.side_effect = lambda key: {
-            "TASK_BACKEND": "airlock.integrations.executors.django_q.django_q_executor",
-        }.get(key)
+    import sys
 
-        with patch("airlock.integrations.executors.django_q.async_task"):
+    # Mock django_q.tasks module before importing the executor
+    mock_django_q_tasks = MagicMock()
+    with patch.dict(sys.modules, {"django_q": MagicMock(), "django_q.tasks": mock_django_q_tasks}):
+        # Clear any cached import of the executor module
+        sys.modules.pop("airlock.integrations.executors.django_q", None)
+
+        with patch("airlock.integrations.django.get_setting") as mock_get_setting:
+            mock_get_setting.side_effect = lambda key: {
+                "TASK_BACKEND": "airlock.integrations.executors.django_q.django_q_executor",
+            }.get(key)
+
             scope = DjangoScope(policy=AllowAll())
 
             from airlock.integrations.executors.django_q import django_q_executor
@@ -319,10 +332,19 @@ def test_base_scope_with_celery_executor():
 
 def test_base_scope_with_django_q_executor():
     """Test base Scope works with django_q_executor."""
+    import sys
     import airlock
-    from airlock.integrations.executors.django_q import django_q_executor
 
-    with patch("airlock.integrations.executors.django_q.async_task") as mock_async_task:
+    # Mock django_q.tasks module before importing the executor
+    mock_async_task = MagicMock()
+    mock_django_q_tasks = MagicMock()
+    mock_django_q_tasks.async_task = mock_async_task
+    with patch.dict(sys.modules, {"django_q": MagicMock(), "django_q.tasks": mock_django_q_tasks}):
+        # Clear any cached import of the executor module
+        sys.modules.pop("airlock.integrations.executors.django_q", None)
+
+        from airlock.integrations.executors.django_q import django_q_executor
+
         mock_task = MagicMock(__name__="my_task")
 
         with airlock.scope(executor=django_q_executor):
