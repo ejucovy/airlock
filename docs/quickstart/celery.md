@@ -157,7 +157,7 @@ MIDDLEWARE = [
 ]
 
 AIRLOCK = {
-    "TASK_BACKEND": "airlock.integrations.executors.celery.celery_executor",
+    "EXECUTOR": "airlock.integrations.executors.celery.celery_executor",
 }
 ```
 

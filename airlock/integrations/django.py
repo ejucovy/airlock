@@ -131,7 +131,7 @@ class DjangoScope(Scope):
     a transaction (autocommit mode), on_commit executes immediately.
 
     If no executor is provided, uses get_executor() to select one based
-    on TASK_BACKEND setting.
+    on EXECUTOR setting.
 
     Subclass and override schedule_dispatch() to customize dispatch timing.
     """
@@ -142,7 +142,7 @@ class DjangoScope(Scope):
         executor: Executor | None = None,
         **kwargs: Any
     ) -> None:
-        # Default to executor based on TASK_BACKEND setting if not provided
+        # Default to executor based on EXECUTOR setting if not provided
         if executor is None:
             executor = get_executor()
 

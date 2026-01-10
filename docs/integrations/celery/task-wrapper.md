@@ -113,7 +113,7 @@ Use both Django scoping and Celery scoping:
 MIDDLEWARE = ["airlock.integrations.django.AirlockMiddleware"]
 
 AIRLOCK = {
-    "TASK_BACKEND": "airlock.integrations.executors.celery.celery_executor",
+    "EXECUTOR": "airlock.integrations.executors.celery.celery_executor",
 }
 ```
 
