@@ -478,6 +478,26 @@ class TestScopeContextManager:
 
         assert len(calls) == 1
 
+    def test_scope_subclass_that_flushes_in_exit(self):
+        """Test that context manager handles scope already flushed in exit()."""
+        calls = []
+
+        def tracked():
+            calls.append(1)
+
+        class EagerFlushScope(Scope):
+            """A scope that flushes immediately on exit."""
+            def exit(self):
+                super().exit()
+                self.flush()
+
+        with scope(policy=AllowAll(), _cls=EagerFlushScope) as s:
+            s._add(make_intent(tracked))
+
+        # Should have flushed once (in exit), not twice
+        assert len(calls) == 1
+        assert s.is_flushed
+
 
 class TestNestedScopeCapture:
     """Tests for nested scope capture behavior via before_descendant_flushes."""
