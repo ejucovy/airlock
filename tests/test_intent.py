@@ -2,7 +2,7 @@
 
 import pytest
 
-from airlock import Intent
+from airlock import Intent, AllowAll, DropAll
 
 
 def dummy_task():
@@ -154,7 +154,6 @@ class TestPassesLocalPolicies:
 
     def test_passes_with_allowing_policy(self):
         """Test passes_local_policies with policy that allows."""
-        from airlock import AllowAll
 
         intent = Intent(
             task=dummy_task,
@@ -167,7 +166,6 @@ class TestPassesLocalPolicies:
 
     def test_fails_with_blocking_policy(self):
         """Test passes_local_policies with policy that blocks."""
-        from airlock import DropAll
 
         intent = Intent(
             task=dummy_task,

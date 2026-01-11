@@ -257,7 +257,6 @@ class TestScopeImperativeAPI:
         s.enter()
 
         # Enqueue works when scope is active
-        import airlock
         airlock.enqueue(tracked)
 
         s.exit()
@@ -276,7 +275,6 @@ class TestScopeImperativeAPI:
         s = Scope(policy=AllowAll())
         s.enter()
 
-        import airlock
         airlock.enqueue(tracked)
 
         s.exit()
@@ -340,7 +338,6 @@ class TestScopeImperativeAPI:
         # Reset and add intent
         s2 = ConditionalScope(policy=AllowAll())
         s2.enter()
-        import airlock
         airlock.enqueue(lambda: None)
         s2.exit()
         assert s2.should_flush(None) is True

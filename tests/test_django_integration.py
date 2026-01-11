@@ -18,7 +18,15 @@ if not settings.configured:
 
 from django.db import transaction
 from django.test import override_settings
-from airlock.integrations.django import DjangoScope, AirlockMiddleware, get_setting
+from airlock.integrations.django import (
+    DjangoScope,
+    AirlockMiddleware,
+    get_setting,
+    get_executor,
+    get_scope_class,
+    get_policy,
+)
+from airlock.integrations.executors.sync import sync_executor
 
 
 def dummy_task():
@@ -110,8 +118,6 @@ def test_middleware_real_discard_on_exception(mock_transaction):
 
 def test_get_executor_returns_sync_when_backend_is_none():
     """Test get_executor returns sync_executor when EXECUTOR is None."""
-    from airlock.integrations.django import get_executor
-    from airlock.integrations.executors.sync import sync_executor
 
     with patch("airlock.integrations.django.get_setting") as mock_get_setting:
         mock_get_setting.return_value = None
@@ -123,7 +129,6 @@ def test_get_executor_returns_sync_when_backend_is_none():
 
 def test_get_executor_imports_celery_executor():
     """Test get_executor imports celery_executor from dotted path."""
-    from airlock.integrations.django import get_executor
 
     with patch("airlock.integrations.django.get_setting") as mock_get_setting:
         mock_get_setting.return_value = "airlock.integrations.executors.celery.celery_executor"
@@ -138,7 +143,6 @@ def test_get_executor_imports_celery_executor():
 def test_get_executor_imports_django_q_executor():
     """Test get_executor imports django_q_executor from dotted path."""
     import sys
-    from airlock.integrations.django import get_executor
 
     # Mock django_q.tasks module before importing the executor
     mock_django_q_tasks = MagicMock()
@@ -158,7 +162,6 @@ def test_get_executor_imports_django_q_executor():
 
 def test_get_executor_imports_huey_executor():
     """Test get_executor imports huey_executor from dotted path."""
-    from airlock.integrations.django import get_executor
 
     with patch("airlock.integrations.django.get_setting") as mock_get_setting:
         mock_get_setting.return_value = "airlock.integrations.executors.huey.huey_executor"
@@ -172,7 +175,6 @@ def test_get_executor_imports_huey_executor():
 
 def test_get_executor_imports_dramatiq_executor():
     """Test get_executor imports dramatiq_executor from dotted path."""
-    from airlock.integrations.django import get_executor
 
     with patch("airlock.integrations.django.get_setting") as mock_get_setting:
         mock_get_setting.return_value = "airlock.integrations.executors.dramatiq.dramatiq_executor"
@@ -186,8 +188,6 @@ def test_get_executor_imports_dramatiq_executor():
 
 def test_get_executor_custom_executor():
     """Test get_executor can import custom executor from user code."""
-    from airlock.integrations.django import get_executor
-    from airlock import Intent
 
     # Create a mock module with a custom executor
     def my_custom_executor(intent: Intent) -> None:
@@ -215,7 +215,6 @@ def test_get_executor_custom_executor():
 
 def test_get_scope_class_returns_django_scope_by_default():
     """Test get_scope_class returns DjangoScope when using default SCOPE setting."""
-    from airlock.integrations.django import get_scope_class
 
     with patch("airlock.integrations.django.get_setting") as mock_get_setting:
         mock_get_setting.return_value = "airlock.integrations.django.DjangoScope"
@@ -227,7 +226,6 @@ def test_get_scope_class_returns_django_scope_by_default():
 
 def test_get_scope_class_imports_custom_scope():
     """Test get_scope_class imports custom scope from dotted path."""
-    from airlock.integrations.django import get_scope_class
 
     # Create a mock custom scope class
     class CustomScope(DjangoScope):
@@ -255,7 +253,6 @@ def test_get_scope_class_imports_custom_scope():
 
 def test_get_policy_with_callable():
     """Test get_policy() when POLICY setting is a callable."""
-    from airlock.integrations.django import get_policy
 
     def policy_factory():
         return AllowAll()
@@ -270,7 +267,6 @@ def test_get_policy_with_callable():
 
 def test_get_policy_with_instance():
     """Test get_policy() when POLICY setting is already an instance."""
-    from airlock.integrations.django import get_policy
 
     instance = AllowAll()
 
@@ -317,7 +313,6 @@ def test_middleware_uses_scope_class_from_setting(mock_transaction):
 
 def test_django_scope_uses_sync_executor_by_default(mock_transaction):
     """Test DjangoScope uses sync_executor when EXECUTOR is None."""
-    from airlock.integrations.executors.sync import sync_executor
 
     with patch("airlock.integrations.django.get_setting") as mock_get_setting:
         mock_get_setting.side_effect = lambda key: {
@@ -415,7 +410,6 @@ def test_django_scope_dispatches_with_configured_executor():
 
 def test_base_scope_with_celery_executor():
     """Test base Scope works with celery_executor."""
-    import airlock
     from airlock.integrations.executors.celery import celery_executor
 
     mock_task = MagicMock()
@@ -434,7 +428,6 @@ def test_base_scope_with_celery_executor():
 def test_base_scope_with_django_q_executor():
     """Test base Scope works with django_q_executor."""
     import sys
-    import airlock
 
     # Mock django_q.tasks module before importing the executor
     mock_async_task = MagicMock()
@@ -457,7 +450,6 @@ def test_base_scope_with_django_q_executor():
 
 def test_base_scope_with_huey_executor():
     """Test base Scope works with huey_executor."""
-    import airlock
     from airlock.integrations.executors.huey import huey_executor
 
     mock_task = MagicMock()
@@ -475,7 +467,6 @@ def test_base_scope_with_huey_executor():
 
 def test_base_scope_with_dramatiq_executor():
     """Test base Scope works with dramatiq_executor."""
-    import airlock
     from airlock.integrations.executors.dramatiq import dramatiq_executor
 
     mock_task = MagicMock()
@@ -493,7 +484,6 @@ def test_base_scope_with_dramatiq_executor():
 
 def test_django_scope_with_multiple_executors_in_sequence():
     """Test different DjangoScopes can use different executors."""
-    from airlock.integrations.executors.sync import sync_executor
     from airlock.integrations.executors.celery import celery_executor
 
     # First scope with tracking executor

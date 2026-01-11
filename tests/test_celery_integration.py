@@ -3,8 +3,10 @@ from unittest.mock import MagicMock, patch
 
 pytest.importorskip("celery")
 
+from celery import Task
+
 import airlock
-from airlock import DropAll
+from airlock import DropAll, AllowAll
 from airlock.integrations.celery import (
     LegacyTaskShim,
     AirlockTask,
@@ -12,6 +14,7 @@ from airlock.integrations.celery import (
     uninstall_global_intercept,
     _installed,
 )
+from airlock.integrations import celery as celery_module
 
 
 @patch("airlock.integrations.celery.airlock.enqueue")
@@ -81,7 +84,6 @@ def test_airlock_task_wraps_run_in_scope():
 
             mock_scope.assert_called_once()
             # Verify policy is AllowAll
-            from airlock import AllowAll
 
             args = mock_scope.call_args[1]
             assert isinstance(args["policy"], AllowAll)
@@ -136,7 +138,6 @@ class TestGlobalIntercept:
 
     def test_delay_intercepted_in_scope(self, global_intercept):
         """Test that .delay() is intercepted when in a scope."""
-        from celery import Task
 
         class MyTask(Task):
             name = "test.task"
@@ -154,7 +155,6 @@ class TestGlobalIntercept:
 
     def test_delay_passes_through_without_scope(self, global_intercept):
         """Test that .delay() passes through when no scope is active."""
-        from celery import Task
 
         class MyTask(Task):
             name = "test.task"
@@ -173,7 +173,6 @@ class TestGlobalIntercept:
 
     def test_apply_async_intercepted_in_scope(self, global_intercept):
         """Test that .apply_async() is intercepted when in a scope."""
-        from celery import Task
 
         class MyTask(Task):
             name = "test.task"
@@ -191,7 +190,6 @@ class TestGlobalIntercept:
 
     def test_apply_async_with_options_captures_dispatch_options(self, global_intercept):
         """Test that .apply_async() with options captures them as dispatch_options."""
-        from celery import Task
 
         class MyTask(Task):
             name = "test.task"
@@ -211,7 +209,6 @@ class TestGlobalIntercept:
 
     def test_intercept_returns_none_for_delay(self, global_intercept):
         """Test that intercepted .delay() returns None (can't return AsyncResult)."""
-        from celery import Task
 
         class MyTask(Task):
             name = "test.task"
@@ -226,7 +223,6 @@ class TestGlobalIntercept:
 
     def test_delay_warns_outside_scope(self, global_intercept):
         """Test that .delay() emits deprecation warning even outside a scope."""
-        from celery import Task
 
         class MyTask(Task):
             name = "test.task"
@@ -239,7 +235,6 @@ class TestGlobalIntercept:
         ):
             # Since global intercept is installed, the original delay is stored
             # We need to mock it at the module level
-            from airlock.integrations import celery as celery_module
 
             original = celery_module._original_delay
 
@@ -256,8 +251,6 @@ class TestGlobalIntercept:
 
     def test_wrap_task_execution(self, clean_intercept_state):
         """Test that wrap_task_execution=True wraps task __call__ in a scope."""
-        from celery import Task
-        from airlock.integrations import celery as celery_module
 
         install_global_intercept(wrap_task_execution=True)
 
@@ -290,7 +283,6 @@ class TestGlobalIntercept:
 
     def test_wrap_task_execution_disabled(self, clean_intercept_state):
         """Test that wrap_task_execution=False doesn't patch __call__."""
-        from celery import Task
 
         original_call = Task.__call__
         install_global_intercept(wrap_task_execution=False)
