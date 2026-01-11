@@ -138,7 +138,3 @@ with airlock.scope(
     backfill_data()
 ```
 
-## Next
-
-- [How it composes](how-it-composes.md) - Nested scopes and provenance
-- [Basic usage guide](../guide/basic-usage.md) - Practical patterns

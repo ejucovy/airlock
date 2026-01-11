@@ -288,8 +288,3 @@ class RateLimitedExecutor:
         self.last_execute = time.time()
 ```
 
-## Next Steps
-
-- [Custom Scopes](custom-scopes.md) - Advanced scope customization
-- [Custom Policies](custom-policies.md) - Write custom policies
-- [Executor API Reference](../api/executors.md) - Complete executor API

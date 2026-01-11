@@ -58,7 +58,3 @@ In this scenario, the view plus the database transaction *is* your boundary.
 
 That's a valid architecture. (I prefer it actually!) Airlock is for when you *want* to express intent closer to the domain -- in `save()`, in signals, in service methods -- without losing control over escape.
 
-## Next
-
-- [Core model](core-model.md) - The 3 concerns (Policy/Executor/Scope)
-- [How it composes](how-it-composes.md) - Nested scopes and provenance

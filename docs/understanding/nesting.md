@@ -1,4 +1,4 @@
-# How It Composes
+# Nesting
 
 With airlock you can nest **scopes** or **policies** arbitrarily.
 
@@ -285,8 +285,3 @@ with DBBeforeCacheScope():
 # update_cache executes here (after DB commit) ✓
 ```
 
-## Next
-
-- [Basic usage](../guide/basic-usage.md) - Practical patterns
-- [Nested scopes guide](../guide/nested-scopes.md) - Deep dive
-- [Custom scopes](../extending/custom-scopes.md) - Subclassing

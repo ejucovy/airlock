@@ -251,8 +251,3 @@ def test_always_flush_scope():
     assert not s.is_discarded
 ```
 
-## Next Steps
-
-- [Custom Policies](custom-policies.md) - Write custom policies
-- [Custom Executors](custom-executors.md) - Write custom executors
-- [Scope API Reference](../api/scope-class.md) - Complete scope API

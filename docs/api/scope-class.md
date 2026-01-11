@@ -224,8 +224,3 @@ Created → Entered → Exited → Flushed/Discarded
 - Can only `flush()` or `discard()` after `exit()`
 - Cannot `flush()` and `discard()` (terminal states are exclusive)
 
-## Next Steps
-
-- [Custom Scopes Guide](../extending/custom-scopes.md) - Subclassing patterns
-- [Core API](core.md) - Main airlock functions
-- [Intent API](intent.md) - Intent class reference

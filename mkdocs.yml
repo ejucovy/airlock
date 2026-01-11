@@ -61,14 +61,14 @@ nav:
   - Home: index.md
 
   - Quickstart:
-    - Raw Python (5 min): quickstart/raw-python.md
     - Django (5 min): quickstart/django.md
     - Celery (5 min): quickstart/celery.md
 
   - Understanding Airlock:
     - The Problem: understanding/the-problem.md
     - Core Model (3 Concerns): understanding/core-model.md
-    - How It Composes: understanding/how-it-composes.md
+    - Nesting: understanding/nesting.md
+    - Alternatives: understanding/alternatives.md
 
   - Practical Guide:
     - Basic Usage: guide/basic-usage.md
@@ -95,4 +95,3 @@ nav:
     - Intent: api/intent.md
     - Policies: api/policies.md
 
-  - Alternatives: alternatives.md

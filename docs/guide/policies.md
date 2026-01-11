@@ -248,7 +248,3 @@ class DropAll:
 - Fail fast: Tests, catching bugs
 - Silent drop: Production filtering, dry-run modes
 
-## Next Steps
-
-- [Custom Policies](../extending/custom-policies.md) - Write your own policies
-- [Nested Scopes](nested-scopes.md) - Policy inheritance and composition

@@ -339,8 +339,3 @@ class BatchingExecutor:
         self.batch.clear()
 ```
 
-## Next Steps
-
-- [Custom Executors](../extending/custom-executors.md) - Write your own
-- [Executors API](../api/executors.md) - Complete executor reference (if exists)
-- [Policies Guide](policies.md) - Filter what executes

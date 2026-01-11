@@ -212,7 +212,3 @@ def test_task_effects():
 
 **Recommendation:** Use `AirlockTask` for production. Use `install_global_intercept` for migration only.
 
-## Next Steps
-
-- [Migration Guide](../../migration/from-direct-delay.md) - Migrating existing tasks
-- [Custom Scopes](../../extending/custom-scopes.md) - Advanced scope customization
