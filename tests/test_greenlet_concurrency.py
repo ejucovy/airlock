@@ -274,3 +274,80 @@ class TestSequentialGreenletExecution:
 
         # Main greenlet should also have no scope
         assert get_current_scope() is None
+
+
+class TestGreenletCompatibilityCheck:
+    """
+    Tests for the _check_greenlet_compatibility function.
+
+    These test edge cases that are hard to hit in normal execution:
+    - When greenlet is not installed (ImportError)
+    - When greenlet doesn't support contextvars (old version warning)
+    """
+
+    def test_no_warning_when_greenlet_not_installed(self):
+        """Test that no warning is issued when greenlet is not installed."""
+        import sys
+        import warnings
+
+        # Import the check function
+        from airlock import _check_greenlet_compatibility
+
+        # Mock greenlet as not installed
+        original_modules = sys.modules.copy()
+        if 'greenlet' in sys.modules:
+            del sys.modules['greenlet']
+
+        # Make import fail
+        import builtins
+        original_import = builtins.__import__
+
+        def mock_import(name, *args, **kwargs):
+            if name == 'greenlet':
+                raise ImportError("No module named 'greenlet'")
+            return original_import(name, *args, **kwargs)
+
+        builtins.__import__ = mock_import
+
+        try:
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                _check_greenlet_compatibility()
+
+            # Should not have any warnings
+            greenlet_warnings = [warning for warning in w if "greenlet" in str(warning.message)]
+            assert len(greenlet_warnings) == 0, f"Got unexpected warnings: {greenlet_warnings}"
+        finally:
+            builtins.__import__ = original_import
+            sys.modules.update(original_modules)
+
+    def test_warning_when_greenlet_lacks_contextvar_support(self):
+        """Test that a warning is issued when greenlet lacks GREENLET_USE_CONTEXT_VARS."""
+        import sys
+        import warnings
+        from unittest.mock import MagicMock
+
+        # Import the check function
+        from airlock import _check_greenlet_compatibility
+
+        # Create a mock greenlet without GREENLET_USE_CONTEXT_VARS
+        mock_greenlet = MagicMock()
+        del mock_greenlet.GREENLET_USE_CONTEXT_VARS  # Ensure attribute doesn't exist
+
+        original_modules = sys.modules.copy()
+        sys.modules['greenlet'] = mock_greenlet
+
+        try:
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                _check_greenlet_compatibility()
+
+            # Should have issued a warning
+            greenlet_warnings = [warning for warning in w
+                               if "greenlet" in str(warning.message).lower()
+                               and warning.category == RuntimeWarning]
+            assert len(greenlet_warnings) == 1, f"Expected 1 warning, got {len(greenlet_warnings)}"
+            assert "contextvars" in str(greenlet_warnings[0].message).lower()
+        finally:
+            sys.modules.clear()
+            sys.modules.update(original_modules)

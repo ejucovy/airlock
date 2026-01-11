@@ -2,10 +2,22 @@
 Django integration for airlock.
 
 Provides:
+- AirlockConfig: AppConfig for auto-configuration via INSTALLED_APPS
 - DjangoScope: Defers dispatch to transaction.on_commit()
 - AirlockMiddleware: Wraps requests in a scope
 - airlock_command: Decorator for management commands
 - get_executor(): Helper to select executor based on EXECUTOR setting
+
+Quick Start:
+    # settings.py
+    INSTALLED_APPS = [
+        ...
+        "airlock.integrations.django",  # Auto-configures airlock
+    ]
+
+    This automatically configures airlock.scope() and @airlock.scoped() to use:
+    - DjangoScope (defers dispatch to transaction.on_commit)
+    - Policy and executor from AIRLOCK settings
 
 Settings (in settings.py):
     AIRLOCK = {
@@ -265,3 +277,7 @@ def airlock_command(
     if func is not None:
         return decorator(func)
     return decorator
+
+
+# Default app config for Django < 3.2 compatibility
+default_app_config = "airlock.integrations.django.apps.AirlockConfig"

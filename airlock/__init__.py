@@ -60,6 +60,77 @@ _check_greenlet_compatibility()
 
 
 # ============================================================================
+# Configuration
+# ============================================================================
+
+# Global configuration for scope defaults
+_config: dict[str, Any] = {
+    "scope_cls": None,  # None means use Scope (can't reference it yet)
+    "policy": None,     # None means use AllowAll()
+    "executor": None,   # None means use default sync executor
+}
+
+
+def configure(
+    *,
+    scope_cls: "type[Scope] | None" = None,
+    policy: "Policy | None" = None,
+    executor: "Executor | None" = None,
+) -> None:
+    """
+    Configure global defaults for airlock scopes.
+
+    Call this once at application startup to set defaults that apply to
+    all scope() and scoped() calls. Explicit arguments to scope()/scoped()
+    always override these defaults.
+
+    Args:
+        scope_cls: Default Scope class. Use this to set DjangoScope as the
+            default in Django applications.
+        policy: Default policy for all scopes.
+        executor: Default executor for all scopes.
+
+    Example:
+        # In Django, this is called automatically by AppConfig.ready()
+        # if you add "airlock.integrations.django" to INSTALLED_APPS.
+
+        # Manual configuration:
+        from airlock import configure, Scope
+        from airlock.integrations.django import DjangoScope
+
+        configure(scope_cls=DjangoScope)
+
+    Note:
+        Configuration is stored globally. In tests, use reset_configuration()
+        to restore defaults between tests.
+    """
+    if scope_cls is not None:
+        _config["scope_cls"] = scope_cls
+    if policy is not None:
+        _config["policy"] = policy
+    if executor is not None:
+        _config["executor"] = executor
+
+
+def reset_configuration() -> None:
+    """
+    Reset configuration to defaults. Primarily for testing.
+    """
+    _config["scope_cls"] = None
+    _config["policy"] = None
+    _config["executor"] = None
+
+
+def get_configuration() -> dict[str, Any]:
+    """
+    Get current configuration. Primarily for testing/debugging.
+
+    Returns a copy to prevent mutation.
+    """
+    return dict(_config)
+
+
+# ============================================================================
 # Context
 # ============================================================================
 
@@ -697,20 +768,23 @@ class Scope:
 def scope(
     policy: Policy | None = None,
     *,
-    _cls: type[Scope] = Scope,
+    _cls: type[Scope] | None = None,
     **kwargs,
 ) -> Iterator[Scope]:
     """
     Context manager defining a lifecycle boundary for side effects.
 
     Args:
-        policy: Policy controlling what intents are allowed. Defaults to AllowAll.
-        _cls: Scope class to use. Subclass Scope and override should_flush()
-            to customize flush/discard behavior.
+        policy: Policy controlling what intents are allowed. Defaults to configured
+            policy or AllowAll if not configured.
+        _cls: Scope class to use. Defaults to configured scope_cls or Scope if not
+            configured. Subclass Scope and override should_flush() to customize
+            flush/discard behavior.
         **kwargs: Additional arguments passed to Scope constructor (e.g., executor).
 
     Common kwargs:
-        executor: Callable that executes intents. Defaults to synchronous execution.
+        executor: Callable that executes intents. Defaults to configured executor
+            or synchronous execution if not configured.
             See airlock.integrations.executors for available executors.
 
     Behavior:
@@ -719,6 +793,10 @@ def scope(
 
     The default Scope.should_flush() returns True on success, False on error.
     Subclass Scope to customize this behavior.
+
+    Note:
+        Arguments passed explicitly always override configured defaults.
+        Use airlock.configure() to set application-wide defaults.
 
     Examples:
         # Use celery executor
@@ -731,10 +809,15 @@ def scope(
         with airlock.scope(executor=django_q_executor):
             airlock.enqueue(my_task, ...)
     """
-    if policy is None:
-        policy = AllowAll()
+    # Apply configured defaults for anything not explicitly provided
+    actual_cls = _cls if _cls is not None else (_config["scope_cls"] or Scope)
+    actual_policy = policy if policy is not None else (_config["policy"] or AllowAll())
 
-    s = _cls(policy=policy, **kwargs)
+    # For executor, check if it's in kwargs; if not, use configured default
+    if "executor" not in kwargs and _config["executor"] is not None:
+        kwargs["executor"] = _config["executor"]
+
+    s = actual_cls(policy=actual_policy, **kwargs)
     s.enter()
 
     error: BaseException | None = None
@@ -756,7 +839,7 @@ def scope(
 def scoped(
     policy: Policy | None = None,
     *,
-    _cls: type[Scope] = Scope,
+    _cls: type[Scope] | None = None,
     **kwargs,
 ) -> Callable[[Callable], Callable]:
     """
@@ -766,9 +849,11 @@ def scoped(
     or any callable that should run inside a scope.
 
     Args:
-        policy: Policy controlling what intents are allowed. Defaults to AllowAll.
-        _cls: Scope class to use. Subclass Scope and override should_flush()
-            to customize flush/discard behavior.
+        policy: Policy controlling what intents are allowed. Defaults to configured
+            policy or AllowAll if not configured.
+        _cls: Scope class to use. Defaults to configured scope_cls or Scope if not
+            configured. Subclass Scope and override should_flush() to customize
+            flush/discard behavior.
         **kwargs: Additional arguments passed to Scope constructor (e.g., executor).
 
     Usage:
@@ -794,6 +879,7 @@ def scoped(
     Note:
         The decorator creates a fresh scope for each invocation. This is
         safe for concurrent execution - each call gets its own isolated scope.
+        Arguments passed explicitly always override configured defaults.
     """
     from functools import wraps
 
@@ -922,6 +1008,10 @@ def enqueue(
 # ============================================================================
 
 __all__ = [
+    # Configuration
+    "configure",
+    "reset_configuration",
+    "get_configuration",
     # Core
     "Intent",
     "Executor",

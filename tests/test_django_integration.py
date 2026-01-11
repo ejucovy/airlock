@@ -700,3 +700,158 @@ def test_airlock_command_with_parens_and_custom_kwarg(mock_transaction):
 
     assert len(policy_used) == 1
     assert isinstance(policy_used[0], DropAll)
+
+
+# =============================================================================
+# AppConfig tests
+# =============================================================================
+
+
+class TestAppConfig:
+    """Tests for Django AppConfig auto-configuration."""
+
+    @pytest.fixture(autouse=True)
+    def reset_airlock_config(self):
+        """Reset airlock configuration before and after each test."""
+        airlock.reset_configuration()
+        yield
+        airlock.reset_configuration()
+
+    def test_app_config_exists(self):
+        """Test that AirlockConfig exists and has correct attributes."""
+        from airlock.integrations.django.apps import AirlockConfig
+
+        assert AirlockConfig.name == "airlock.integrations.django"
+        assert AirlockConfig.label == "airlock_django"
+
+    def test_app_config_ready_calls_configure(self):
+        """Test that AppConfig.ready() calls airlock.configure()."""
+        from airlock.integrations.django.apps import AirlockConfig
+        import airlock.integrations.django as django_module
+
+        with patch("airlock.integrations.django.get_policy") as mock_policy:
+            mock_policy.return_value = AllowAll()
+            with patch("airlock.integrations.django.get_executor") as mock_executor:
+                mock_executor.return_value = sync_executor
+
+                config = AirlockConfig("airlock.integrations.django", django_module)
+                config.ready()
+
+                # Check that airlock was configured
+                airlock_config = airlock.get_configuration()
+                assert airlock_config["scope_cls"] is DjangoScope
+                assert isinstance(airlock_config["policy"], AllowAll)
+                assert airlock_config["executor"] is sync_executor
+
+    def test_app_config_ready_uses_configured_policy(self):
+        """Test that AppConfig.ready() uses policy from Django settings."""
+        from airlock.integrations.django.apps import AirlockConfig
+        from airlock import DropAll
+        import airlock.integrations.django as django_module
+
+        custom_policy = DropAll()
+
+        with patch("airlock.integrations.django.get_policy") as mock_policy:
+            mock_policy.return_value = custom_policy
+            with patch("airlock.integrations.django.get_executor") as mock_executor:
+                mock_executor.return_value = sync_executor
+
+                config = AirlockConfig("airlock.integrations.django", django_module)
+                config.ready()
+
+                airlock_config = airlock.get_configuration()
+                assert airlock_config["policy"] is custom_policy
+
+    def test_app_config_ready_uses_configured_executor(self):
+        """Test that AppConfig.ready() uses executor from Django settings."""
+        from airlock.integrations.django.apps import AirlockConfig
+        from airlock.integrations.executors.celery import celery_executor
+        import airlock.integrations.django as django_module
+
+        with patch("airlock.integrations.django.get_policy") as mock_policy:
+            mock_policy.return_value = AllowAll()
+            with patch("airlock.integrations.django.get_executor") as mock_executor:
+                mock_executor.return_value = celery_executor
+
+                config = AirlockConfig("airlock.integrations.django", django_module)
+                config.ready()
+
+                airlock_config = airlock.get_configuration()
+                assert airlock_config["executor"] is celery_executor
+
+    def test_scope_uses_django_defaults_after_app_config_ready(self, mock_transaction):
+        """Test that scope() uses DjangoScope after AppConfig.ready()."""
+        from airlock.integrations.django.apps import AirlockConfig
+        import airlock.integrations.django as django_module
+
+        with patch("airlock.integrations.django.get_policy") as mock_policy:
+            mock_policy.return_value = AllowAll()
+            with patch("airlock.integrations.django.get_executor") as mock_executor:
+                mock_executor.return_value = sync_executor
+
+                config = AirlockConfig("airlock.integrations.django", django_module)
+                config.ready()
+
+                # Now scope() should use DjangoScope by default
+                with airlock.scope() as s:
+                    pass
+
+                assert isinstance(s, DjangoScope)
+
+    def test_scoped_uses_django_defaults_after_app_config_ready(self, mock_transaction):
+        """Test that @scoped() uses DjangoScope after AppConfig.ready()."""
+        scopes_created = []
+
+        class TrackingDjangoScope(DjangoScope):
+            def __init__(self, **kwargs):
+                scopes_created.append(self)
+                super().__init__(**kwargs)
+
+        with patch("airlock.integrations.django.get_policy") as mock_policy:
+            mock_policy.return_value = AllowAll()
+            with patch("airlock.integrations.django.get_executor") as mock_executor:
+                mock_executor.return_value = sync_executor
+
+                # Configure with tracking scope
+                airlock.configure(
+                    scope_cls=TrackingDjangoScope,
+                    policy=AllowAll(),
+                    executor=sync_executor,
+                )
+
+                @airlock.scoped()
+                def my_func():
+                    pass
+
+                my_func()
+
+                assert len(scopes_created) == 1
+                assert isinstance(scopes_created[0], TrackingDjangoScope)
+
+    def test_explicit_scope_args_override_app_config(self, mock_transaction):
+        """Test that explicit scope() args override AppConfig defaults."""
+        from airlock.integrations.django.apps import AirlockConfig
+        from airlock import Scope, DropAll
+        import airlock.integrations.django as django_module
+
+        with patch("airlock.integrations.django.get_policy") as mock_policy:
+            mock_policy.return_value = AllowAll()
+            with patch("airlock.integrations.django.get_executor") as mock_executor:
+                mock_executor.return_value = sync_executor
+
+                config = AirlockConfig("airlock.integrations.django", django_module)
+                config.ready()
+
+                # Explicit args should override
+                with airlock.scope(_cls=Scope, policy=DropAll()) as s:
+                    pass
+
+                # Should use explicit Scope, not DjangoScope
+                assert type(s) is Scope
+
+    def test_default_app_config_is_set(self):
+        """Test that default_app_config is set for Django < 3.2 compatibility."""
+        from airlock.integrations import django as django_integration
+
+        assert hasattr(django_integration, "default_app_config")
+        assert django_integration.default_app_config == "airlock.integrations.django.apps.AirlockConfig"
