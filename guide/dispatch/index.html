@@ -2547,7 +2547,7 @@
 <h3 id="via-django-settings">Via Django Settings<a class="headerlink" href="#via-django-settings" title="Permanent link">&para;</a></h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># settings.py</span>
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">AIRLOCK</span> <span class="o">=</span> <span class="p">{</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>    <span class="s2">&quot;TASK_BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;airlock.integrations.executors.celery.celery_executor&quot;</span><span class="p">,</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>    <span class="s2">&quot;EXECUTOR&quot;</span><span class="p">:</span> <span class="s2">&quot;airlock.integrations.executors.celery.celery_executor&quot;</span><span class="p">,</span>
 </span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="p">}</span>
 </span></code></pre></div>
 <p>Now all <code>DjangoScope</code> instances use Celery by default.</p>

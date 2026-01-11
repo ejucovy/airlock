@@ -678,6 +678,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#middleware-placement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Middleware placement
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#basic-usage" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1801,6 +1812,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#middleware-placement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Middleware placement
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#basic-usage" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1895,9 +1917,13 @@ django-q, Dramatiq, huey, and Django Tasks.</p>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="p">]</span>
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">AIRLOCK</span> <span class="o">=</span> <span class="p">{</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="s2">&quot;TASK_BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;airlock.integrations.executors.celery.celery_executor&quot;</span><span class="p">,</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="s2">&quot;EXECUTOR&quot;</span><span class="p">:</span> <span class="s2">&quot;airlock.integrations.executors.celery.celery_executor&quot;</span><span class="p">,</span>
 </span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="p">}</span>
 </span></code></pre></div>
+<h3 id="middleware-placement">Middleware placement<a class="headerlink" href="#middleware-placement" title="Permanent link">&para;</a></h3>
+<p>Any placement works for most projects. Django's request handler converts uncaught exceptions to 4xx/5xx responses, so <code>AirlockMiddleware</code> typically sees the correct status code and discards appropriately.</p>
+<p>Placement matters if you have <strong>custom middleware with <code>process_exception()</code></strong> that catches view exceptions and returns 2xx or 3xx responses. In that case, place <code>AirlockMiddleware</code> higher (earlier) in the list than such middleware, so it sees the exception via its own <code>process_exception</code> before another middleware converts it to a misleading success response.</p>
+<p>If you care about dispatching conditional on exceptions from middleware themselves (not just views), place <code>AirlockMiddleware</code> above those middleware. Similarly, if you use <code>ATOMIC_REQUESTS=False</code> and maintain your own control over transaction boundaries across middleware layers, you may need to be more opinionated about ordering.</p>
 <h3 id="basic-usage">Basic usage<a class="headerlink" href="#basic-usage" title="Permanent link">&para;</a></h3>
 <p>Anywhere in your models/views/services/etc, pass your task functions to <code>airlock.enqueue()</code>:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">## models.py</span>
@@ -1925,25 +1951,16 @@ the default database.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># settings.py</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">AIRLOCK</span> <span class="o">=</span> <span class="p">{</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="c1"># Just call functions synchronously at dispatch time</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="s2">&quot;TASK_BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;airlock.integrations.executors.sync.sync_executor&quot;</span><span class="p">,</span> 
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="s2">&quot;EXECUTOR&quot;</span><span class="p">:</span> <span class="s2">&quot;airlock.integrations.executors.sync.sync_executor&quot;</span><span class="p">,</span>
 </span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="c1"># Other built in options:</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="c1"># &quot;TASK_BACKEND&quot;: &quot;airlock.integrations.executors.celery.celery_executor&quot;,</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="c1"># &quot;TASK_BACKEND&quot;: &quot;airlock.integrations.executors.django_q.django_q_executor&quot;,</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="c1"># &quot;TASK_BACKEND&quot;: &quot;airlock.integrations.executors.huey.huey_executor&quot;,</span>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="c1"># &quot;TASK_BACKEND&quot;: &quot;airlock.integrations.executors.dramatiq.dramatiq_executor&quot;,</span>
-</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="c1"># &quot;TASK_BACKEND&quot;: &quot;airlock.integrations.executors.django_tasks.django_tasks_executor&quot;,</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="c1"># &quot;EXECUTOR&quot;: &quot;airlock.integrations.executors.celery.celery_executor&quot;,</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="c1"># &quot;EXECUTOR&quot;: &quot;airlock.integrations.executors.django_q.django_q_executor&quot;,</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="c1"># &quot;EXECUTOR&quot;: &quot;airlock.integrations.executors.huey.huey_executor&quot;,</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="c1"># &quot;EXECUTOR&quot;: &quot;airlock.integrations.executors.dramatiq.dramatiq_executor&quot;,</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="c1"># &quot;EXECUTOR&quot;: &quot;airlock.integrations.executors.django_tasks.django_tasks_executor&quot;,</span>
 </span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>
-</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    <span class="s2">&quot;DEFAULT_POLICY&quot;</span><span class="p">:</span> <span class="s2">&quot;airlock.AllowAll&quot;</span><span class="p">,</span> 
-</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>
-</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    <span class="c1"># Defer to transaction.on_commit()</span>
-</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>    <span class="s2">&quot;USE_ON_COMMIT&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>
-</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>    <span class="c1"># The `robust` parameter passed to `on_commit`</span>
-</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>    <span class="s2">&quot;ROBUST&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>
-</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>    <span class="c1"># Database for on_commit</span>
-</span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>    <span class="s2">&quot;DATABASE_ALIAS&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
-</span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a><span class="p">}</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    <span class="s2">&quot;POLICY&quot;</span><span class="p">:</span> <span class="s2">&quot;airlock.AllowAll&quot;</span><span class="p">,</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="p">}</span>
 </span></code></pre></div>
 <h3 id="overriding-4xx5xx-behavior">Overriding 4xx/5xx behavior<a class="headerlink" href="#overriding-4xx5xx-behavior" title="Permanent link">&para;</a></h3>
 <p>By default airlock's Django middleware discards side effects 
