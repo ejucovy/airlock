@@ -264,3 +264,55 @@ class TestGlobalIntercept:
 
         # __call__ should not be patched
         assert Task.__call__ is original_call
+
+    def test_celery_executor_does_not_recurse_with_global_intercept(self, clean_intercept_state):
+        """
+        Test that celery_executor dispatch doesn't cause infinite recursion
+        when global intercept is installed.
+
+        The invariant: scope.exit() removes scope from context var BEFORE
+        flush() calls the executor, so when executor calls task.apply_async(),
+        get_current_scope() returns None and the passthrough path is used.
+
+        This test uses a real Celery Task subclass (not a mock) so that
+        celery_executor's call to task.apply_async() actually hits the
+        intercepted version.
+        """
+        from airlock.integrations.executors.celery import celery_executor
+
+        install_global_intercept(wrap_task_execution=False)
+
+        apply_async_calls = []
+
+        class TrackedTask(Task):
+            name = "test.recursion.task"
+
+        # Patch the ORIGINAL apply_async to track calls
+        # This is what _intercepted_apply_async calls in passthrough mode
+        original_apply_async = celery_module._original_apply_async
+
+        def tracking_apply_async(self, args=None, kwargs=None, **options):
+            apply_async_calls.append((self.name, args, kwargs, options))
+            # Don't actually dispatch to Celery
+            return None
+
+        celery_module._original_apply_async = tracking_apply_async
+
+        try:
+            task = TrackedTask()
+
+            # Use celery_executor - when scope exits and flushes,
+            # celery_executor calls task.apply_async() which hits
+            # _intercepted_apply_async. Since scope has exited,
+            # get_current_scope() returns None -> passthrough path.
+            with airlock.scope(executor=celery_executor):
+                airlock.enqueue(task, "arg1", key="val")
+
+            # Should have exactly one call (no recursion)
+            assert len(apply_async_calls) == 1
+            name, args, kwargs, options = apply_async_calls[0]
+            assert name == "test.recursion.task"
+            assert args == ("arg1",)
+            assert kwargs == {"key": "val"}
+        finally:
+            celery_module._original_apply_async = original_apply_async
