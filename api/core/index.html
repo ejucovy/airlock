@@ -741,7 +741,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../celery/task-wrapper/" class="md-nav__link">
+      <a href="../../celery/task-wrapper.md" class="md-nav__link">
         
   
   
@@ -2415,7 +2415,7 @@
 
 
 <a href="#airlock.scope" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">scope</span><span class="p">(</span><span class="n">policy</span><span class="p">:</span> <span class="n">Policy</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">_cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">Scope</span><span class="p">]</span> <span class="o">=</span> <span class="n">Scope</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Scope</span><span class="p">]</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">scope</span><span class="p">(</span><span class="n">policy</span><span class="p">:</span> <span class="n">Policy</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">_cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">Scope</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Scope</span><span class="p">]</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents first">
@@ -2443,7 +2443,8 @@
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Policy controlling what intents are allowed. Defaults to AllowAll.</p>
+                <p>Policy controlling what intents are allowed. Defaults to configured
+policy or AllowAll if not configured.</p>
               </div>
             </td>
             <td>
@@ -2455,16 +2456,17 @@
                 <code>_cls</code>
             </td>
             <td>
-                  <code><span title="type">type</span>[<a class="autorefs autorefs-internal" title="Scope (airlock.Scope)" href="#airlock.Scope">Scope</a>]</code>
+                  <code><span title="type">type</span>[<a class="autorefs autorefs-internal" title="Scope (airlock.Scope)" href="#airlock.Scope">Scope</a>] | None</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Scope class to use. Subclass Scope and override should_flush()
-to customize flush/discard behavior.</p>
+                <p>Scope class to use. Defaults to configured scope_cls or Scope if not
+configured. Subclass Scope and override should_flush() to customize
+flush/discard behavior.</p>
               </div>
             </td>
             <td>
-                  <code><a class="autorefs autorefs-internal" title="Scope (airlock.Scope)" href="#airlock.Scope">Scope</a></code>
+                  <code>None</code>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -2488,7 +2490,8 @@ to customize flush/discard behavior.</p>
 
 <details class="common-kwargs" open>
   <summary>Common kwargs</summary>
-  <p>executor: Callable that executes intents. Defaults to synchronous execution.
+  <p>executor: Callable that executes intents. Defaults to configured executor
+    or synchronous execution if not configured.
     See airlock.integrations.executors for available executors.</p>
 </details>
 
@@ -2501,6 +2504,12 @@ to customize flush/discard behavior.</p>
 </details>        <p>The default Scope.should_flush() returns True on success, False on error.
 Subclass Scope to customize this behavior.</p>
 
+
+<details class="note" open>
+  <summary>Note</summary>
+  <p>Arguments passed explicitly always override configured defaults.
+Use airlock.configure() to set application-wide defaults.</p>
+</details>
 
 <p><span class="doc-section-title">Examples:</span></p>
     <h3 id="airlock.scope--use-celery-executor">Use celery executor<a class="headerlink" href="#airlock.scope--use-celery-executor" title="Permanent link">&para;</a></h3>

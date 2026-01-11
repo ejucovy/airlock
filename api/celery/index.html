@@ -741,7 +741,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../celery/task-wrapper/" class="md-nav__link">
+      <a href="../../celery/task-wrapper.md" class="md-nav__link">
         
   
   
@@ -1164,17 +1164,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#airlock.integrations.celery.AirlockTask" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        AirlockTask
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#airlock.integrations.celery.LegacyTaskShim" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1345,17 +1334,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#airlock.integrations.celery.AirlockTask" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        AirlockTask
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#airlock.integrations.celery.LegacyTaskShim" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1466,69 +1444,10 @@
 
 <h1 id="celery-integration">Celery Integration<a class="headerlink" href="#celery-integration" title="Permanent link">&para;</a></h1>
 <p>Celery-specific components for airlock.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airlock.integrations.celery</span><span class="w"> </span><span class="kn">import</span> <span class="n">AirlockTask</span><span class="p">,</span> <span class="n">LegacyTaskShim</span><span class="p">,</span> <span class="n">install_global_intercept</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airlock.integrations.celery</span><span class="w"> </span><span class="kn">import</span> <span class="n">LegacyTaskShim</span><span class="p">,</span> <span class="n">install_global_intercept</span>
 </span></code></pre></div>
 <h2 id="task-base-classes">Task Base Classes<a class="headerlink" href="#task-base-classes" title="Permanent link">&para;</a></h2>
 
-
-<div class="doc doc-object doc-class">
-
-
-
-<h2 id="airlock.integrations.celery.AirlockTask" class="doc doc-heading">
-            <span class="doc doc-object-name doc-class-name">AirlockTask</span>
-
-
-<a href="#airlock.integrations.celery.AirlockTask" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-    <div class="doc doc-contents first">
-            <p class="doc doc-class-bases">
-              Bases: <code><span title="celery.Task">Task</span></code></p>
-
-
-
-        <p>A Celery Task base class that wraps execution in an airlock scope.</p>
-<ul>
-<li>On success: flushes intents (downstream effects fire)</li>
-<li>On exception: discards intents (no side effects)</li>
-</ul>
-
-
-<details class="usage" open>
-  <summary>Usage</summary>
-  <p>@app.task(base=AirlockTask)
-def my_task():
-    airlock.enqueue(downstream_task, ...)</p>
-</details>
-
-
-
-
-
-
-
-
-
-
-<div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-
-
-
-  </div>
-
-    </div>
-
-</div>
 
 <div class="doc doc-object doc-class">
 
@@ -1608,7 +1527,7 @@ through airlock.enqueue(). When no scope is active, calls emit a
 deprecation warning and pass through normally.</p>
 <p>With wrap_task_execution=True (default), task execution is also wrapped
 in an airlock scope. This means:
-- Tasks automatically get an airlock scope (like using AirlockTask)
+- Tasks automatically get an airlock scope
 - Any .delay() calls within tasks are intercepted and buffered
 - On task success: buffered intents flush
 - On task exception: buffered intents are discarded</p>

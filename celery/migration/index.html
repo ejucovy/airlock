@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://ejucovy.github.io/airlock/celery/migration/">
       
       
-        <link rel="prev" href="../task-wrapper/">
+        <link rel="prev" href="../">
       
       
         <link rel="next" href="../../extending/custom-policies/">
@@ -744,7 +744,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../task-wrapper/" class="md-nav__link">
+      <a href="../task-wrapper.md" class="md-nav__link">
         
   
   
@@ -1053,17 +1053,6 @@
     <span class="md-ellipsis">
       
         Issue: Warnings everywhere
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#issue-blanket-airlocktask-double-scopes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Issue: Blanket + AirlockTask = Double Scopes
       
     </span>
   </a>
@@ -1705,17 +1694,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#issue-blanket-airlocktask-double-scopes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Issue: Blanket + AirlockTask = Double Scopes
-      
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -1972,18 +1950,6 @@
 </span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="c1"># New</span>
 </span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">arg</span><span class="p">)</span>
 </span></code></pre></div>
-<h3 id="issue-blanket-airlocktask-double-scopes">Issue: Blanket + AirlockTask = Double Scopes<a class="headerlink" href="#issue-blanket-airlocktask-double-scopes" title="Permanent link">&para;</a></h3>
-<p>Don't use both:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># Bad - creates nested scopes</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">install_global_intercept</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>  <span class="c1"># Wraps execution in scope</span>
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="nd">@app</span><span class="o">.</span><span class="n">task</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="n">AirlockTask</span><span class="p">)</span>  <span class="c1"># Also wraps execution in scope</span>
-</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">my_task</span><span class="p">():</span>
-</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>    <span class="o">...</span>
-</span></code></pre></div>
-<p>Choose one:
-- Blanket intercept with <code>wrap_task_execution=True</code> (default)
-- OR explicit <code>AirlockTask</code> base class</p>
 <h2 id="recommendation">Recommendation<a class="headerlink" href="#recommendation" title="Permanent link">&para;</a></h2>
 <p><strong>For most teams:</strong> Start with blanket migration, gradually replace <code>.delay()</code> calls.</p>
 <p><strong>For small teams/codebases:</strong> Use selective migration for explicit control.</p>

@@ -10,13 +10,9 @@
       
       
       
-        <link rel="canonical" href="https://ejucovy.github.io/airlock/understanding/design-invariants/">
+        <link rel="canonical" href="https://ejucovy.github.io/airlock/migration/selective-vs-blanket/">
       
       
-        <link rel="prev" href="../core-model/">
-      
-      
-        <link rel="next" href="../nesting/">
       
       
         
@@ -27,7 +23,7 @@
     
     
       
-        <title>Design Invariants - Airlock</title>
+        <title>Selective vs Blanket Migration - Airlock</title>
       
     
     
@@ -80,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#design-invariants" class="md-skip">
+        <a href="#selective-vs-blanket-migration" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +110,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Design Invariants
+              Selective vs Blanket Migration
             
           </span>
         </div>
@@ -263,13 +259,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../the-problem/" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../understanding/the-problem/" class="md-tabs__link">
           
   
   
@@ -452,10 +446,8 @@
       
   
   
-    
   
   
-  
     
     
       
@@ -473,22 +465,21 @@
     
     
       
-        
-        
-      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
             
   
   
@@ -506,7 +497,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -524,7 +515,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../the-problem/" class="md-nav__link">
+      <a href="../../understanding/the-problem/" class="md-nav__link">
         
   
   
@@ -552,7 +543,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../core-model/" class="md-nav__link">
+      <a href="../../understanding/core-model/" class="md-nav__link">
         
   
   
@@ -577,37 +568,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Design Invariants
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../understanding/design-invariants/" class="md-nav__link">
         
   
   
@@ -623,87 +587,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#1-policies-cannot-enqueue" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Policies cannot enqueue
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#2-buffered-effects-escape-only-at-flush" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Buffered effects escape only at flush
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#3-no-scope-error" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. No scope = error
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#4-concurrent-units-of-work-have-isolated-scopes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Concurrent units of work have isolated scopes
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="4. Concurrent units of work have isolated scopes">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#greenlet-requirement" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Greenlet requirement
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -716,7 +599,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../nesting/" class="md-nav__link">
+      <a href="../../understanding/nesting/" class="md-nav__link">
         
   
   
@@ -744,7 +627,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../alternatives/" class="md-nav__link">
+      <a href="../../understanding/alternatives/" class="md-nav__link">
         
   
   
@@ -1284,10 +1167,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-policies-cannot-enqueue" class="md-nav__link">
+  <a href="#decision-tree" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Policies cannot enqueue
+        Decision Tree
       
     </span>
   </a>
@@ -1295,44 +1178,66 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-buffered-effects-escape-only-at-flush" class="md-nav__link">
+  <a href="#selective-migration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Buffered effects escape only at flush
+        Selective Migration
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#3-no-scope-error" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. No scope = error
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#4-concurrent-units-of-work-have-isolated-scopes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Concurrent units of work have isolated scopes
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="4. Concurrent units of work have isolated scopes">
+    <nav class="md-nav" aria-label="Selective Migration">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#greenlet-requirement" class="md-nav__link">
+  <a href="#how-it-works" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Greenlet requirement
+        How It Works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pros" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pros
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cons" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cons
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#when-to-use" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to Use
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#migration-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration Steps
       
     </span>
   </a>
@@ -1341,6 +1246,178 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#blanket-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Blanket Migration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Blanket Migration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-it-works_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pros_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pros
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cons_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cons
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#when-to-use_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to Use
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#migration-steps_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration Steps
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hybrid-approach" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hybrid Approach
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Patterns
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pattern-1-start-blanket-finish-selective" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern 1: Start Blanket, Finish Selective
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-2-selective-for-new-blanket-for-old" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern 2: Selective for New, Blanket for Old
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-3-feature-flag-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern 3: Feature Flag Migration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gotchas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gotchas
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Gotchas">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#selective-requires-scopes-everywhere" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Selective Requires Scopes Everywhere
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommendation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommendation
+      
+    </span>
+  </a>
   
 </li>
       
@@ -1364,37 +1441,163 @@
   
 
 
-<h1 id="design-invariants">Design Invariants<a class="headerlink" href="#design-invariants" title="Permanent link">&para;</a></h1>
-<p>These are the core guarantees that airlock enforces by design.</p>
-<h2 id="1-policies-cannot-enqueue">1. Policies cannot enqueue<a class="headerlink" href="#1-policies-cannot-enqueue" title="Permanent link">&para;</a></h2>
-<p>Calling <code>enqueue()</code> from within a policy raises <code>PolicyEnqueueError</code>.</p>
-<p>Policies observe and filter — they don't produce new side effects. This keeps the system predictable: the set of intents comes from your domain code, not from policy logic.</p>
-<h2 id="2-buffered-effects-escape-only-at-flush">2. Buffered effects escape only at flush<a class="headerlink" href="#2-buffered-effects-escape-only-at-flush" title="Permanent link">&para;</a></h2>
-<p>Effects enqueued via <code>airlock.enqueue()</code> are held in the buffer until the scope flushes. There's no way for them to escape early — no "force dispatch" API, no automatic leaking.</p>
-<p>This is the control airlock provides: you express intent anywhere in your code, but the scope boundary decides when (and whether) those effects actually run.</p>
-<h2 id="3-no-scope-error">3. No scope = error<a class="headerlink" href="#3-no-scope-error" title="Permanent link">&para;</a></h2>
-<p>Calling <code>enqueue()</code> outside a scope raises <code>NoScopeError</code>.</p>
-<p>This is intentional. Airlock requires explicit lifecycle boundaries — side effects should not escape silently. If you want auto-dispatch without a scope, just call <code>.delay()</code> directly. The strictness is a feature, not a limitation.</p>
-<h2 id="4-concurrent-units-of-work-have-isolated-scopes">4. Concurrent units of work have isolated scopes<a class="headerlink" href="#4-concurrent-units-of-work-have-isolated-scopes" title="Permanent link">&para;</a></h2>
-<p>Each request, task, or concurrent greenlet has its own scope context. Scopes cannot leak across concurrent execution boundaries.</p>
-<p>Airlock uses Python's <code>contextvars</code> module for scope storage. This provides automatic isolation for:</p>
+<h1 id="selective-vs-blanket-migration">Selective vs Blanket Migration<a class="headerlink" href="#selective-vs-blanket-migration" title="Permanent link">&para;</a></h1>
+<p>Choosing the right migration strategy for your codebase.</p>
+<h2 id="decision-tree">Decision Tree<a class="headerlink" href="#decision-tree" title="Permanent link">&para;</a></h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Do you have 100+ .delay() calls?
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├─ Yes → Start with blanket migration
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>└─ No  → Use selective migration
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>Is this a new feature/module?
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>├─ Yes → Use greenfield (airlock.enqueue from start)
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>└─ No  → Continue below
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>Can you afford 1-2 weeks of migration work?
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>├─ Yes → Selective migration (safest)
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>└─ No  → Blanket migration (fastest)
+</span></code></pre></div>
+<h2 id="selective-migration">Selective Migration<a class="headerlink" href="#selective-migration" title="Permanent link">&para;</a></h2>
+<h3 id="how-it-works">How It Works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h3>
+<p>Apply <code>LegacyTaskShim</code> to individual tasks:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airlock.integrations.celery</span><span class="w"> </span><span class="kn">import</span> <span class="n">LegacyTaskShim</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nd">@app</span><span class="o">.</span><span class="n">task</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="n">LegacyTaskShim</span><span class="p">)</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">notify_warehouse</span><span class="p">(</span><span class="n">order_id</span><span class="p">):</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="o">...</span>
+</span></code></pre></div>
+<p>Migrate one task at a time, replacing <code>.delay()</code> calls at your own pace.</p>
+<h3 id="pros">Pros<a class="headerlink" href="#pros" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Threads</strong>: Each thread has its own context</li>
-<li><strong>asyncio tasks</strong>: Each task has its own context copy</li>
-<li><strong>Processes</strong>: Separate memory, naturally isolated</li>
-<li><strong>Greenlets</strong> (gevent/eventlet): Each greenlet has its own context (requires greenlet &gt;= 1.0)</li>
+<li>✅ <strong>Safe</strong> - Explicit about what's migrated</li>
+<li>✅ <strong>Controlled</strong> - Migrate critical paths first</li>
+<li>✅ <strong>Clear</strong> - Easy to see migration progress</li>
+<li>✅ <strong>Testable</strong> - Test each task individually</li>
 </ul>
-<h3 id="greenlet-requirement">Greenlet requirement<a class="headerlink" href="#greenlet-requirement" title="Permanent link">&para;</a></h3>
-<p>If you use gevent, eventlet, or other greenlet-based concurrency, you must have <strong>greenlet &gt;= 1.0</strong> installed. This version added native <code>contextvars</code> support, ensuring each greenlet has isolated context.</p>
-<p>Airlock checks for this at import time and emits a <code>RuntimeWarning</code> if an older greenlet is detected:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>RuntimeWarning: Detected greenlet without contextvars support.
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>airlock requires greenlet&gt;=1.0 for correct isolation in gevent/eventlet environments.
+<h3 id="cons">Cons<a class="headerlink" href="#cons" title="Permanent link">&para;</a></h3>
+<ul>
+<li>❌ <strong>Slow</strong> - Must apply shim to each task</li>
+<li>❌ <strong>Requires scopes</strong> - Raises <code>NoScopeError</code> outside scopes</li>
+<li>❌ <strong>Incomplete coverage</strong> - Un-shimmed tasks still use old behavior</li>
+</ul>
+<h3 id="when-to-use">When to Use<a class="headerlink" href="#when-to-use" title="Permanent link">&para;</a></h3>
+<ul>
+<li>You have &lt; 50 tasks</li>
+<li>You want explicit control</li>
+<li>You can afford time to migrate properly</li>
+<li>You're risk-averse</li>
+</ul>
+<h3 id="migration-steps">Migration Steps<a class="headerlink" href="#migration-steps" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Identify critical tasks</strong> - Start with high-value paths</li>
+<li><strong>Add shim to one task</strong></li>
+<li><strong>Add scopes to call sites</strong> - Ensure no <code>NoScopeError</code></li>
+<li><strong>Test thoroughly</strong></li>
+<li><strong>Replace <code>.delay()</code> with <code>airlock.enqueue()</code></strong> (optional)</li>
+<li><strong>Repeat for next task</strong></li>
+</ol>
+<h2 id="blanket-migration">Blanket Migration<a class="headerlink" href="#blanket-migration" title="Permanent link">&para;</a></h2>
+<h3 id="how-it-works_1">How It Works<a class="headerlink" href="#how-it-works_1" title="Permanent link">&para;</a></h3>
+<p>Intercept ALL tasks globally:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># celery.py</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airlock.integrations.celery</span><span class="w"> </span><span class="kn">import</span> <span class="n">install_global_intercept</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">app</span> <span class="o">=</span> <span class="n">Celery</span><span class="p">(</span><span class="s1">&#39;myapp&#39;</span><span class="p">)</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">install_global_intercept</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
 </span></code></pre></div>
-<p>Modern versions of gevent (20.9.0+) and eventlet already require greenlet &gt;= 1.0, so this should only affect very old installations.</p>
-<p>To verify your environment is safe:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">greenlet</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">assert</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">greenlet</span><span class="p">,</span> <span class="s2">&quot;GREENLET_USE_CONTEXT_VARS&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span> <span class="s2">&quot;Upgrade greenlet!&quot;</span>
+<p>Every task is automatically intercepted and wrapped.</p>
+<h3 id="pros_1">Pros<a class="headerlink" href="#pros_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ <strong>Fast</strong> - One line of code</li>
+<li>✅ <strong>Complete</strong> - Covers all tasks immediately</li>
+<li>✅ <strong>Graceful</strong> - Works outside scopes (warns, doesn't break)</li>
+<li>✅ <strong>Auto-wraps execution</strong> - Tasks run in scopes automatically</li>
+</ul>
+<h3 id="cons_1">Cons<a class="headerlink" href="#cons_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>❌ <strong>Global side effects</strong> - Monkey-patches Celery</li>
+<li>❌ <strong>Migration tool</strong> - Not intended for steady-state</li>
+<li>❌ <strong>Less control</strong> - Everything migrated at once</li>
+<li>❌ <strong>Returns None</strong> - <code>.delay()</code> returns <code>None</code> inside scopes</li>
+</ul>
+<h3 id="when-to-use_1">When to Use<a class="headerlink" href="#when-to-use_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>You have 100+ tasks</li>
+<li>You need quick proof-of-concept</li>
+<li>You're refactoring a legacy codebase</li>
+<li>You want immediate benefits with gradual cleanup</li>
+</ul>
+<h3 id="migration-steps_1">Migration Steps<a class="headerlink" href="#migration-steps_1" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Install global intercept</strong> - One line in <code>celery.py</code></li>
+<li><strong>Test critical paths</strong> - Ensure scopes exist where needed</li>
+<li><strong>Monitor warnings</strong> - Find <code>.delay()</code> calls to replace</li>
+<li><strong>Gradually replace</strong> - <code>task.delay()</code> → <code>airlock.enqueue(task)</code></li>
+<li><strong>Remove intercept</strong> - When all <code>.delay()</code> replaced</li>
+</ol>
+<h2 id="hybrid-approach">Hybrid Approach<a class="headerlink" href="#hybrid-approach" title="Permanent link">&para;</a></h2>
+<p>Use both strategies:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># celery.py - Global intercept for most tasks</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">install_global_intercept</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">wrap_task_execution</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Critical tasks - Explicit shimming for control</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="nd">@app</span><span class="o">.</span><span class="n">task</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="n">LegacyTaskShim</span><span class="p">)</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="k">def</span><span class="w"> </span><span class="nf">critical_payment_task</span><span class="p">(</span><span class="n">order_id</span><span class="p">):</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="o">...</span>
 </span></code></pre></div>
+<p>This gives:
+- Blanket coverage for routine tasks
+- Explicit control for critical tasks
+- Gradual migration path</p>
+<h2 id="common-patterns">Common Patterns<a class="headerlink" href="#common-patterns" title="Permanent link">&para;</a></h2>
+<h3 id="pattern-1-start-blanket-finish-selective">Pattern 1: Start Blanket, Finish Selective<a class="headerlink" href="#pattern-1-start-blanket-finish-selective" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Week 1: Install blanket migration</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">install_global_intercept</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Week 2-4: Add scopes to critical paths</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">():</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">process_order</span><span class="p">()</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="c1"># Week 5+: Replace .delay() with airlock.enqueue()</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="c1"># Old: task.delay(arg)</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="c1"># New: airlock.enqueue(task, arg)</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="c1"># Eventually: Remove intercept when all replaced</span>
+</span></code></pre></div>
+<h3 id="pattern-2-selective-for-new-blanket-for-old">Pattern 2: Selective for New, Blanket for Old<a class="headerlink" href="#pattern-2-selective-for-new-blanket-for-old" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># New feature: Use airlock.enqueue from start</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">new_checkout_flow</span><span class="p">():</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">new_task</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="c1"># Legacy code: Blanket intercept</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="n">install_global_intercept</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="pattern-3-feature-flag-migration">Pattern 3: Feature Flag Migration<a class="headerlink" href="#pattern-3-feature-flag-migration" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># settings.py</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">USE_AIRLOCK</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">bool</span><span class="p">(</span><span class="s2">&quot;USE_AIRLOCK&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># celery.py</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">USE_AIRLOCK</span><span class="p">:</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    <span class="n">install_global_intercept</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Test in staging, roll out gradually.</p>
+<h2 id="gotchas">Gotchas<a class="headerlink" href="#gotchas" title="Permanent link">&para;</a></h2>
+<h3 id="selective-requires-scopes-everywhere">Selective Requires Scopes Everywhere<a class="headerlink" href="#selective-requires-scopes-everywhere" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nd">@app</span><span class="o">.</span><span class="n">task</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="n">LegacyTaskShim</span><span class="p">)</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">shimmed_task</span><span class="p">():</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>    <span class="o">...</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="c1"># ❌ Fails - no scope</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="n">shimmed_task</span><span class="o">.</span><span class="n">delay</span><span class="p">()</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="c1"># ✅ Works - has scope</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">():</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>    <span class="n">shimmed_task</span><span class="o">.</span><span class="n">delay</span><span class="p">()</span>
+</span></code></pre></div>
+<p>Blanket migration allows outside scopes (warns, doesn't break).</p>
+<h2 id="recommendation">Recommendation<a class="headerlink" href="#recommendation" title="Permanent link">&para;</a></h2>
+<p><strong>For most teams:</strong> Start with blanket migration, gradually replace <code>.delay()</code> calls.</p>
+<p><strong>For small teams/codebases:</strong> Use selective migration for explicit control.</p>
+<p><strong>For new code:</strong> Skip migration entirely, use <code>airlock.enqueue()</code> from day 1.</p>
 
 
 

@@ -741,7 +741,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../celery/task-wrapper/" class="md-nav__link">
+      <a href="../../celery/task-wrapper.md" class="md-nav__link">
         
   
   
@@ -1214,17 +1214,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#airlock.integrations.django.airlock_command" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        airlock_command
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#airlock.integrations.django.get_executor" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1462,17 +1451,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#airlock.integrations.django.airlock_command" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        airlock_command
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#airlock.integrations.django.get_executor" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1544,7 +1522,7 @@
 
 <h1 id="django-integration">Django Integration<a class="headerlink" href="#django-integration" title="Permanent link">&para;</a></h1>
 <p>Django-specific components for airlock.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airlock.integrations.django</span><span class="w"> </span><span class="kn">import</span> <span class="n">DjangoScope</span><span class="p">,</span> <span class="n">AirlockMiddleware</span><span class="p">,</span> <span class="n">airlock_command</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airlock.integrations.django</span><span class="w"> </span><span class="kn">import</span> <span class="n">DjangoScope</span><span class="p">,</span> <span class="n">AirlockMiddleware</span>
 </span></code></pre></div>
 <h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
 <p>Configure via <code>settings.py</code>:</p>
@@ -1705,42 +1683,6 @@ outside a transaction (autocommit mode).</p>
 
 </div><h2 id="functions">Functions<a class="headerlink" href="#functions" title="Permanent link">&para;</a></h2>
 
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="airlock.integrations.django.airlock_command" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">airlock_command</span>
-
-
-<a href="#airlock.integrations.django.airlock_command" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">airlock_command</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">dry_run_kwarg</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;dry_run&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span>
-</span></code></pre></div>
-
-    <div class="doc doc-contents first">
-
-        <p>Decorator for Django management commands.</p>
-<p>Wraps the handle() method in an airlock scope.
-If options[dry_run_kwarg] is True, uses DropAll policy.</p>
-<p>Dispatch is deferred to transaction.on_commit():
-    - With an active transaction: dispatch occurs after commit
-    - Without a transaction (most commands): dispatch occurs immediately</p>
-
-
-<details class="usage" open>
-  <summary>Usage</summary>
-  <p>class Command(BaseCommand):
-    def add_arguments(self, parser):
-        parser.add_argument('--dry-run', action='store_true')</p>
-<div class="language-text highlight"><pre><span></span><code>@airlock_command
-def handle(self, *args, **options):
-    airlock.enqueue(some_task, ...)
-</code></pre></div>
-</details>
-
-    </div>
-
-</div>
 
 <div class="doc doc-object doc-function">
 
