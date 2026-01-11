@@ -753,6 +753,60 @@ def scope(
                 s.discard()
 
 
+def scoped(
+    policy: Policy | None = None,
+    *,
+    _cls: type[Scope] = Scope,
+    **kwargs,
+) -> Callable[[Callable], Callable]:
+    """
+    Decorator that wraps a function in an airlock scope.
+
+    This is a convenience for wrapping task functions, command handlers,
+    or any callable that should run inside a scope.
+
+    Args:
+        policy: Policy controlling what intents are allowed. Defaults to AllowAll.
+        _cls: Scope class to use. Subclass Scope and override should_flush()
+            to customize flush/discard behavior.
+        **kwargs: Additional arguments passed to Scope constructor (e.g., executor).
+
+    Usage:
+        @airlock.scoped()
+        def my_task():
+            airlock.enqueue(send_email, user_id=123)
+
+        # With Celery
+        @app.task
+        @airlock.scoped()
+        def my_celery_task():
+            airlock.enqueue(another_task, ...)
+
+        # With custom policy
+        @airlock.scoped(policy=MyPolicy())
+        def my_task():
+            ...
+
+    Behavior:
+        - On normal return: flushes the scope (dispatches intents)
+        - On exception: discards the scope (drops intents)
+
+    Note:
+        The decorator creates a fresh scope for each invocation. This is
+        safe for concurrent execution - each call gets its own isolated scope.
+    """
+    from functools import wraps
+
+    def decorator(func: Callable) -> Callable:
+        @wraps(func)
+        def wrapper(*args, **kw):
+            with scope(policy=policy, _cls=_cls, **kwargs):
+                return func(*args, **kw)
+        return wrapper
+
+    return decorator
+
+
 # ============================================================================
 # Local Policy Context
 # ============================================================================
@@ -873,6 +927,7 @@ __all__ = [
     "Executor",
     "enqueue",
     "scope",
+    "scoped",
     "policy",
     "Scope",
     "get_current_scope",
