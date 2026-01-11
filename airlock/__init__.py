@@ -138,6 +138,7 @@ class Executor(Protocol):
     - sync_executor: Synchronous execution (default)
     - celery_executor: Dispatch via Celery .delay() / .apply_async()
     - django_q_executor: Dispatch via django-q's async_task()
+    - django_tasks_executor: Dispatch via Django 6+'s built-in tasks framework
     - huey_executor: Dispatch via Huey's .schedule()
     - dramatiq_executor: Dispatch via Dramatiq's .send()
 
