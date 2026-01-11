@@ -5,19 +5,35 @@
          <lastmod>2026-01-11</lastmod>
     </url>
     <url>
+         <loc>https://ejucovy.github.io/airlock/api/</loc>
+         <lastmod>2026-01-11</lastmod>
+    </url>
+    <url>
+         <loc>https://ejucovy.github.io/airlock/api/celery/</loc>
+         <lastmod>2026-01-11</lastmod>
+    </url>
+    <url>
          <loc>https://ejucovy.github.io/airlock/api/core/</loc>
          <lastmod>2026-01-11</lastmod>
     </url>
     <url>
-         <loc>https://ejucovy.github.io/airlock/api/intent/</loc>
+         <loc>https://ejucovy.github.io/airlock/api/django/</loc>
          <lastmod>2026-01-11</lastmod>
     </url>
     <url>
-         <loc>https://ejucovy.github.io/airlock/api/policies/</loc>
+         <loc>https://ejucovy.github.io/airlock/api/executors/</loc>
          <lastmod>2026-01-11</lastmod>
     </url>
     <url>
-         <loc>https://ejucovy.github.io/airlock/api/scope-class/</loc>
+         <loc>https://ejucovy.github.io/airlock/celery/</loc>
+         <lastmod>2026-01-11</lastmod>
+    </url>
+    <url>
+         <loc>https://ejucovy.github.io/airlock/celery/migration/</loc>
+         <lastmod>2026-01-11</lastmod>
+    </url>
+    <url>
+         <loc>https://ejucovy.github.io/airlock/celery/task-wrapper/</loc>
          <lastmod>2026-01-11</lastmod>
     </url>
     <url>
@@ -30,38 +46,6 @@
     </url>
     <url>
          <loc>https://ejucovy.github.io/airlock/extending/custom-scopes/</loc>
-         <lastmod>2026-01-11</lastmod>
-    </url>
-    <url>
-         <loc>https://ejucovy.github.io/airlock/guide/basic-usage/</loc>
-         <lastmod>2026-01-11</lastmod>
-    </url>
-    <url>
-         <loc>https://ejucovy.github.io/airlock/guide/dispatch/</loc>
-         <lastmod>2026-01-11</lastmod>
-    </url>
-    <url>
-         <loc>https://ejucovy.github.io/airlock/guide/nested-scopes/</loc>
-         <lastmod>2026-01-11</lastmod>
-    </url>
-    <url>
-         <loc>https://ejucovy.github.io/airlock/guide/policies/</loc>
-         <lastmod>2026-01-11</lastmod>
-    </url>
-    <url>
-         <loc>https://ejucovy.github.io/airlock/integrations/celery/task-wrapper/</loc>
-         <lastmod>2026-01-11</lastmod>
-    </url>
-    <url>
-         <loc>https://ejucovy.github.io/airlock/migration/from-direct-delay/</loc>
-         <lastmod>2026-01-11</lastmod>
-    </url>
-    <url>
-         <loc>https://ejucovy.github.io/airlock/migration/selective-vs-blanket/</loc>
-         <lastmod>2026-01-11</lastmod>
-    </url>
-    <url>
-         <loc>https://ejucovy.github.io/airlock/quickstart/celery/</loc>
          <lastmod>2026-01-11</lastmod>
     </url>
     <url>
