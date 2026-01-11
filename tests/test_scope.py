@@ -106,6 +106,14 @@ class TestScope:
         s.discard()
         assert s.is_discarded
 
+    def test_cannot_discard_twice(self):
+        """Test that discarding twice raises an error."""
+        s = Scope(policy=AllowAll())
+        s.discard()
+
+        with pytest.raises(ScopeStateError, match="already been discarded"):
+            s.discard()
+
     def test_cannot_discard_after_flush(self):
         """Test that discarding after flush raises an error."""
         s = Scope(policy=AllowAll())
@@ -249,7 +257,6 @@ class TestScopeImperativeAPI:
         s.enter()
 
         # Enqueue works when scope is active
-        import airlock
         airlock.enqueue(tracked)
 
         s.exit()
@@ -268,7 +275,6 @@ class TestScopeImperativeAPI:
         s = Scope(policy=AllowAll())
         s.enter()
 
-        import airlock
         airlock.enqueue(tracked)
 
         s.exit()
@@ -332,7 +338,6 @@ class TestScopeImperativeAPI:
         # Reset and add intent
         s2 = ConditionalScope(policy=AllowAll())
         s2.enter()
-        import airlock
         airlock.enqueue(lambda: None)
         s2.exit()
         assert s2.should_flush(None) is True
@@ -469,6 +474,26 @@ class TestScopeContextManager:
             s._add(make_intent(tracked))
 
         assert len(calls) == 1
+
+    def test_scope_subclass_that_flushes_in_exit(self):
+        """Test that context manager handles scope already flushed in exit()."""
+        calls = []
+
+        def tracked():
+            calls.append(1)
+
+        class EagerFlushScope(Scope):
+            """A scope that flushes immediately on exit."""
+            def exit(self):
+                super().exit()
+                self.flush()
+
+        with scope(policy=AllowAll(), _cls=EagerFlushScope) as s:
+            s._add(make_intent(tracked))
+
+        # Should have flushed once (in exit), not twice
+        assert len(calls) == 1
+        assert s.is_flushed
 
 
 class TestNestedScopeCapture:

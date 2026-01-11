@@ -31,9 +31,17 @@ MIDDLEWARE = [
 ]
 
 AIRLOCK = {
-    "TASK_BACKEND": "airlock.integrations.executors.celery.celery_executor",
+    "EXECUTOR": "airlock.integrations.executors.celery.celery_executor",
 }
 ```
+
+### Middleware placement
+
+Any placement works for most projects. Django's request handler converts uncaught exceptions to 4xx/5xx responses, so `AirlockMiddleware` typically sees the correct status code and discards appropriately.
+
+Placement matters if you have **custom middleware with `process_exception()`** that catches view exceptions and returns 2xx or 3xx responses. In that case, place `AirlockMiddleware` higher (earlier) in the list than such middleware, so it sees the exception via its own `process_exception` before another middleware converts it to a misleading success response.
+
+If you care about dispatching conditional on exceptions from middleware themselves (not just views), place `AirlockMiddleware` above those middleware. Similarly, if you use `ATOMIC_REQUESTS=False` and maintain your own control over transaction boundaries across middleware layers, you may need to be more opinionated about ordering.
 
 ### Basic usage
 
@@ -69,24 +77,15 @@ the default database.
 # settings.py
 AIRLOCK = {
     # Just call functions synchronously at dispatch time
-    "TASK_BACKEND": "airlock.integrations.executors.sync.sync_executor", 
+    "EXECUTOR": "airlock.integrations.executors.sync.sync_executor",
     # Other built in options:
-    # "TASK_BACKEND": "airlock.integrations.executors.celery.celery_executor",
-    # "TASK_BACKEND": "airlock.integrations.executors.django_q.django_q_executor",
-    # "TASK_BACKEND": "airlock.integrations.executors.huey.huey_executor",
-    # "TASK_BACKEND": "airlock.integrations.executors.dramatiq.dramatiq_executor",
-    # "TASK_BACKEND": "airlock.integrations.executors.django_tasks.django_tasks_executor",
+    # "EXECUTOR": "airlock.integrations.executors.celery.celery_executor",
+    # "EXECUTOR": "airlock.integrations.executors.django_q.django_q_executor",
+    # "EXECUTOR": "airlock.integrations.executors.huey.huey_executor",
+    # "EXECUTOR": "airlock.integrations.executors.dramatiq.dramatiq_executor",
+    # "EXECUTOR": "airlock.integrations.executors.django_tasks.django_tasks_executor",
 
-    "DEFAULT_POLICY": "airlock.AllowAll", 
-
-    # Defer to transaction.on_commit()
-    "USE_ON_COMMIT": True,
-
-    # The `robust` parameter passed to `on_commit`
-    "ROBUST": True,
-
-    # Database for on_commit
-    "DATABASE_ALIAS": "default",
+    "POLICY": "airlock.AllowAll",
 }
 ```
 

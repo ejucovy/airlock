@@ -186,7 +186,7 @@ airlock.enqueue(
 ```python
 # settings.py
 AIRLOCK = {
-    "TASK_BACKEND": "airlock.integrations.executors.celery.celery_executor",
+    "EXECUTOR": "airlock.integrations.executors.celery.celery_executor",
 }
 ```
 

@@ -26,6 +26,14 @@ keywords = ["side-effects", "celery", "tasks", "lifecycle", "outbox", "airlock"]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
+    "flake8>=6.0",
+]
+test = [
+    "django>=4.0",
+    "celery>=5.0",
+    "huey>=2.0",
+    "dramatiq>=1.0",
+    "django-q2>=1.0",
 ]
 docs = [
     "mkdocs>=1.5.0",
@@ -50,3 +58,6 @@ exclude_lines = [
     "if TYPE_CHECKING:",
     "\\.\\.\\.",
 ]
+
+[project.entry-points."flake8.extension"]
+AIR = "airlock.flake8_plugin:AirlockChecker"

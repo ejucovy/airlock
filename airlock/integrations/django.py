@@ -5,18 +5,16 @@ Provides:
 - DjangoScope: Defers dispatch to transaction.on_commit()
 - AirlockMiddleware: Wraps requests in a scope
 - airlock_command: Decorator for management commands
-- get_executor(): Helper to select executor based on TASK_BACKEND setting
+- get_executor(): Helper to select executor based on EXECUTOR setting
 
 Settings (in settings.py):
     AIRLOCK = {
-        "DEFAULT_POLICY": "airlock.AllowAll",  # Dotted path or callable
-        "USE_ON_COMMIT": True,              # Defer dispatch to transaction.on_commit
-        "ROBUST": True,                     # on_commit robust parameter
-        "DATABASE_ALIAS": "default",        # Database for on_commit
-        "TASK_BACKEND": None,               # Dotted path to executor callable
+        "POLICY": "airlock.AllowAll",  # Dotted path or callable
+        "EXECUTOR": None,              # Dotted path to executor callable
+        "SCOPE": "airlock.integrations.django.DjangoScope",  # Scope class for middleware
     }
 
-TASK_BACKEND is a dotted import path to an executor callable:
+EXECUTOR is a dotted import path to an executor callable:
     - None (default): sync_executor (synchronous execution)
     - "airlock.integrations.executors.celery.celery_executor"
     - "airlock.integrations.executors.django_q.django_q_executor"
@@ -30,10 +28,11 @@ from typing import Any, Callable
 from importlib import import_module
 
 from django.conf import settings
-from django.db import transaction, DEFAULT_DB_ALIAS
+from django.db import transaction
 
 import airlock
 from airlock import Scope, Intent, Executor, AllowAll, DropAll, _execute
+from airlock.integrations.executors.sync import sync_executor
 
 
 # =============================================================================
@@ -41,11 +40,9 @@ from airlock import Scope, Intent, Executor, AllowAll, DropAll, _execute
 # =============================================================================
 
 DEFAULTS = {
-    "DEFAULT_POLICY": "airlock.AllowAll",
-    "USE_ON_COMMIT": True,
-    "ROBUST": True,  # Django's on_commit robust parameter
-    "DATABASE_ALIAS": DEFAULT_DB_ALIAS,
-    "TASK_BACKEND": None,  # Dotted path to executor callable, or None for sync
+    "POLICY": "airlock.AllowAll",
+    "EXECUTOR": None,  # Dotted path to executor callable, or None for sync
+    "SCOPE": "airlock.integrations.django.DjangoScope",
 }
 
 
@@ -62,9 +59,9 @@ def import_string(dotted_path: str) -> Any:
     return getattr(module, class_name)
 
 
-def get_default_policy():
-    """Get the default policy instance."""
-    policy_setting = get_setting("DEFAULT_POLICY")
+def get_policy():
+    """Get the policy instance based on POLICY setting."""
+    policy_setting = get_setting("POLICY")
     if callable(policy_setting):
         return policy_setting()
     if isinstance(policy_setting, str):
@@ -80,39 +77,42 @@ def get_default_policy():
 
 def get_executor() -> Executor:
     """
-    Get the appropriate executor based on TASK_BACKEND setting.
+    Get the appropriate executor based on EXECUTOR setting.
 
-    TASK_BACKEND should be a dotted import path to an executor callable,
+    EXECUTOR should be a dotted import path to an executor callable,
     or None for synchronous execution.
 
     Examples:
         AIRLOCK = {
-            'TASK_BACKEND': 'airlock.integrations.executors.django_q.django_q_executor',
+            'EXECUTOR': 'airlock.integrations.executors.django_q.django_q_executor',
         }
 
         # Or use a custom executor
         AIRLOCK = {
-            'TASK_BACKEND': 'myapp.executors.custom_executor',
+            'EXECUTOR': 'myapp.executors.custom_executor',
         }
 
     Returns:
-        Executor function based on TASK_BACKEND
+        Executor function based on EXECUTOR setting
 
     Raises:
         ImportError: If the executor module/callable cannot be imported
     """
-    from importlib import import_module
+    executor_path = get_setting("EXECUTOR")
 
-    backend = get_setting("TASK_BACKEND")
-
-    if backend is None:
-        from airlock.integrations.executors.sync import sync_executor
+    if executor_path is None:
         return sync_executor
 
     # Import the callable from dotted path
-    module_path, callable_name = backend.rsplit(".", 1)
+    module_path, callable_name = executor_path.rsplit(".", 1)
     module = import_module(module_path)
     return getattr(module, callable_name)
+
+
+def get_scope_class():
+    """Get the scope class to use, based on SCOPE setting."""
+    scope_class_path = get_setting("SCOPE")
+    return import_string(scope_class_path)
 
 
 # =============================================================================
@@ -125,47 +125,44 @@ class DjangoScope(Scope):
     A Django-specific scope that respects database transactions.
 
     Defers dispatch to transaction.on_commit() so side effects only
-    fire after the transaction commits successfully.
+    fire after the transaction commits successfully. When called outside
+    a transaction (autocommit mode), on_commit executes immediately.
 
     If no executor is provided, uses get_executor() to select one based
-    on TASK_BACKEND setting.
+    on EXECUTOR setting.
+
+    Subclass and override schedule_dispatch() to customize dispatch timing.
     """
 
     def __init__(
         self,
         *,
-        using: str | None = None,
         executor: Executor | None = None,
         **kwargs: Any
     ) -> None:
-        # Default to executor based on TASK_BACKEND setting if not provided
+        # Default to executor based on EXECUTOR setting if not provided
         if executor is None:
             executor = get_executor()
 
         super().__init__(executor=executor, **kwargs)
-        self.using = using or get_setting("DATABASE_ALIAS")
+
+    def schedule_dispatch(self, callback: Callable[[], None]) -> None:
+        """
+        Schedule the dispatch callback. Override to customize dispatch timing.
+
+        By default, uses transaction.on_commit(robust=True). This defers
+        dispatch until the transaction commits, or runs immediately if
+        outside a transaction (autocommit mode).
+
+        Override to change timing, robust behavior, or skip on_commit entirely.
+        """
+        transaction.on_commit(callback, robust=True)
 
     def _dispatch_all(self, intents: list[Intent]) -> None:
-        """
-        Dispatch intents, optionally deferring to on_commit.
-
-        Settings:
-            USE_ON_COMMIT: If True, defer dispatch to transaction.on_commit()
-            ROBUST: Passed to Django's on_commit(robust=...) parameter
-
-        """
-        if get_setting("USE_ON_COMMIT"):
-            def do_dispatch():
-                for intent in intents:
-                    self._executor(intent)
-            transaction.on_commit(
-                do_dispatch,
-                using=self.using,
-                robust=get_setting("ROBUST")
-            )
-        else:
-            for intent in intents:
-                self._executor(intent)
+        """Dispatch each intent via schedule_dispatch(), orthogonally."""
+        for intent in intents:
+            # Wrap in lambda to give Django's on_commit logging a __qualname__
+            self.schedule_dispatch(lambda i=intent: self._executor(i))
 
 
 # =============================================================================
@@ -192,11 +189,12 @@ class AirlockMiddleware:
         return response.status_code < 400
 
     def __call__(self, request):
-        policy = get_default_policy()
+        policy = get_policy()
+        scope_class = get_scope_class()
 
         # Use imperative API for manual terminal state handling.
         # This allows us to decide flush vs discard based on response status.
-        s = DjangoScope(policy=policy)
+        s = scope_class(policy=policy)
         s.enter()
         request.airlock_scope = s
 
@@ -238,15 +236,9 @@ def airlock_command(
     Wraps the handle() method in an airlock scope.
     If options[dry_run_kwarg] is True, uses DropAll policy.
 
-    Transaction semantics:
-        Flush occurs at the end of handle(). If USE_ON_COMMIT is True (default),
-        dispatch is deferred to transaction.on_commit(). This means:
-
+    Dispatch is deferred to transaction.on_commit():
         - With an active transaction: dispatch occurs after commit
-        - Without a transaction: dispatch occurs immediately at end of handle()
-
-        In practice, for most management commands that don't wrap their logic
-        in transaction.atomic(), the mental boundary is still "end of handle()".
+        - Without a transaction (most commands): dispatch occurs immediately
 
     Usage:
         class Command(BaseCommand):
@@ -262,9 +254,10 @@ def airlock_command(
         @wraps(handle_func)
         def wrapper(self, *args, **options):
             is_dry_run = options.get(dry_run_kwarg, False)
-            policy = DropAll() if is_dry_run else get_default_policy()
+            policy = DropAll() if is_dry_run else get_policy()
+            scope_class = get_scope_class()
 
-            with airlock.scope(policy=policy, _cls=DjangoScope):
+            with airlock.scope(policy=policy, _cls=scope_class):
                 return handle_func(self, *args, **options)
 
         return wrapper

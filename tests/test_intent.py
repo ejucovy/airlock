@@ -2,7 +2,7 @@
 
 import pytest
 
-from airlock import Intent
+from airlock import Intent, AllowAll, DropAll
 
 
 def dummy_task():
@@ -140,4 +140,39 @@ class TestIntent:
         repr_str = repr(intent)
         assert "dispatch_options" in repr_str
         assert "countdown" in repr_str
+
+
+class TestPassesLocalPolicies:
+    """Tests for Intent.passes_local_policies()."""
+
+    def test_passes_with_no_local_policies(self):
+        """Test passes_local_policies returns True when no local policies."""
+        intent = Intent(task=dummy_task, args=(), kwargs={})
+
+        # No local policies - should pass (empty loop)
+        assert intent.passes_local_policies() is True
+
+    def test_passes_with_allowing_policy(self):
+        """Test passes_local_policies with policy that allows."""
+
+        intent = Intent(
+            task=dummy_task,
+            args=(),
+            kwargs={},
+            _local_policies=(AllowAll(),),
+        )
+
+        assert intent.passes_local_policies() is True
+
+    def test_fails_with_blocking_policy(self):
+        """Test passes_local_policies with policy that blocks."""
+
+        intent = Intent(
+            task=dummy_task,
+            args=(),
+            kwargs={},
+            _local_policies=(DropAll(),),
+        )
+
+        assert intent.passes_local_policies() is False
 
