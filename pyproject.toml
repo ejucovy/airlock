@@ -34,6 +34,7 @@ test = [
     "huey>=2.0",
     "dramatiq>=1.0",
     "django-q2>=1.0",
+    "gevent>=21.0",
 ]
 docs = [
     "mkdocs>=1.5.0",

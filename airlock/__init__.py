@@ -18,8 +18,45 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Any, Callable, Protocol, Iterator, runtime_checkable
 import logging
+import warnings
 
 __version__ = "0.1.0"
+
+
+# ============================================================================
+# Greenlet Compatibility Check
+# ============================================================================
+
+
+def _check_greenlet_compatibility() -> None:
+    """
+    Warn if running with an old greenlet that doesn't support contextvars.
+
+    greenlet >= 1.0 natively supports contextvars, providing per-greenlet
+    isolation. Older versions share contextvars across greenlets, which would
+    cause scope leakage in concurrent environments like gevent or eventlet.
+
+    This check runs at import time to provide early warning.
+    """
+    try:
+        import greenlet
+    except ImportError:
+        # No greenlet installed - not a greenlet-based environment
+        return
+
+    if not getattr(greenlet, "GREENLET_USE_CONTEXT_VARS", False):
+        warnings.warn(
+            "Detected greenlet without contextvars support. "
+            "airlock requires greenlet>=1.0 for correct isolation in "
+            "gevent/eventlet environments. Without this, concurrent "
+            "requests or tasks may leak scope state. "
+            "Upgrade with: pip install 'greenlet>=1.0'",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+
+
+_check_greenlet_compatibility()
 
 
 # ============================================================================
