@@ -256,23 +256,6 @@ task.delay(arg)
 airlock.enqueue(task, arg)
 ```
 
-### Issue: Blanket + AirlockTask = Double Scopes
-
-Don't use both:
-
-```python
-# Bad - creates nested scopes
-install_global_intercept(app)  # Wraps execution in scope
-
-@app.task(base=AirlockTask)  # Also wraps execution in scope
-def my_task():
-    ...
-```
-
-Choose one:
-- Blanket intercept with `wrap_task_execution=True` (default)
-- OR explicit `AirlockTask` base class
-
 ## Recommendation
 
 **For most teams:** Start with blanket migration, gradually replace `.delay()` calls.

@@ -3,14 +3,10 @@
 Celery-specific components for airlock.
 
 ```python
-from airlock.integrations.celery import AirlockTask, LegacyTaskShim, install_global_intercept
+from airlock.integrations.celery import LegacyTaskShim, install_global_intercept
 ```
 
 ## Task Base Classes
-
-::: airlock.integrations.celery.AirlockTask
-    options:
-      show_root_heading: true
 
 ::: airlock.integrations.celery.LegacyTaskShim
     options:

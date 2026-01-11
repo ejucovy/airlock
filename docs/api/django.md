@@ -3,7 +3,7 @@
 Django-specific components for airlock.
 
 ```python
-from airlock.integrations.django import DjangoScope, AirlockMiddleware, airlock_command
+from airlock.integrations.django import DjangoScope, AirlockMiddleware
 ```
 
 ## Configuration
@@ -33,10 +33,6 @@ AIRLOCK = {
         - should_flush
 
 ## Functions
-
-::: airlock.integrations.django.airlock_command
-    options:
-      show_root_heading: true
 
 ::: airlock.integrations.django.get_executor
     options:
