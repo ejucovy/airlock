@@ -35,14 +35,6 @@ AIRLOCK = {
 }
 ```
 
-### Middleware placement
-
-Any placement works for most projects. Django's request handler converts uncaught exceptions to 4xx/5xx responses, so `AirlockMiddleware` typically sees the correct status code and discards appropriately.
-
-Placement matters if you have **custom middleware with `process_exception()`** that catches view exceptions and returns 2xx or 3xx responses. In that case, place `AirlockMiddleware` higher (earlier) in the list than such middleware, so it sees the exception via its own `process_exception` before another middleware converts it to a misleading success response.
-
-If you care about dispatching conditional on exceptions from middleware themselves (not just views), place `AirlockMiddleware` above those middleware. Similarly, if you use `ATOMIC_REQUESTS=False` and maintain your own control over transaction boundaries across middleware layers, you may need to be more opinionated about ordering.
-
 ### Basic usage
 
 Anywhere in your models/views/services/etc, pass your task functions to `airlock.enqueue()`:
@@ -108,6 +100,15 @@ MIDDLEWARE = [
     "my_app.middleware.UnconditionallyDispatchingAirlockMiddleware",
     # ...
 ]
+```
+
+### Middleware placement
+
+Any placement works for most projects. Django's request handler converts uncaught exceptions to 4xx/5xx responses, so `AirlockMiddleware` typically sees the correct status code and discards appropriately.
+
+Placement matters if you have **custom middleware with `process_exception()`** that catches view exceptions and returns 2xx or 3xx responses. In that case, place `AirlockMiddleware` higher (earlier) in the list than such middleware, so it sees the exception via its own `process_exception` before another middleware converts it to a misleading success response.
+
+If you care about dispatching conditional on exceptions from middleware themselves (not just views), place `AirlockMiddleware` above those middleware. Similarly, if you use `ATOMIC_REQUESTS=False` and maintain your own control over transaction boundaries across middleware layers, you may need to be more opinionated about ordering.
 
 ## Airlock in management commands
 
