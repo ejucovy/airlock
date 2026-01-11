@@ -69,7 +69,7 @@ def checkout(request):
     order = Order.objects.get(id=request.POST['order_id'])
     order.process()
     return HttpResponse("OK")
-# Celery tasks dispatch in transaction.on_commit
+# Celery tasks dispatch in middleware, after transaction has committed
 ```
 
 Read more: [Django integration](docs/django/index.md)
