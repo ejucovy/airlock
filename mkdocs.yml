@@ -43,9 +43,6 @@ markdown_extensions:
 nav:
   - Home: index.md
 
-  - Django:
-    - Overview: django/index.md
-
   - Understanding Airlock:
     - The Problem: understanding/the-problem.md
     - Core Model (3 Concerns): understanding/core-model.md
@@ -53,9 +50,11 @@ nav:
     - Nesting: understanding/nesting.md
     - Alternatives: understanding/alternatives.md
 
+  - Django:
+    - Overview: django/index.md
+
   - Celery:
     - Overview: celery/index.md
-    - Task Wrapper: celery/task-wrapper.md
     - Migration: celery/migration.md
 
   - Extending:
