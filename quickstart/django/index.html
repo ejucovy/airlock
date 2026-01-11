@@ -678,17 +678,6 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#middleware-placement" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Middleware placement
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#basic-usage" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -721,8 +710,30 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#middleware-placement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Middleware placement
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#airlock-in-management-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Airlock in management commands
+      
+    </span>
+  </a>
   
 </li>
       
@@ -1812,17 +1823,6 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#middleware-placement" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Middleware placement
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#basic-usage" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1855,8 +1855,30 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#middleware-placement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Middleware placement
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#airlock-in-management-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Airlock in management commands
+      
+    </span>
+  </a>
   
 </li>
       
@@ -1920,10 +1942,6 @@ django-q, Dramatiq, huey, and Django Tasks.</p>
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="s2">&quot;EXECUTOR&quot;</span><span class="p">:</span> <span class="s2">&quot;airlock.integrations.executors.celery.celery_executor&quot;</span><span class="p">,</span>
 </span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="p">}</span>
 </span></code></pre></div>
-<h3 id="middleware-placement">Middleware placement<a class="headerlink" href="#middleware-placement" title="Permanent link">&para;</a></h3>
-<p>Any placement works for most projects. Django's request handler converts uncaught exceptions to 4xx/5xx responses, so <code>AirlockMiddleware</code> typically sees the correct status code and discards appropriately.</p>
-<p>Placement matters if you have <strong>custom middleware with <code>process_exception()</code></strong> that catches view exceptions and returns 2xx or 3xx responses. In that case, place <code>AirlockMiddleware</code> higher (earlier) in the list than such middleware, so it sees the exception via its own <code>process_exception</code> before another middleware converts it to a misleading success response.</p>
-<p>If you care about dispatching conditional on exceptions from middleware themselves (not just views), place <code>AirlockMiddleware</code> above those middleware. Similarly, if you use <code>ATOMIC_REQUESTS=False</code> and maintain your own control over transaction boundaries across middleware layers, you may need to be more opinionated about ordering.</p>
 <h3 id="basic-usage">Basic usage<a class="headerlink" href="#basic-usage" title="Permanent link">&para;</a></h3>
 <p>Anywhere in your models/views/services/etc, pass your task functions to <code>airlock.enqueue()</code>:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">## models.py</span>
@@ -1978,51 +1996,53 @@ subclass <code>AirlockMiddleware</code> and override <code>should_flush</code>:<
 </span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    <span class="s2">&quot;my_app.middleware.UnconditionallyDispatchingAirlockMiddleware&quot;</span><span class="p">,</span>
 </span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    <span class="c1"># ...</span>
 </span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="p">]</span>
-</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>
-</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="c1">## Airlock in management commands</span>
-</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>
-</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="n">Wrap</span> <span class="n">commands</span> <span class="k">with</span> <span class="err">`</span><span class="nd">@airlock_command</span><span class="err">`</span> <span class="k">for</span> <span class="n">automatic</span> <span class="n">scoping</span><span class="p">:</span>
-</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>
-</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="o">*</span> <span class="n">All</span> <span class="n">side</span> <span class="n">effects</span> <span class="n">enqueued</span> <span class="n">during</span> <span class="n">a</span> <span class="n">command</span> <span class="n">remain</span> <span class="n">buffered</span> <span class="n">until</span> <span class="n">the</span> <span class="n">end</span> <span class="n">of</span> <span class="n">the</span> <span class="n">command</span><span class="o">.</span>
-</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="o">*</span> <span class="n">When</span> <span class="n">the</span> <span class="n">command</span> <span class="n">finishes</span><span class="p">:</span>
-</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>  <span class="o">*</span> <span class="n">If</span> <span class="n">there</span> <span class="n">was</span> <span class="n">an</span> <span class="n">unhandled</span> <span class="n">exception</span><span class="p">,</span> <span class="n">side</span> <span class="n">effects</span> <span class="n">are</span> <span class="n">discarded</span><span class="o">.</span>
-</span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>  <span class="o">*</span> <span class="n">If</span> <span class="n">the</span> <span class="n">command</span> <span class="ow">is</span> <span class="n">successful</span><span class="p">,</span> <span class="n">side</span> <span class="n">effects</span> <span class="n">are</span> <span class="n">dispatched</span><span class="o">.</span>
-</span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a><span class="o">*</span> <span class="n">If</span> <span class="n">your</span> <span class="n">command</span> <span class="n">supports</span> <span class="n">a</span> <span class="err">`</span><span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span><span class="err">`</span> <span class="n">flag</span><span class="p">,</span> <span class="n">airlock</span> <span class="n">will</span> <span class="n">discard</span> <span class="n">side</span> <span class="n">effects</span> <span class="n">when</span> <span class="n">your</span> <span class="n">command</span> <span class="n">executes</span> <span class="ow">in</span> <span class="n">dry</span><span class="o">-</span><span class="n">run</span> <span class="n">mode</span><span class="o">.</span>
-</span><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>
-</span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a><span class="err">```</span><span class="n">python</span>
-</span><span id="__span-4-25"><a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a><span class="kn">from</span><span class="w"> </span><span class="nn">django.core.management.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseCommand</span>
-</span><span id="__span-4-26"><a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airlock.integrations.django</span><span class="w"> </span><span class="kn">import</span> <span class="n">airlock_command</span>
-</span><span id="__span-4-27"><a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>
-</span><span id="__span-4-28"><a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a><span class="k">class</span><span class="w"> </span><span class="nc">Command</span><span class="p">(</span><span class="n">BaseCommand</span><span class="p">):</span>
-</span><span id="__span-4-29"><a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">add_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
-</span><span id="__span-4-30"><a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--dry-run&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">)</span>
-</span><span id="__span-4-31"><a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a>
-</span><span id="__span-4-32"><a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>    <span class="nd">@airlock_command</span>
-</span><span id="__span-4-33"><a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
-</span><span id="__span-4-34"><a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a>        <span class="c1"># If --dry-run, all side effects will drop automatically</span>
-</span><span id="__span-4-35"><a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a>        <span class="c1"># Otherwise, all side effects will dispatch at the end of the script</span>
-</span><span id="__span-4-36"><a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a>        <span class="k">for</span> <span class="n">order</span> <span class="ow">in</span> <span class="n">Order</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s1">&#39;pending&#39;</span><span class="p">):</span>
-</span><span id="__span-4-37"><a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a>            <span class="n">order</span><span class="o">.</span><span class="n">process</span><span class="p">()</span>
+</span></code></pre></div>
+<h3 id="middleware-placement">Middleware placement<a class="headerlink" href="#middleware-placement" title="Permanent link">&para;</a></h3>
+<p>Any placement works for most projects. Django's request handler converts uncaught exceptions to 4xx/5xx responses, so <code>AirlockMiddleware</code> typically sees the correct status code and discards appropriately.</p>
+<p>Placement matters if you have <strong>custom middleware with <code>process_exception()</code></strong> that catches view exceptions and returns 2xx or 3xx responses. In that case, place <code>AirlockMiddleware</code> higher (earlier) in the list than such middleware, so it sees the exception via its own <code>process_exception</code> before another middleware converts it to a misleading success response.</p>
+<p>If you care about dispatching conditional on exceptions from middleware themselves (not just views), place <code>AirlockMiddleware</code> above those middleware. Similarly, if you use <code>ATOMIC_REQUESTS=False</code> and maintain your own control over transaction boundaries across middleware layers, you may need to be more opinionated about ordering.</p>
+<h2 id="airlock-in-management-commands">Airlock in management commands<a class="headerlink" href="#airlock-in-management-commands" title="Permanent link">&para;</a></h2>
+<p>Wrap commands with <code>@airlock_command</code> for automatic scoping:</p>
+<ul>
+<li>All side effects enqueued during a command remain buffered until the end of the command.</li>
+<li>When the command finishes:</li>
+<li>If there was an unhandled exception, side effects are discarded.</li>
+<li>If the command is successful, side effects are dispatched.</li>
+<li>If your command supports a <code>--dry-run</code> flag, airlock will discard side effects when your command executes in dry-run mode.</li>
+</ul>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">django.core.management.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseCommand</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airlock.integrations.django</span><span class="w"> </span><span class="kn">import</span> <span class="n">airlock_command</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="k">class</span><span class="w"> </span><span class="nc">Command</span><span class="p">(</span><span class="n">BaseCommand</span><span class="p">):</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">add_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--dry-run&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">)</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="nd">@airlock_command</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>        <span class="c1"># If --dry-run, all side effects will drop automatically</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>        <span class="c1"># Otherwise, all side effects will dispatch at the end of the script</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>        <span class="k">for</span> <span class="n">order</span> <span class="ow">in</span> <span class="n">Order</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s1">&#39;pending&#39;</span><span class="p">):</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>            <span class="n">order</span><span class="o">.</span><span class="n">process</span><span class="p">()</span>
 </span></code></pre></div>
 <h2 id="manual-scoping">Manual scoping<a class="headerlink" href="#manual-scoping" title="Permanent link">&para;</a></h2>
 <p>You can always maintain explicit control too with the context manager API. 
 Use <code>DjangoScope</code> to pick up settings and transaction-aware dispatch timing:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airlock.integrations.django</span><span class="w"> </span><span class="kn">import</span> <span class="n">DjangoScope</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="c1"># In a script, task, etc:</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">background_job</span><span class="p">():</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">_cls</span><span class="o">=</span><span class="n">DjangoScope</span><span class="p">):</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>        <span class="n">do_stuff</span><span class="p">()</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="c1"># Effects dispatch after transaction commit</span>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>
-</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="c1"># Or in a view with finer-grained control:</span>
-</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="k">def</span><span class="w"> </span><span class="nf">checkout</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>    <span class="n">order</span> <span class="o">=</span> <span class="n">Order</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">[</span><span class="s1">&#39;order_id&#39;</span><span class="p">])</span>
-</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    <span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">_cls</span><span class="o">=</span><span class="n">DjangoScope</span><span class="p">):</span>
-</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>        <span class="n">order</span><span class="o">.</span><span class="n">process</span><span class="p">()</span>
-</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>    <span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">_cls</span><span class="o">=</span><span class="n">DjangoScope</span><span class="p">):</span>
-</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>        <span class="n">ping_analytics</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
-</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>    <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span><span class="s2">&quot;OK&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airlock.integrations.django</span><span class="w"> </span><span class="kn">import</span> <span class="n">DjangoScope</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="c1"># In a script, task, etc:</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">background_job</span><span class="p">():</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">_cls</span><span class="o">=</span><span class="n">DjangoScope</span><span class="p">):</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>        <span class="n">do_stuff</span><span class="p">()</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    <span class="c1"># Effects dispatch after transaction commit</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="c1"># Or in a view with finer-grained control:</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="k">def</span><span class="w"> </span><span class="nf">checkout</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>    <span class="n">order</span> <span class="o">=</span> <span class="n">Order</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">[</span><span class="s1">&#39;order_id&#39;</span><span class="p">])</span>
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>    <span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">_cls</span><span class="o">=</span><span class="n">DjangoScope</span><span class="p">):</span>
+</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>        <span class="n">order</span><span class="o">.</span><span class="n">process</span><span class="p">()</span>
+</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>    <span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">_cls</span><span class="o">=</span><span class="n">DjangoScope</span><span class="p">):</span>
+</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>        <span class="n">ping_analytics</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+</span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>    <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span><span class="s2">&quot;OK&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <p>This pattern can also be combined with middleware-based implicit scopes.
 You'll want to read more about <a href="../../guide/nested-scopes/">how nested scopes work</a>
