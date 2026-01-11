@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://ejucovy.github.io/airlock/understanding/the-problem/">
+        <link rel="canonical" href="https://ejucovy.github.io/airlock/understanding/design-invariants/">
       
       
-        <link rel="prev" href="../../quickstart/celery/">
+        <link rel="prev" href="../core-model/">
       
       
-        <link rel="next" href="../core-model/">
+        <link rel="next" href="../nesting/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>The Problem - Airlock</title>
+        <title>Design Invariants - Airlock</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#the-problem" class="md-skip">
+        <a href="#design-invariants" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              The Problem
+              Design Invariants
             
           </span>
         </div>
@@ -270,7 +270,7 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+        <a href="../the-problem/" class="md-tabs__link">
           
   
   
@@ -672,37 +672,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    The Problem
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../the-problem/" class="md-nav__link">
         
   
   
@@ -718,70 +691,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#why-does-airlock-exist-what-problem-does-it-solve" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Why does airlock exist? What problem does it solve?
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#stuff-it-all-in-an-airlock" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Stuff it all in an airlock
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#what-this-unlocks" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What this unlocks
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#do-i-really-need-this" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Do I really need this...?
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -819,10 +728,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../design-invariants/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Design Invariants
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -838,6 +774,59 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-policies-cannot-enqueue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Policies cannot enqueue
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-buffered-effects-escape-only-at-flush" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Buffered effects escape only at flush
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-no-scope-error" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. No scope = error
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1734,10 +1723,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#why-does-airlock-exist-what-problem-does-it-solve" class="md-nav__link">
+  <a href="#1-policies-cannot-enqueue" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Why does airlock exist? What problem does it solve?
+        1. Policies cannot enqueue
       
     </span>
   </a>
@@ -1745,10 +1734,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#stuff-it-all-in-an-airlock" class="md-nav__link">
+  <a href="#2-buffered-effects-escape-only-at-flush" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Stuff it all in an airlock
+        2. Buffered effects escape only at flush
       
     </span>
   </a>
@@ -1756,21 +1745,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-this-unlocks" class="md-nav__link">
+  <a href="#3-no-scope-error" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What this unlocks
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#do-i-really-need-this" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Do I really need this...?
+        3. No scope = error
       
     </span>
   </a>
@@ -1797,65 +1775,17 @@
   
 
 
-<h1 id="the-problem">The Problem<a class="headerlink" href="#the-problem" title="Permanent link">&para;</a></h1>
-<h2 id="why-does-airlock-exist-what-problem-does-it-solve">Why does airlock exist? What problem does it solve?<a class="headerlink" href="#why-does-airlock-exist-what-problem-does-it-solve" title="Permanent link">&para;</a></h2>
-<p>Putting side effects deep in the call stack is common but dangerous:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">Order</span><span class="p">:</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;processed&quot;</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        <span class="n">notify_warehouse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        <span class="n">send_confirmation_email</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-</span></code></pre></div>
-<p>It's also tempting to centralize "conditional side effect dispatch" in a deep method. Also dangerous!</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">Order</span><span class="p">:</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">update_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">):</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        <span class="n">notify_warehouse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;paid&quot;</span><span class="p">:</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>            <span class="n">send_confirmation_email</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        <span class="k">elif</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;shipped&quot;</span><span class="p">:</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>            <span class="n">update_tracking_system</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>            <span class="n">send_update_email</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-</span></code></pre></div>
-<p>But <em>why</em> are they dangerous?</p>
-<ul>
-<li><strong>You can't opt out.</strong> Every scripted creation, fixture load, and migration that calls the method fires the tasks.</li>
-<li><strong>It's invisible at the call site.</strong> <code>order.mark_as_paid()</code> looks innocent. You have to know to trace its call stack for side effects.</li>
-<li><strong>Testing is miserable.</strong> Mock at the task level (fragile), run a real broker (slow), or <code>CELERY_ALWAYS_EAGER=True</code> (hides async bugs).</li>
-<li><strong>Bulk operations explode.</strong> A loop calling <code>save()</code> on 10,000 orders enqueues 10,000 tasks.</li>
-<li><strong>Re-entrancy bites.</strong> <code>User.save()</code> calls <code>enrich_from_api.delay(user.id)</code>. That task fetches data, sets <code>user.age</code> and <code>user.income</code>, then calls <code>user.save()</code>... which enqueues <code>enrich_from_api</code> again. Now you're adding flags like <code>_skip_enrich=True</code> and threading them through everywhere. (Or you're diffing against <code>Model.objects.get(pk=self.pk)</code> in every <code>save()</code> and using <code>save(changed_fields=[])</code> as a task dispatcher. Now you have three problems.)</li>
-</ul>
-<p>The problem isn't <em>where</em> the intent is expressed. It's that <strong>the effects are silent, and escape immediately</strong>.</p>
-<h2 id="stuff-it-all-in-an-airlock">Stuff it all in an airlock<a class="headerlink" href="#stuff-it-all-in-an-airlock" title="Permanent link">&para;</a></h2>
-<p>With airlock, you express an <em>intent</em> to perform a side effect, but the side effects don't escape until someone lets them out:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">airlock</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">Order</span><span class="p">:</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;processed&quot;</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>        <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">notify_warehouse</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>          <span class="c1"># Buffered for later</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>        <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">send_confirmation_email</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>   <span class="c1"># Buffered for later</span>
-</span></code></pre></div>
-<p>Now these methods are a <em>legitimate</em> and <em>safe</em> place to express domain intent:</p>
-<ul>
-<li><strong>Colocation.</strong> The model knows when it needs side effects. You may want that knowledge to belong here.</li>
-<li><strong>DRY.</strong> Every code path that saves an Order expresses the side effects. You can't forget.</li>
-<li><strong>Control.</strong> The <em>scope</em> decides what escapes, not the call site.</li>
-<li><strong>Visibility.</strong> You can inspect the buffer before it flushes... run a model method and compare before-and-after... great for tests!</li>
-<li><strong>Control again.</strong> Define your own nested scopes for surgically stacked policies, or even define multiple execution boundaries.</li>
-</ul>
-<p>Side effects can be defined close to the source, and still escape in one place.</p>
-<h2 id="what-this-unlocks">What this unlocks<a class="headerlink" href="#what-this-unlocks" title="Permanent link">&para;</a></h2>
-<p>Without airlock, "enqueue all side effects at the edge" is an important constraint for maintaining predictable timing, auditability, and control. Side effects deep in the call stack are dangerous, so you're forced to pull them out.</p>
-<p>With airlock, both patterns are safe:</p>
-<ul>
-<li><strong>Edge-only</strong>: All enqueues in views/handlers. Explicit, visible at the boundary.</li>
-<li><strong>Colocated</strong>: Enqueues near domain logic (<code>save()</code>, signals, service methods). DRY, encapsulated.</li>
-</ul>
-<p>Choose based on your preferences, not out of necessity.</p>
-<h2 id="do-i-really-need-this">Do I really need this...?<a class="headerlink" href="#do-i-really-need-this" title="Permanent link">&para;</a></h2>
-<ul>
-<li>See <a href="../alternatives/">Alternatives</a></li>
-</ul>
+<h1 id="design-invariants">Design Invariants<a class="headerlink" href="#design-invariants" title="Permanent link">&para;</a></h1>
+<p>These are the core guarantees that airlock enforces by design.</p>
+<h2 id="1-policies-cannot-enqueue">1. Policies cannot enqueue<a class="headerlink" href="#1-policies-cannot-enqueue" title="Permanent link">&para;</a></h2>
+<p>Calling <code>enqueue()</code> from within a policy raises <code>PolicyEnqueueError</code>.</p>
+<p>Policies observe and filter — they don't produce new side effects. This keeps the system predictable: the set of intents comes from your domain code, not from policy logic.</p>
+<h2 id="2-buffered-effects-escape-only-at-flush">2. Buffered effects escape only at flush<a class="headerlink" href="#2-buffered-effects-escape-only-at-flush" title="Permanent link">&para;</a></h2>
+<p>Effects enqueued via <code>airlock.enqueue()</code> are held in the buffer until the scope flushes. There's no way for them to escape early — no "force dispatch" API, no automatic leaking.</p>
+<p>This is the control airlock provides: you express intent anywhere in your code, but the scope boundary decides when (and whether) those effects actually run.</p>
+<h2 id="3-no-scope-error">3. No scope = error<a class="headerlink" href="#3-no-scope-error" title="Permanent link">&para;</a></h2>
+<p>Calling <code>enqueue()</code> outside a scope raises <code>NoScopeError</code>.</p>
+<p>This is intentional. Airlock requires explicit lifecycle boundaries — side effects should not escape silently. If you want auto-dispatch without a scope, just call <code>.delay()</code> directly. The strictness is a feature, not a limitation.</p>
 
 
 
