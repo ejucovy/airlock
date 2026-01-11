@@ -1,14 +1,16 @@
-# Celery Quickstart
+# Celery Integration
 
-**Goal:** Get airlock working with Celery tasks in 5 minutes.
+Airlock integrates with Celery to buffer and control task dispatch.
 
-## Install
+## Quickstart
+
+### Install
 
 ```bash
 pip install airlock celery
 ```
 
-## Wrap Task Execution
+### Wrap Task Execution
 
 Use `AirlockTask` as base class to auto-scope task execution:
 
@@ -32,14 +34,9 @@ def process_order(order_id):
     # Discards if task raises exception
 ```
 
-Now when `process_order` runs:
-- ✅ Creates automatic scope
-- ✅ Flushes on success
-- ❌ Discards on error
+### Dispatch via Celery
 
-## Dispatch via Celery
-
-Use `celery_executor` to dispatch through Celery:
+Use `celery_executor` to dispatch intents through Celery:
 
 ```python
 from airlock.integrations.executors.celery import celery_executor
@@ -50,9 +47,7 @@ with airlock.scope(executor=celery_executor):
 # Dispatches via .delay()
 ```
 
-The executor automatically detects Celery tasks and uses `.delay()` or `.apply_async()`. Plain functions run synchronously.
-
-## Combining Both
+### Combining Both
 
 Task execution scoping + Celery dispatch:
 
@@ -73,7 +68,7 @@ with airlock.scope(executor=celery_executor):
 # When it runs, send_email is also queued via Celery
 ```
 
-## Pass Celery Options
+### Pass Celery Options
 
 ```python
 airlock.enqueue(
@@ -85,66 +80,7 @@ airlock.enqueue(
         "priority": 9,        # High priority
     }
 )
-# Calls: send_email.apply_async((user_id,), {}, countdown=60, queue="emails", priority=9)
 ```
-
-## Migrating Existing Code
-
-### Selective Migration
-
-Apply `LegacyTaskShim` to tasks you're migrating:
-
-```python
-from airlock.integrations.celery import LegacyTaskShim
-
-@app.task(base=LegacyTaskShim)
-def old_task(arg):
-    ...
-
-# This now routes through airlock
-with airlock.scope():
-    old_task.delay(123)  # Emits DeprecationWarning, buffers intent
-# Dispatches here
-```
-
-**Note:** `LegacyTaskShim` requires an active scope. It will raise `NoScopeError` if called outside a scope.
-
-### Blanket Migration
-
-For large codebases, intercept all tasks globally:
-
-```python
-# celery.py
-from celery import Celery
-from airlock.integrations.celery import install_global_intercept
-
-app = Celery('myapp')
-
-# Patch all tasks globally
-install_global_intercept(app)
-```
-
-This:
-1. Intercepts all `.delay()` and `.apply_async()` calls
-2. Routes them through airlock when inside a scope
-3. Wraps all task execution in scopes (like `AirlockTask`)
-4. Emits `DeprecationWarning` to encourage migration
-
-Inside scope:
-```python
-with airlock.scope():
-    my_task.delay(123)  # Buffered, returns None
-# Dispatches here
-```
-
-Outside scope:
-```python
-my_task.delay(123)  # Passes through to Celery, warns
-```
-
-⚠️ **Global intercept is a migration tool, not steady state.** Use it to migrate legacy code, but prefer `airlock.enqueue()` for new code.
-
-[Full migration guide →](../migration/from-direct-delay.md)
 
 ## With Django
 
@@ -174,3 +110,7 @@ def checkout_view(request):
 # Both tasks dispatch via Celery after transaction.on_commit()
 ```
 
+## Next Steps
+
+- [Task Wrapper Deep Dive](task-wrapper.md) - Customizing `AirlockTask`
+- [Migration Guide](migration.md) - Migrating from direct `.delay()` calls

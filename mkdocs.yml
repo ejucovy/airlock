@@ -35,6 +35,18 @@ theme:
 
 plugins:
   - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: false
+            show_root_heading: true
+            show_root_full_path: false
+            heading_level: 2
+            members_order: source
+            show_signature_annotations: true
+            separate_signature: true
+            docstring_style: google
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -60,9 +72,7 @@ markdown_extensions:
 nav:
   - Home: index.md
 
-  - Quickstart:
-    - Django (5 min): quickstart/django.md
-    - Celery (5 min): quickstart/celery.md
+  - Quickstart: quickstart/django.md
 
   - Understanding Airlock:
     - The Problem: understanding/the-problem.md
@@ -71,19 +81,10 @@ nav:
     - Nesting: understanding/nesting.md
     - Alternatives: understanding/alternatives.md
 
-  - Practical Guide:
-    - Basic Usage: guide/basic-usage.md
-    - Policies: guide/policies.md
-    - Nested Scopes: guide/nested-scopes.md
-    - Dispatch: guide/dispatch.md
-
-  - Integrations:
-    - Celery:
-      - Task Wrapper: integrations/celery/task-wrapper.md
-
-  - Migration:
-    - From .delay() Calls: migration/from-direct-delay.md
-    - Selective vs Blanket: migration/selective-vs-blanket.md
+  - Celery:
+    - Overview: celery/index.md
+    - Task Wrapper: celery/task-wrapper.md
+    - Migration: celery/migration.md
 
   - Extending:
     - Custom Policies: extending/custom-policies.md
@@ -91,8 +92,9 @@ nav:
     - Custom Scopes: extending/custom-scopes.md
 
   - API Reference:
-    - Core Functions: api/core.md
-    - Scope Class: api/scope-class.md
-    - Intent: api/intent.md
-    - Policies: api/policies.md
+    - Overview: api/index.md
+    - Core: api/core.md
+    - Django: api/django.md
+    - Celery: api/celery.md
+    - Executors: api/executors.md
 

@@ -1,128 +1,115 @@
-# Core API Reference
+# Core API
 
-The main functions you'll use in application code.
+The main airlock module. Import with `import airlock`.
 
-## airlock.scope()
+## Functions
 
-Create a lifecycle boundary for side effects.
+::: airlock.scope
+    options:
+      show_root_heading: true
 
-```python
-airlock.scope(
-    policy=None,
-    executor=None,
-    *,
-    _cls=Scope
-) -> ContextManager[Scope]
-```
+::: airlock.enqueue
+    options:
+      show_root_heading: true
 
-**Parameters:**
+::: airlock.policy
+    options:
+      show_root_heading: true
 
-- `policy` (Policy | None) - Policy controlling what intents are allowed. Defaults to `AllowAll()`.
-- `executor` (Callable | None) - Executor for dispatching intents. Defaults to `sync_executor`.
-- `_cls` (Type[Scope]) - Scope class to use. For custom scope subclasses.
+::: airlock.get_current_scope
+    options:
+      show_root_heading: true
 
-**Returns:** Context manager yielding the scope instance.
+## Classes
 
-**Example:**
+::: airlock.Scope
+    options:
+      show_root_heading: true
+      members:
+        - intents
+        - own_intents
+        - captured_intents
+        - is_flushed
+        - is_discarded
+        - is_active
+        - enter
+        - exit
+        - flush
+        - discard
+        - should_flush
+        - before_descendant_flushes
 
-```python
-with airlock.scope() as s:
-    airlock.enqueue(task_a)
-    airlock.enqueue(task_b)
-# Effects dispatch here
-```
+::: airlock.Intent
+    options:
+      show_root_heading: true
+      members:
+        - task
+        - args
+        - kwargs
+        - origin
+        - dispatch_options
+        - name
+        - local_policies
+        - passes_local_policies
 
-**With custom scope:**
+## Protocols
 
-```python
-from airlock.integrations.django import DjangoScope
+::: airlock.Policy
+    options:
+      show_root_heading: true
 
-with airlock.scope(_cls=DjangoScope):
-    airlock.enqueue(task)
-```
+::: airlock.Executor
+    options:
+      show_root_heading: true
 
-## airlock.enqueue()
+## Built-in Policies
 
-Express intent to perform a side effect.
+::: airlock.AllowAll
+    options:
+      show_root_heading: true
 
-```python
-airlock.enqueue(
-    task: Callable,
-    *args,
-    _origin: str | None = None,
-    _dispatch_options: dict | None = None,
-    **kwargs
-) -> None
-```
+::: airlock.DropAll
+    options:
+      show_root_heading: true
 
-**Parameters:**
+::: airlock.AssertNoEffects
+    options:
+      show_root_heading: true
 
-- `task` (Callable) - The callable to execute (Celery task, function, etc.)
-- `*args` - Positional arguments for the task
-- `_origin` (str | None) - Optional origin metadata for debugging
-- `_dispatch_options` (dict | None) - Optional dispatch options (countdown, queue, etc.)
-- `**kwargs` - Keyword arguments for the task
+::: airlock.BlockTasks
+    options:
+      show_root_heading: true
 
-**Raises:**
+::: airlock.LogOnFlush
+    options:
+      show_root_heading: true
 
-- `NoScopeError` - If no scope is active
-- `PolicyEnqueueError` - If called from within a policy callback
+::: airlock.CompositePolicy
+    options:
+      show_root_heading: true
 
-**Example:**
+## Exceptions
 
-```python
-airlock.enqueue(send_email, user_id=123)
+::: airlock.AirlockError
+    options:
+      show_root_heading: true
 
-airlock.enqueue(
-    send_email,
-    user_id=123,
-    _dispatch_options={"countdown": 60, "queue": "emails"}
-)
-```
+::: airlock.UsageError
+    options:
+      show_root_heading: true
 
-## airlock.policy()
+::: airlock.NoScopeError
+    options:
+      show_root_heading: true
 
-Context manager for local policy control without creating a new buffer.
+::: airlock.PolicyEnqueueError
+    options:
+      show_root_heading: true
 
-```python
-airlock.policy(p: Policy) -> ContextManager[None]
-```
+::: airlock.ScopeStateError
+    options:
+      show_root_heading: true
 
-**Parameters:**
-
-- `p` (Policy) - Policy to apply to intents enqueued within this context
-
-**Example:**
-
-```python
-with airlock.scope():
-    airlock.enqueue(task_a)  # Will dispatch
-
-    with airlock.policy(airlock.DropAll()):
-        airlock.enqueue(task_b)  # Won't dispatch
-
-    airlock.enqueue(task_c)  # Will dispatch
-```
-
-All intents go to the same buffer. Policy is captured per-intent at enqueue time.
-
-## airlock.get_current_scope()
-
-Get the currently active scope, or None.
-
-```python
-airlock.get_current_scope() -> Scope | None
-```
-
-**Returns:** The active scope, or `None` if no scope is active.
-
-**Example:**
-
-```python
-scope = airlock.get_current_scope()
-if scope:
-    print(f"Buffered intents: {len(scope.intents)}")
-else:
-    print("No active scope")
-```
-
+::: airlock.PolicyViolation
+    options:
+      show_root_heading: true
