@@ -106,6 +106,14 @@ class TestScope:
         s.discard()
         assert s.is_discarded
 
+    def test_cannot_discard_twice(self):
+        """Test that discarding twice raises an error."""
+        s = Scope(policy=AllowAll())
+        s.discard()
+
+        with pytest.raises(ScopeStateError, match="already been discarded"):
+            s.discard()
+
     def test_cannot_discard_after_flush(self):
         """Test that discarding after flush raises an error."""
         s = Scope(policy=AllowAll())

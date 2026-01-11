@@ -249,6 +249,40 @@ def test_get_scope_class_imports_custom_scope():
             mock_import.assert_called_once_with("myapp.scopes.CustomScope")
 
 
+# =============================================================================
+# get_policy() tests
+# =============================================================================
+
+
+def test_get_policy_with_callable():
+    """Test get_policy() when POLICY setting is a callable."""
+    from airlock.integrations.django import get_policy
+
+    def policy_factory():
+        return AllowAll()
+
+    with patch("airlock.integrations.django.get_setting") as mock_get_setting:
+        mock_get_setting.return_value = policy_factory
+
+        policy = get_policy()
+
+        assert isinstance(policy, AllowAll)
+
+
+def test_get_policy_with_instance():
+    """Test get_policy() when POLICY setting is already an instance."""
+    from airlock.integrations.django import get_policy
+
+    instance = AllowAll()
+
+    with patch("airlock.integrations.django.get_setting") as mock_get_setting:
+        mock_get_setting.return_value = instance
+
+        policy = get_policy()
+
+        assert policy is instance
+
+
 def test_middleware_uses_scope_class_from_setting(mock_transaction):
     """Test AirlockMiddleware uses scope class from SCOPE setting."""
     # Create a custom scope class that tracks instantiation
@@ -641,6 +675,38 @@ def test_airlock_command_dry_run_uses_drop_all(mock_transaction):
             cmd.handle(dry_run=True)
 
             # get_policy should NOT be called when dry_run=True
+            mock_get_policy.assert_not_called()
+
+    assert len(policy_used) == 1
+    assert isinstance(policy_used[0], DropAll)
+
+
+def test_airlock_command_with_parens_and_custom_kwarg(mock_transaction):
+    """Test @airlock_command() with parentheses and custom dry_run_kwarg."""
+    from airlock.integrations.django import airlock_command
+    from airlock import DropAll
+
+    policy_used = []
+
+    class TrackingScope(DjangoScope):
+        def __init__(self, policy, **kwargs):
+            policy_used.append(policy)
+            super().__init__(policy=policy, **kwargs)
+
+    class FakeCommand:
+        @airlock_command(dry_run_kwarg="simulate")
+        def handle(self, *args, **options):
+            airlock.enqueue(dummy_task)
+
+    with patch("airlock.integrations.django.get_policy") as mock_get_policy:
+        mock_get_policy.return_value = AllowAll()
+        with patch("airlock.integrations.django.get_scope_class") as mock_get_scope:
+            mock_get_scope.return_value = TrackingScope
+
+            cmd = FakeCommand()
+            cmd.handle(simulate=True)
+
+            # get_policy should NOT be called when simulate=True
             mock_get_policy.assert_not_called()
 
     assert len(policy_used) == 1

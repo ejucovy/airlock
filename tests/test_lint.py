@@ -76,6 +76,51 @@ task_b.delay(2)
 
         assert len(violations) == 0
 
+    def test_noqa_without_space(self):
+        """Test that # noqa:airlock (no space) works."""
+        code = "task.delay(1)  # noqa:airlock\n"
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
+            f.write(code)
+            f.flush()
+
+            violations = list(check_file(Path(f.name)))
+
+        assert len(violations) == 0
+
+    def test_noqa_with_airlock_elsewhere(self):
+        """Test that # noqa with airlock elsewhere on line works."""
+        code = "task.delay(1)  # noqa - airlock migration\n"
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
+            f.write(code)
+            f.flush()
+
+            violations = list(check_file(Path(f.name)))
+
+        assert len(violations) == 0
+
+    def test_handles_unreadable_file(self):
+        """Test graceful handling of unreadable files."""
+        import os
+        # Skip if running as root (can read any file)
+        if os.geteuid() == 0:
+            pytest.skip("Cannot test file permissions as root")
+
+        # Create a file then make it unreadable
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
+            f.write("task.delay(1)\n")
+            path = Path(f.name)
+
+        # Remove read permissions
+        path.chmod(0o000)
+        try:
+            violations = list(check_file(path))
+            # Should return empty, not raise
+            assert len(violations) == 0
+        finally:
+            # Restore permissions for cleanup
+            path.chmod(0o644)
+            path.unlink()
+
     def test_no_false_positives_on_other_methods(self):
         """Test that other .method() calls are not flagged."""
         code = """
@@ -154,6 +199,32 @@ class TestCheckPaths:
             violations = list(check_paths([Path(tmpdir)]))
 
         assert len(violations) == 1
+
+    def test_single_file_path(self):
+        """Test checking a single file path directly."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
+            f.write("task.delay(1)\ntask.apply_async()\n")
+            f.flush()
+            path = Path(f.name)
+
+        try:
+            violations = list(check_paths([path]))
+            assert len(violations) == 2
+        finally:
+            path.unlink()
+
+    def test_single_non_python_file_skipped(self):
+        """Test that a single non-Python file is skipped."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
+            f.write("task.delay(1)\n")
+            f.flush()
+            path = Path(f.name)
+
+        try:
+            violations = list(check_paths([path]))
+            assert len(violations) == 0
+        finally:
+            path.unlink()
 
 
 class TestMain:
