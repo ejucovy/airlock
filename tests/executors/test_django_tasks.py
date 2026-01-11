@@ -247,3 +247,178 @@ def test_integration_plain_callable_fallback():
 
     assert len(calls) == 1
     assert calls[0] == (42, "value")
+
+
+# =============================================================================
+# Tests for both call spellings
+# =============================================================================
+
+
+def test_spelling_dispatch_options_kwarg():
+    """Test airlock.enqueue(task, _dispatch_options=kw) spelling."""
+    from airlock import scope, enqueue, AllowAll
+    from airlock.integrations.executors.django_tasks import django_tasks_executor
+
+    enqueue_calls = []
+    using_calls = []
+
+    class FakeDjangoTask:
+        """Simulates a Django @task decorated function."""
+
+        def __init__(self, options=None):
+            self._options = options or {}
+
+        def using(self, **options):
+            using_calls.append(options)
+            return FakeDjangoTask(options=options)
+
+        def enqueue(self, *args, **kwargs):
+            enqueue_calls.append((args, kwargs, self._options))
+
+    task = FakeDjangoTask()
+
+    # Spelling 1: pass options via _dispatch_options
+    with scope(policy=AllowAll(), executor=django_tasks_executor):
+        enqueue(
+            task,
+            "arg1",
+            _dispatch_options={"priority": 50},
+            user_id=123,
+        )
+
+    # Executor should call .using() then .enqueue()
+    assert len(using_calls) == 1
+    assert using_calls[0] == {"priority": 50}
+    assert len(enqueue_calls) == 1
+    args, kwargs, options = enqueue_calls[0]
+    assert args == ("arg1",)
+    assert kwargs == {"user_id": 123}
+    assert options == {"priority": 50}
+
+
+def test_spelling_pre_configured_using():
+    """Test airlock.enqueue(task.using(**kw)) spelling."""
+    from airlock import scope, enqueue, AllowAll
+    from airlock.integrations.executors.django_tasks import django_tasks_executor
+
+    enqueue_calls = []
+    using_calls = []
+
+    class FakeDjangoTask:
+        """Simulates a Django @task decorated function."""
+
+        def __init__(self, options=None):
+            self._options = options or {}
+
+        def using(self, **options):
+            using_calls.append(options)
+            return FakeDjangoTask(options=options)
+
+        def enqueue(self, *args, **kwargs):
+            enqueue_calls.append((args, kwargs, self._options))
+
+    task = FakeDjangoTask()
+
+    # Spelling 2: pre-configure with .using() before enqueue
+    with scope(policy=AllowAll(), executor=django_tasks_executor):
+        enqueue(
+            task.using(priority=50),
+            "arg1",
+            user_id=123,
+        )
+
+    # .using() was called by user code, not executor
+    assert len(using_calls) == 1
+    assert using_calls[0] == {"priority": 50}
+
+    # Executor should call .enqueue() directly (no _dispatch_options)
+    assert len(enqueue_calls) == 1
+    args, kwargs, options = enqueue_calls[0]
+    assert args == ("arg1",)
+    assert kwargs == {"user_id": 123}
+    # Options were baked in by .using() call
+    assert options == {"priority": 50}
+
+
+def test_spelling_both_options_combined():
+    """Test combining task.using() with _dispatch_options merges options."""
+    from airlock import scope, enqueue, AllowAll
+    from airlock.integrations.executors.django_tasks import django_tasks_executor
+
+    enqueue_calls = []
+    using_calls = []
+
+    class FakeDjangoTask:
+        """Simulates a Django @task decorated function."""
+
+        def __init__(self, options=None):
+            self._options = options or {}
+
+        def using(self, **options):
+            using_calls.append(options)
+            # Merge with existing options
+            merged = {**self._options, **options}
+            return FakeDjangoTask(options=merged)
+
+        def enqueue(self, *args, **kwargs):
+            enqueue_calls.append((args, kwargs, self._options))
+
+    task = FakeDjangoTask()
+
+    # Use both spellings: pre-configure + dispatch_options
+    with scope(policy=AllowAll(), executor=django_tasks_executor):
+        enqueue(
+            task.using(priority=50),  # Set priority
+            "arg1",
+            _dispatch_options={"queue_name": "high"},  # Set queue
+            user_id=123,
+        )
+
+    # First .using() from user, second from executor
+    assert len(using_calls) == 2
+    assert using_calls[0] == {"priority": 50}  # User's call
+    assert using_calls[1] == {"queue_name": "high"}  # Executor's call
+
+    # Final options should have both
+    assert len(enqueue_calls) == 1
+    args, kwargs, options = enqueue_calls[0]
+    assert args == ("arg1",)
+    assert kwargs == {"user_id": 123}
+    assert options == {"priority": 50, "queue_name": "high"}
+
+
+def test_spelling_dispatch_options_override():
+    """Test _dispatch_options can override pre-configured .using() options."""
+    from airlock import scope, enqueue, AllowAll
+    from airlock.integrations.executors.django_tasks import django_tasks_executor
+
+    enqueue_calls = []
+
+    class FakeDjangoTask:
+        """Simulates a Django @task decorated function."""
+
+        def __init__(self, options=None):
+            self._options = options or {}
+
+        def using(self, **options):
+            # Merge with existing options (new options override)
+            merged = {**self._options, **options}
+            return FakeDjangoTask(options=merged)
+
+        def enqueue(self, *args, **kwargs):
+            enqueue_calls.append((args, kwargs, self._options))
+
+    task = FakeDjangoTask()
+
+    # Pre-set priority=10, then override to priority=100 via _dispatch_options
+    with scope(policy=AllowAll(), executor=django_tasks_executor):
+        enqueue(
+            task.using(priority=10),
+            "arg1",
+            _dispatch_options={"priority": 100},  # Override
+        )
+
+    assert len(enqueue_calls) == 1
+    _, _, options = enqueue_calls[0]
+    # Executor's _dispatch_options should override the pre-configured priority
+    assert options["priority"] == 100
