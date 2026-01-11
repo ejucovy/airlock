@@ -174,8 +174,3 @@ def checkout_view(request):
 # Both tasks dispatch via Celery after transaction.on_commit()
 ```
 
-## Next Steps
-
-- [Migration strategies](../migration/selective-vs-blanket.md) - Selective vs blanket
-- [Task wrapper details](../integrations/celery/task-wrapper.md) - AirlockTask deep dive
-- [Raw Python quickstart](raw-python.md) - Core concepts without frameworks

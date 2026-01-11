@@ -226,7 +226,3 @@ def test_checkout_is_atomic():
     assert len(s.intents) >= 3  # inventory + payment + email
 ```
 
-## Next Steps
-
-- [How It Composes](../understanding/how-it-composes.md) - Deep dive on composition
-- [Custom Scopes](../extending/custom-scopes.md) - Implementing `before_descendant_flushes()`

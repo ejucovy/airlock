@@ -311,8 +311,3 @@ def allows(self, intent):
 
 For reordering, override `Scope._dispatch_all()`.
 
-## Next Steps
-
-- [Custom Executors](custom-executors.md) - Write custom dispatch logic
-- [Custom Scopes](custom-scopes.md) - Advanced scope behavior
-- [Policy API Reference](../api/policies.md) - Complete policy API

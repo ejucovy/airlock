@@ -214,7 +214,3 @@ Blanket migration allows outside scopes (warns, doesn't break).
 
 **For new code:** Skip migration entirely, use `airlock.enqueue()` from day 1.
 
-## Next Steps
-
-- [Migrating from .delay()](from-direct-delay.md) - Detailed migration guide
-- [Celery Integration](../integrations/celery/task-wrapper.md) - AirlockTask deep dive

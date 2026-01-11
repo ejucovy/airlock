@@ -41,7 +41,7 @@ with airlock.scope(policy=airlock.DropAll()) as scope:
 with airlock.scope(policy=airlock.BlockTasks({"send_confirmation_email"})):
     order.process()
     assert len(self.intents) == 2 # the blocked task remains enqueued while we're in the scope
-# side effects dispatch or discard here -- warehouse notified, but no confirmation email sent 
+# side effects dispatch or discard here -- warehouse notified, but no confirmation email sent
 ```
 
 ## Using Django? Maybe with Celery?
@@ -72,7 +72,7 @@ def checkout(request):
 # Celery tasks dispatch in transaction.on_commit
 ```
 
-Read more: [Django quickstart](docs/quickstart/django.md)
+Read more: [Django quickstart](quickstart/django.md)
 
 ## Installation
 
@@ -82,18 +82,16 @@ pip install airlock
 
 ## Documentation
 
-[Full documentation](docs/)
-
 Key pages:
 
-- [The Problem](docs/understanding/the-problem.md) - Why airlock exists
-- [Core Model](docs/understanding/core-model.md) - The 3 concerns (Policy/Executor/Scope)
-- [Nesting](docs/understanding/nesting.md) - Nested scopes and safety
-- [Alternatives](docs/understanding/alternatives.md) - Do I really need this...?
+- [The Problem](understanding/the-problem.md) - Why airlock exists
+- [Core Model](understanding/core-model.md) - The 3 concerns (Policy/Executor/Scope)
+- [Nesting](understanding/nesting.md) - Nested scopes and safety
+- [Alternatives](understanding/alternatives.md) - Do I really need this...?
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup.
+See [CONTRIBUTING.md](https://github.com/ejucovy/airlock/blob/main/CONTRIBUTING.md) for development setup.
 
 ## License
 

@@ -126,8 +126,3 @@ else:
     print("No active scope")
 ```
 
-## Next Steps
-
-- [Scope Class API](scope-class.md) - Scope methods and properties
-- [Policies API](policies.md) - Built-in policies reference
-- [Intent API](intent.md) - Intent class reference

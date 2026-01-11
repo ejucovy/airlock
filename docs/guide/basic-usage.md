@@ -98,8 +98,3 @@ with airlock.scope(policy=airlock.AssertNoEffects()):
     airlock.enqueue(task)  # Raises PolicyViolation immediately
 ```
 
-## Next Steps
-
-- [Policies](policies.md) - Built-in and custom policies
-- [Nested scopes](nested-scopes.md) - Composition patterns
-- [Dispatch](dispatch.md) - Executors and options

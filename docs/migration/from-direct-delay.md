@@ -150,7 +150,3 @@ task.delay(arg)
 airlock.enqueue(task, arg)
 ```
 
-## Next Steps
-
-- [Selective vs Blanket](selective-vs-blanket.md) - Choosing migration strategy
-- [Celery Task Wrapper](../integrations/celery/task-wrapper.md) - `AirlockTask` deep dive

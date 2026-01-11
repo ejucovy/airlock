@@ -155,8 +155,3 @@ class Policy(Protocol):
 
 See [Custom Policies](../extending/custom-policies.md) for examples.
 
-## Next Steps
-
-- [Custom Policies Guide](../extending/custom-policies.md) - Write your own policies
-- [Core API](core.md) - Main airlock functions
-- [Intent API](intent.md) - Intent class reference

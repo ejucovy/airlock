@@ -74,7 +74,3 @@ Choose based on your preferences, not out of necessity.
 
 - See [Alternatives](alternatives.md)
 
-## Next
-
-- [Core model](core-model.md) - The 3 concerns (Policy/Executor/Scope)
-- [How it composes](how-it-composes.md) - Nested scopes and provenance

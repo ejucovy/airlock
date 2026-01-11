@@ -199,8 +199,3 @@ with airlock.scope(policy=PriorityFilter()):
     airlock.enqueue(high, _dispatch_options={"priority": 10}) # Dispatches
 ```
 
-## Next Steps
-
-- [Core API](core.md) - Main airlock functions
-- [Scope API](scope-class.md) - Scope class reference
-- [Policies API](policies.md) - Built-in policies
