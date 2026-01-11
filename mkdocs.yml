@@ -5,33 +5,7 @@ repo_url: https://github.com/ejucovy/airlock
 repo_name: ejucovy/airlock
 
 theme:
-  name: material
-  palette:
-    - scheme: default
-      primary: indigo
-      accent: indigo
-      toggle:
-        icon: material/brightness-7
-        name: Switch to dark mode
-    - scheme: slate
-      primary: indigo
-      accent: indigo
-      toggle:
-        icon: material/brightness-4
-        name: Switch to light mode
-  features:
-    - navigation.instant
-    - navigation.tracking
-    - navigation.tabs
-    - navigation.sections
-    - navigation.expand
-    - navigation.top
-    - navigation.indexes
-    - search.suggest
-    - search.highlight
-    - content.tabs.link
-    - content.code.annotate
-    - content.code.copy
+  name: readthedocs
 
 plugins:
   - search
@@ -63,16 +37,14 @@ markdown_extensions:
   - tables
   - attr_list
   - md_in_html
-  - pymdownx.emoji:
-      emoji_index: !!python/name:material.extensions.emoji.twemoji
-      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - toc:
       permalink: true
 
 nav:
   - Home: index.md
 
-  - Quickstart: quickstart/django.md
+  - Django:
+    - Overview: django/index.md
 
   - Understanding Airlock:
     - The Problem: understanding/the-problem.md

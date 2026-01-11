@@ -12,7 +12,7 @@ The middleware automatically wraps each request in a scope with the following be
 * When the Response reaches airlock's middleware:
   * If the response is an error (4xx/5xx or unhandled exception) side effects are discarded.
   * If the response is successful (1xx/2xx/3xx) side effects are dispatched.
-    * If you're in a database transaction, side effects will be deferred to `transaction.on_commit()` automatically.
+    * If you're in a database transaction, side effects will be deferred until after the transaction has committed automatically.
 
 These default behaviors are [configurable](#configuration).
 
