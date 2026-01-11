@@ -33,6 +33,10 @@
          <lastmod>2026-01-11</lastmod>
     </url>
     <url>
+         <loc>https://ejucovy.github.io/airlock/django/</loc>
+         <lastmod>2026-01-11</lastmod>
+    </url>
+    <url>
          <loc>https://ejucovy.github.io/airlock/extending/custom-executors/</loc>
          <lastmod>2026-01-11</lastmod>
     </url>
@@ -46,10 +50,6 @@
     </url>
     <url>
          <loc>https://ejucovy.github.io/airlock/migration/selective-vs-blanket/</loc>
-         <lastmod>2026-01-11</lastmod>
-    </url>
-    <url>
-         <loc>https://ejucovy.github.io/airlock/quickstart/django/</loc>
          <lastmod>2026-01-11</lastmod>
     </url>
     <url>
