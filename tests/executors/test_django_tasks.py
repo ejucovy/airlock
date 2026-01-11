@@ -1,9 +1,10 @@
 """Tests for django_tasks_executor."""
 
-import pytest
-from unittest.mock import Mock, MagicMock
+from datetime import datetime, timedelta
+from unittest.mock import Mock
 
-from airlock import Intent
+from airlock import Intent, Executor, scope, enqueue, AllowAll
+from airlock.integrations.executors.django_tasks import django_tasks_executor
 
 
 def make_intent(task, args=(), kwargs=None, dispatch_options=None):
@@ -17,8 +18,6 @@ def make_intent(task, args=(), kwargs=None, dispatch_options=None):
 
 def test_django_tasks_executor_with_enqueue():
     """Test django_tasks_executor uses enqueue method."""
-    from airlock.integrations.executors.django_tasks import django_tasks_executor
-
     mock_task = Mock()
     mock_task.enqueue = Mock()
     intent = make_intent(mock_task, args=(1, 2), kwargs={"x": 3})
@@ -30,8 +29,6 @@ def test_django_tasks_executor_with_enqueue():
 
 def test_django_tasks_executor_with_dispatch_options():
     """Test django_tasks_executor passes dispatch_options via .using()."""
-    from airlock.integrations.executors.django_tasks import django_tasks_executor
-
     # Create a mock that supports .using().enqueue() chaining
     mock_using_result = Mock()
     mock_using_result.enqueue = Mock()
@@ -59,9 +56,6 @@ def test_django_tasks_executor_with_dispatch_options():
 
 def test_django_tasks_executor_with_run_after():
     """Test django_tasks_executor handles run_after option."""
-    from airlock.integrations.executors.django_tasks import django_tasks_executor
-    from datetime import datetime, timedelta
-
     run_after = datetime.now() + timedelta(hours=1)
 
     mock_using_result = Mock()
@@ -86,8 +80,6 @@ def test_django_tasks_executor_with_run_after():
 
 def test_django_tasks_executor_fallback_to_sync():
     """Test django_tasks_executor falls back to sync for plain callables."""
-    from airlock.integrations.executors.django_tasks import django_tasks_executor
-
     mock_task = Mock(spec=[])  # Plain callable - no enqueue method
     intent = make_intent(mock_task, args=(1,), kwargs={"x": 2})
 
@@ -98,8 +90,6 @@ def test_django_tasks_executor_fallback_to_sync():
 
 def test_django_tasks_executor_no_dispatch_options():
     """Test django_tasks_executor works without dispatch_options."""
-    from airlock.integrations.executors.django_tasks import django_tasks_executor
-
     mock_task = Mock()
     mock_task.enqueue = Mock()
     mock_task.using = Mock()
@@ -114,8 +104,6 @@ def test_django_tasks_executor_no_dispatch_options():
 
 def test_django_tasks_executor_empty_dispatch_options():
     """Test django_tasks_executor treats empty dict as no options."""
-    from airlock.integrations.executors.django_tasks import django_tasks_executor
-
     mock_task = Mock()
     mock_task.enqueue = Mock()
     mock_task.using = Mock()
@@ -130,8 +118,6 @@ def test_django_tasks_executor_empty_dispatch_options():
 
 def test_django_tasks_executor_without_using_method():
     """Test django_tasks_executor handles tasks without .using() method."""
-    from airlock.integrations.executors.django_tasks import django_tasks_executor
-
     # Task has .enqueue() but not .using() - options ignored
     mock_task = Mock(spec=['enqueue'])
     mock_task.enqueue = Mock()
@@ -149,9 +135,6 @@ def test_django_tasks_executor_without_using_method():
 
 def test_django_tasks_executor_implements_protocol():
     """Test django_tasks_executor implements the Executor protocol."""
-    from airlock import Executor
-    from airlock.integrations.executors.django_tasks import django_tasks_executor
-
     assert isinstance(django_tasks_executor, Executor)
 
 
@@ -162,9 +145,6 @@ def test_django_tasks_executor_implements_protocol():
 
 def test_integration_dispatch_options_passed_through():
     """Test dispatch_options flow through scope/enqueue to task.using().enqueue()."""
-    from airlock import scope, enqueue, AllowAll
-    from airlock.integrations.executors.django_tasks import django_tasks_executor
-
     enqueue_calls = []
     using_calls = []
 
@@ -206,9 +186,6 @@ def test_integration_dispatch_options_passed_through():
 
 def test_integration_no_options_uses_direct_enqueue():
     """Test that without dispatch_options, .enqueue() is called directly."""
-    from airlock import scope, enqueue, AllowAll
-    from airlock.integrations.executors.django_tasks import django_tasks_executor
-
     enqueue_calls = []
     using_calls = []
 
@@ -234,9 +211,6 @@ def test_integration_no_options_uses_direct_enqueue():
 
 def test_integration_plain_callable_fallback():
     """Test plain callables work without Django tasks framework."""
-    from airlock import scope, enqueue, AllowAll
-    from airlock.integrations.executors.django_tasks import django_tasks_executor
-
     calls = []
 
     def plain_function(x, y=None):
@@ -256,9 +230,6 @@ def test_integration_plain_callable_fallback():
 
 def test_spelling_dispatch_options_kwarg():
     """Test airlock.enqueue(task, _dispatch_options=kw) spelling."""
-    from airlock import scope, enqueue, AllowAll
-    from airlock.integrations.executors.django_tasks import django_tasks_executor
-
     enqueue_calls = []
     using_calls = []
 
@@ -298,9 +269,6 @@ def test_spelling_dispatch_options_kwarg():
 
 def test_spelling_pre_configured_using():
     """Test airlock.enqueue(task.using(**kw)) spelling."""
-    from airlock import scope, enqueue, AllowAll
-    from airlock.integrations.executors.django_tasks import django_tasks_executor
-
     enqueue_calls = []
     using_calls = []
 
@@ -342,9 +310,6 @@ def test_spelling_pre_configured_using():
 
 def test_spelling_both_options_combined():
     """Test combining task.using() with _dispatch_options merges options."""
-    from airlock import scope, enqueue, AllowAll
-    from airlock.integrations.executors.django_tasks import django_tasks_executor
-
     enqueue_calls = []
     using_calls = []
 
@@ -389,9 +354,6 @@ def test_spelling_both_options_combined():
 
 def test_spelling_dispatch_options_override():
     """Test _dispatch_options can override pre-configured .using() options."""
-    from airlock import scope, enqueue, AllowAll
-    from airlock.integrations.executors.django_tasks import django_tasks_executor
-
     enqueue_calls = []
 
     class FakeDjangoTask:
