@@ -138,3 +138,84 @@ with airlock.scope(
     backfill_data()
 ```
 
+## Global Defaults with `configure()`
+
+Instead of passing arguments to every `scope()` call, you can set global defaults:
+
+```python
+import airlock
+from airlock.integrations.django import DjangoScope
+from airlock.integrations.executors.celery import celery_executor
+
+# Set once at app startup
+airlock.configure(
+    scope_cls=DjangoScope,         # Default WHEN
+    executor=celery_executor,      # Default HOW
+    policy=airlock.AllowAll(),     # Default WHAT
+)
+
+# Now all scopes use these defaults
+with airlock.scope():  # Uses DjangoScope + celery_executor
+    airlock.enqueue(task)
+
+@airlock.scoped()  # Also uses configured defaults
+def my_function():
+    airlock.enqueue(other_task)
+```
+
+### Django Auto-Configuration
+
+Add `"airlock.integrations.django"` to `INSTALLED_APPS` for automatic configuration:
+
+```python
+# settings.py
+INSTALLED_APPS = [
+    ...
+    "airlock.integrations.django",  # Calls configure() on startup
+]
+
+AIRLOCK = {
+    "EXECUTOR": "airlock.integrations.executors.celery.celery_executor",
+}
+```
+
+Now all `scope()` and `@scoped()` calls automatically use `DjangoScope` with transaction-aware dispatch and your configured executor.
+
+### Overriding Defaults
+
+Explicit arguments always override configured defaults:
+
+```python
+airlock.configure(scope_cls=DjangoScope, policy=AllowAll())
+
+# Uses configured defaults
+with airlock.scope():
+    ...
+
+# Override policy for this scope
+with airlock.scope(policy=DropAll()):
+    ...
+
+# Override scope class for this scope
+with airlock.scope(_cls=Scope):
+    ...
+```
+
+### Configuration API
+
+```python
+# Set defaults
+airlock.configure(
+    scope_cls=...,    # Default scope class
+    policy=...,       # Default policy
+    executor=...,     # Default executor
+)
+
+# Get current configuration (returns a copy)
+config = airlock.get_configuration()
+# {'scope_cls': DjangoScope, 'policy': AllowAll(), 'executor': celery_executor}
+
+# Reset to defaults (mainly for testing)
+airlock.reset_configuration()
+```
+

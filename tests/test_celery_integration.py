@@ -9,7 +9,6 @@ import airlock
 from airlock import DropAll, AllowAll
 from airlock.integrations.celery import (
     LegacyTaskShim,
-    AirlockTask,
     install_global_intercept,
     uninstall_global_intercept,
     _installed,
@@ -63,30 +62,6 @@ def test_legacy_task_shim_apply_async_with_options(mock_enqueue):
     mock_enqueue.assert_called_once_with(
         t, 1, _dispatch_options={"countdown": 10, "queue": "high"}, a=2
     )
-
-
-def test_airlock_task_wraps_run_in_scope():
-    """Test that AirlockTask wraps execution in a scope."""
-
-    class MyWorker(AirlockTask):
-        def run(self):
-            return "done"
-
-    t = MyWorker()
-
-    # Mock super().__call__ to avoid Celery internals needing an app
-    with patch("celery.Task.__call__") as mock_super_call:
-        mock_super_call.return_value = "done"
-
-        # Mock scope to verify it's used
-        with patch("airlock.integrations.celery.airlock.scope") as mock_scope:
-            t()
-
-            mock_scope.assert_called_once()
-            # Verify policy is AllowAll
-
-            args = mock_scope.call_args[1]
-            assert isinstance(args["policy"], AllowAll)
 
 
 # =============================================================================

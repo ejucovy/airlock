@@ -123,28 +123,37 @@ If you care about dispatching conditional on exceptions from middleware themselv
 
 ## Airlock in management commands
 
-Wrap commands with `@airlock_command` for automatic scoping:
+Wrap commands with `@airlock.scoped()` for automatic scoping:
 
 * All side effects enqueued during a command remain buffered until the end of the command.
 * When the command finishes:
   * If there was an unhandled exception, side effects are discarded.
   * If the command is successful, side effects are dispatched.
-* If your command supports a `--dry-run` flag, airlock will discard side effects when your command executes in dry-run mode.
 
 ```python
 from django.core.management.base import BaseCommand
-from airlock.integrations.django import airlock_command
+import airlock
 
+class Command(BaseCommand):
+    @airlock.scoped()
+    def handle(self, *args, **options):
+        for order in Order.objects.filter(status='pending'):
+            order.process()
+        # Side effects dispatch after handle() completes
+```
+
+For dry-run support, use a policy:
+
+```python
 class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--dry-run', action='store_true')
 
-    @airlock_command
     def handle(self, *args, **options):
-        # If --dry-run, all side effects will drop automatically
-        # Otherwise, all side effects will dispatch at the end of the script
-        for order in Order.objects.filter(status='pending'):
-            order.process()
+        policy = airlock.DropAll() if options['dry_run'] else airlock.AllowAll()
+        with airlock.scope(policy=policy):
+            for order in Order.objects.filter(status='pending'):
+                order.process()
 ```
 
 ## Manual scoping
@@ -198,5 +207,3 @@ def process_order(order_id):
     # Side effects dispatch after task completes successfully
     # and any database transaction commits
 ```
-
-This replaces the need for `AirlockTask` or other Celery-specific base classes.
