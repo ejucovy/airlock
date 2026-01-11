@@ -46,16 +46,25 @@ with airlock.scope(policy=airlock.BlockTasks({"send_confirmation_email"})):
 
 ## Using Django? Maybe with Celery?
 
-```
+```python
 # settings.py
+INSTALLED_APPS = [
+    ...
+    "airlock.integrations.django",  # Auto-configures airlock
+]
+
 MIDDLEWARE = [
-    # ... other middleware ...
+    ...
     "airlock.integrations.django.AirlockMiddleware",
 ]
 
+AIRLOCK = {
+    "EXECUTOR": "airlock.integrations.executors.celery.celery_executor",
+}
+
 # models.py
 import airlock
-import .tasks
+from . import tasks
 
 class Order(models.Model):
     def process(self):
