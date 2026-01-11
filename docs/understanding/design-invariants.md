@@ -8,11 +8,11 @@ Calling `enqueue()` from within a policy raises `PolicyEnqueueError`.
 
 Policies observe and filter — they don't produce new side effects. This keeps the system predictable: the set of intents comes from your domain code, not from policy logic.
 
-## 2. Side effects escape in one place
+## 2. Buffered effects escape only at flush
 
-Only scope flush dispatches effects. No `.delay()` calls scattered through domain code.
+Effects enqueued via `airlock.enqueue()` are held in the buffer until the scope flushes. There's no way for them to escape early — no "force dispatch" API, no automatic leaking.
 
-This is the whole point: express intent anywhere, but control the exit. If you're calling `.delay()` directly, you don't need airlock.
+This is the control airlock provides: you express intent anywhere in your code, but the scope boundary decides when (and whether) those effects actually run.
 
 ## 3. No scope = error
 
