@@ -32,6 +32,7 @@ from django.db import transaction
 
 import airlock
 from airlock import Scope, Intent, Executor, AllowAll, DropAll, _execute
+from airlock.integrations.executors.sync import sync_executor
 
 
 # =============================================================================
@@ -100,7 +101,6 @@ def get_executor() -> Executor:
     executor_path = get_setting("EXECUTOR")
 
     if executor_path is None:
-        from airlock.integrations.executors.sync import sync_executor
         return sync_executor
 
     # Import the callable from dotted path
