@@ -97,8 +97,6 @@ def get_executor() -> Executor:
     Raises:
         ImportError: If the executor module/callable cannot be imported
     """
-    from importlib import import_module
-
     executor_path = get_setting("EXECUTOR")
 
     if executor_path is None:

@@ -199,8 +199,7 @@ def test_get_executor_custom_executor():
     with patch("airlock.integrations.django.get_setting") as mock_get_setting:
         mock_get_setting.return_value = "myapp.executors.my_custom_executor"
 
-        # Patch importlib.import_module since get_executor imports it locally
-        with patch("importlib.import_module") as mock_import:
+        with patch("airlock.integrations.django.import_module") as mock_import:
             mock_import.return_value = mock_module
 
             executor = get_executor()
