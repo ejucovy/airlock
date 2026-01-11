@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://ejucovy.github.io/airlock/guide/basic-usage/">
       
       
-        <link rel="prev" href="../../understanding/how-it-composes/">
+        <link rel="prev" href="../../understanding/alternatives/">
       
       
         <link rel="next" href="../policies/">
@@ -225,7 +225,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../index.md" class="md-tabs__link">
+      <a href="../.." class="md-tabs__link">
         
   
   
@@ -246,7 +246,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../quickstart/raw-python.md" class="md-tabs__link">
+        <a href="../../quickstart/django/" class="md-tabs__link">
           
   
   
@@ -404,25 +404,6 @@
   
 
       
-        
-  
-  
-  
-  
-    <li class="md-tabs__item">
-      <a href="../../alternatives.md" class="md-tabs__link">
-        
-  
-  
-    
-  
-  Alternatives
-
-      </a>
-    </li>
-  
-
-      
     </ul>
   </div>
 </nav>
@@ -475,7 +456,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../index.md" class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -503,8 +484,6 @@
   
     
     
-      
-        
       
         
       
@@ -556,34 +535,6 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../quickstart/raw-python.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Raw Python (5 min)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
             
               
                 
@@ -656,6 +607,8 @@
   
     
     
+      
+        
       
         
       
@@ -773,14 +726,42 @@
   
   
     <li class="md-nav__item">
-      <a href="../../understanding/how-it-composes/" class="md-nav__link">
+      <a href="../../understanding/nesting/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    How It Composes
+    Nesting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../understanding/alternatives/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Alternatives
   
 
     
@@ -1005,17 +986,6 @@
     <span class="md-ellipsis">
       
         Error Handling
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Next Steps
       
     </span>
   </a>
@@ -1740,33 +1710,6 @@
   
 
     
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../alternatives.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Alternatives
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
   </ul>
 </nav>
                   </div>
@@ -1870,17 +1813,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Next Steps
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -1968,12 +1900,6 @@
 <div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">policy</span><span class="o">=</span><span class="n">airlock</span><span class="o">.</span><span class="n">AssertNoEffects</span><span class="p">()):</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>  <span class="c1"># Raises PolicyViolation immediately</span>
 </span></code></pre></div>
-<h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
-<ul>
-<li><a href="../policies/">Policies</a> - Built-in and custom policies</li>
-<li><a href="../nested-scopes/">Nested scopes</a> - Composition patterns</li>
-<li><a href="../dispatch/">Dispatch</a> - Executors and options</li>
-</ul>
 
 
 

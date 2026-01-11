@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://ejucovy.github.io/airlock/understanding/how-it-composes/">
+        <link rel="canonical" href="https://ejucovy.github.io/airlock/understanding/nesting/">
       
       
         <link rel="prev" href="../core-model/">
       
       
-        <link rel="next" href="../../guide/basic-usage/">
+        <link rel="next" href="../alternatives/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>How It Composes - Airlock</title>
+        <title>Nesting - Airlock</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#how-it-composes" class="md-skip">
+        <a href="#nesting" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              How It Composes
+              Nesting
             
           </span>
         </div>
@@ -225,7 +225,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../index.md" class="md-tabs__link">
+      <a href="../.." class="md-tabs__link">
         
   
   
@@ -246,7 +246,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../quickstart/raw-python.md" class="md-tabs__link">
+        <a href="../../quickstart/django/" class="md-tabs__link">
           
   
   
@@ -404,25 +404,6 @@
   
 
       
-        
-  
-  
-  
-  
-    <li class="md-tabs__item">
-      <a href="../../alternatives.md" class="md-tabs__link">
-        
-  
-  
-    
-  
-  Alternatives
-
-      </a>
-    </li>
-  
-
-      
     </ul>
   </div>
 </nav>
@@ -475,7 +456,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../index.md" class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -503,8 +484,6 @@
   
     
     
-      
-        
       
         
       
@@ -556,34 +535,6 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../quickstart/raw-python.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Raw Python (5 min)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
             
               
                 
@@ -658,6 +609,8 @@
   
     
     
+      
+        
       
         
       
@@ -792,7 +745,7 @@
   <span class="md-ellipsis">
     
   
-    How It Composes
+    Nesting
   
 
     
@@ -810,7 +763,7 @@
   <span class="md-ellipsis">
     
   
-    How It Composes
+    Nesting
   
 
     
@@ -990,21 +943,38 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#next" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Next
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../alternatives/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Alternatives
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1818,33 +1788,6 @@
   
 
     
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../alternatives.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Alternatives
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
   </ul>
 </nav>
                   </div>
@@ -2026,17 +1969,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#next" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Next
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -2057,7 +1989,7 @@
   
 
 
-<h1 id="how-it-composes">How It Composes<a class="headerlink" href="#how-it-composes" title="Permanent link">&para;</a></h1>
+<h1 id="nesting">Nesting<a class="headerlink" href="#nesting" title="Permanent link">&para;</a></h1>
 <p>With airlock you can nest <strong>scopes</strong> or <strong>policies</strong> arbitrarily.</p>
 <h2 id="nested-policies">Nested Policies<a class="headerlink" href="#nested-policies" title="Permanent link">&para;</a></h2>
 <p>Use <code>with airlock.policy()</code> to layer additional policies anywhere in your codebase, all in the same scope's buffer:</p>
@@ -2307,12 +2239,6 @@
 </span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>    <span class="c1"># db_write executes ✓, update_cache captured</span>
 </span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a><span class="c1"># update_cache executes here (after DB commit) ✓</span>
 </span></code></pre></div>
-<h2 id="next">Next<a class="headerlink" href="#next" title="Permanent link">&para;</a></h2>
-<ul>
-<li><a href="../../guide/basic-usage/">Basic usage</a> - Practical patterns</li>
-<li><a href="../../guide/nested-scopes/">Nested scopes guide</a> - Deep dive</li>
-<li><a href="../../extending/custom-scopes/">Custom scopes</a> - Subclassing</li>
-</ul>
 
 
 
