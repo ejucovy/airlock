@@ -81,7 +81,7 @@ def checkout(request):
 # Celery tasks dispatch in transaction.on_commit
 ```
 
-Read more: [Django quickstart](quickstart/django.md) | [Celery integration](celery/index.md)
+Read more: [Django integration](django/index.md) | [Celery integration](celery/index.md)
 
 ## Installation
 

@@ -72,7 +72,8 @@ markdown_extensions:
 nav:
   - Home: index.md
 
-  - Quickstart: quickstart/django.md
+  - Django:
+    - Overview: django/index.md
 
   - Understanding Airlock:
     - The Problem: understanding/the-problem.md
