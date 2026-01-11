@@ -67,6 +67,7 @@ nav:
   - Understanding Airlock:
     - The Problem: understanding/the-problem.md
     - Core Model (3 Concerns): understanding/core-model.md
+    - Design Invariants: understanding/design-invariants.md
     - Nesting: understanding/nesting.md
     - Alternatives: understanding/alternatives.md
 
