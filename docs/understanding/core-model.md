@@ -138,3 +138,61 @@ with airlock.scope(
     backfill_data()
 ```
 
+## Global Defaults with `configure()`
+
+Instead of passing arguments to every `scope()` call, you can set global defaults:
+
+```python
+import airlock
+from airlock.integrations.executors.celery import celery_executor
+
+# Set once at app startup
+airlock.configure(
+    executor=celery_executor,      # Default HOW
+    policy=airlock.AllowAll(),     # Default WHAT
+)
+
+# Now all scopes use these defaults
+with airlock.scope():  # Uses celery_executor
+    airlock.enqueue(task)
+
+@airlock.scoped()  # Also uses configured defaults
+def my_function():
+    airlock.enqueue(other_task)
+```
+
+### Overriding Defaults
+
+Explicit arguments always override configured defaults:
+
+```python
+airlock.configure(policy=AllowAll())
+
+# Uses configured defaults
+with airlock.scope():
+    ...
+
+# Override policy for this scope
+with airlock.scope(policy=DropAll()):
+    ...
+```
+
+### Configuration API
+
+```python
+# Set defaults
+airlock.configure(
+    scope_cls=...,    # Default scope class
+    policy=...,       # Default policy
+    executor=...,     # Default executor
+)
+
+# Get current configuration (returns a copy)
+config = airlock.get_configuration()
+
+# Reset to defaults (mainly for testing)
+airlock.reset_configuration()
+```
+
+Framework integrations (like Django) typically call `configure()` automatically at startup.
+

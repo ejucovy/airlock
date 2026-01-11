@@ -3,7 +3,7 @@
 import pytest
 
 import airlock
-from airlock import enqueue, PolicyEnqueueError, NoScopeError, PolicyViolation, scope, AllowAll, AssertNoEffects
+from airlock import enqueue, PolicyEnqueueError, NoScopeError, PolicyViolation, scope, scoped, AllowAll, AssertNoEffects, DropAll
 from airlock import _in_policy
 
 
@@ -223,3 +223,155 @@ class TestDispatchOptions:
         # Plain callable was called normally
         assert len(calls) == 1
         assert calls[0] == (("arg1",), {"key": "value"})
+
+
+class TestScopedDecorator:
+    """Tests for the @scoped() decorator."""
+
+    def test_scoped_creates_scope(self):
+        """Test that @scoped creates a scope for the function."""
+        calls = []
+
+        def tracked_task():
+            calls.append(1)
+
+        @scoped()
+        def my_func():
+            enqueue(tracked_task)
+
+        my_func()
+
+        # Task should have been dispatched
+        assert len(calls) == 1
+
+    def test_scoped_flushes_on_success(self):
+        """Test that @scoped flushes on successful return."""
+        calls = []
+
+        def tracked_task(value):
+            calls.append(value)
+
+        @scoped()
+        def my_func():
+            enqueue(tracked_task, "hello")
+            return "result"
+
+        result = my_func()
+
+        assert result == "result"
+        assert calls == ["hello"]
+
+    def test_scoped_discards_on_exception(self):
+        """Test that @scoped discards on exception."""
+        calls = []
+
+        def tracked_task():
+            calls.append(1)
+
+        @scoped()
+        def my_func():
+            enqueue(tracked_task)
+            raise ValueError("oops")
+
+        with pytest.raises(ValueError):
+            my_func()
+
+        # Task should NOT have been dispatched
+        assert len(calls) == 0
+
+    def test_scoped_with_policy(self):
+        """Test that @scoped accepts a policy."""
+        calls = []
+
+        def tracked_task():
+            calls.append(1)
+
+        @scoped(policy=DropAll())
+        def my_func():
+            enqueue(tracked_task)
+
+        my_func()
+
+        # Task should NOT have been dispatched (DropAll policy)
+        assert len(calls) == 0
+
+    def test_scoped_with_args_and_kwargs(self):
+        """Test that @scoped preserves function arguments."""
+        @scoped()
+        def my_func(a, b, c=None):
+            return (a, b, c)
+
+        result = my_func(1, 2, c=3)
+        assert result == (1, 2, 3)
+
+    def test_scoped_preserves_function_metadata(self):
+        """Test that @scoped preserves __name__ and __doc__."""
+        @scoped()
+        def my_documented_func():
+            """This is my docstring."""
+            pass
+
+        assert my_documented_func.__name__ == "my_documented_func"
+        assert my_documented_func.__doc__ == "This is my docstring."
+
+    def test_scoped_each_call_gets_fresh_scope(self):
+        """Test that each call to a @scoped function gets its own scope."""
+        calls = []
+
+        def tracked_task(call_id):
+            calls.append(call_id)
+
+        @scoped()
+        def my_func(call_id):
+            enqueue(tracked_task, call_id)
+
+        my_func(1)
+        my_func(2)
+        my_func(3)
+
+        # Each call should have flushed independently
+        assert calls == [1, 2, 3]
+
+    def test_scoped_works_with_celery_style_stacking(self):
+        """Test that @scoped works when stacked with other decorators."""
+        calls = []
+
+        def tracked_task():
+            calls.append(1)
+
+        # Simulate Celery's @app.task decorator
+        def fake_celery_task(func):
+            def wrapper(*args, **kwargs):
+                return func(*args, **kwargs)
+            wrapper.__name__ = func.__name__
+            return wrapper
+
+        @fake_celery_task
+        @scoped()
+        def my_celery_task():
+            enqueue(tracked_task)
+
+        my_celery_task()
+
+        assert len(calls) == 1
+
+    def test_scoped_no_scope_leak_between_calls(self):
+        """Test that scopes don't leak between sequential calls."""
+        from airlock import get_current_scope
+
+        @scoped()
+        def my_func():
+            assert get_current_scope() is not None
+
+        # Before: no scope
+        assert get_current_scope() is None
+
+        my_func()
+
+        # After: no scope
+        assert get_current_scope() is None
+
+        my_func()
+
+        # Still no scope
+        assert get_current_scope() is None

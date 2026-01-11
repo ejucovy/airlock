@@ -2,10 +2,23 @@
 Django integration for airlock.
 
 Provides:
+- AirlockConfig: AppConfig for auto-configuration via INSTALLED_APPS
 - DjangoScope: Defers dispatch to transaction.on_commit()
 - AirlockMiddleware: Wraps requests in a scope
-- airlock_command: Decorator for management commands
 - get_executor(): Helper to select executor based on EXECUTOR setting
+
+For management commands and Celery tasks, use @airlock.scoped() decorator.
+
+Quick Start:
+    # settings.py
+    INSTALLED_APPS = [
+        ...
+        "airlock.integrations.django",  # Auto-configures airlock
+    ]
+
+    This automatically configures airlock.scope() and @airlock.scoped() to use:
+    - DjangoScope (defers dispatch to transaction.on_commit)
+    - Policy and executor from AIRLOCK settings
 
 Settings (in settings.py):
     AIRLOCK = {
@@ -222,46 +235,5 @@ class AirlockMiddleware:
         return response
 
 
-# =============================================================================
-# Management command decorator
-# =============================================================================
-
-
-def airlock_command(
-    func: Callable = None, *, dry_run_kwarg: str = "dry_run"
-) -> Callable:
-    """
-    Decorator for Django management commands.
-
-    Wraps the handle() method in an airlock scope.
-    If options[dry_run_kwarg] is True, uses DropAll policy.
-
-    Dispatch is deferred to transaction.on_commit():
-        - With an active transaction: dispatch occurs after commit
-        - Without a transaction (most commands): dispatch occurs immediately
-
-    Usage:
-        class Command(BaseCommand):
-            def add_arguments(self, parser):
-                parser.add_argument('--dry-run', action='store_true')
-
-            @airlock_command
-            def handle(self, *args, **options):
-                airlock.enqueue(some_task, ...)
-    """
-
-    def decorator(handle_func: Callable) -> Callable:
-        @wraps(handle_func)
-        def wrapper(self, *args, **options):
-            is_dry_run = options.get(dry_run_kwarg, False)
-            policy = DropAll() if is_dry_run else get_policy()
-            scope_class = get_scope_class()
-
-            with airlock.scope(policy=policy, _cls=scope_class):
-                return handle_func(self, *args, **options)
-
-        return wrapper
-
-    if func is not None:
-        return decorator(func)
-    return decorator
+# Default app config for Django < 3.2 compatibility
+default_app_config = "airlock.integrations.django.apps.AirlockConfig"

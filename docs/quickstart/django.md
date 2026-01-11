@@ -22,11 +22,16 @@ These default behaviors are [configurable](#configuration).
 pip install airlock
 ```
 
-In `settings.py`, add middleware and configure your task framework:
+In `settings.py`, add to INSTALLED_APPS, add middleware, and configure your task framework:
 
 ```python
+INSTALLED_APPS = [
+    ...
+    "airlock.integrations.django",  # Auto-configures airlock
+]
+
 MIDDLEWARE = [
-    # ... other middleware ...
+    ...
     "airlock.integrations.django.AirlockMiddleware",
 ]
 
@@ -34,6 +39,12 @@ AIRLOCK = {
     "EXECUTOR": "airlock.integrations.executors.celery.celery_executor",
 }
 ```
+
+Adding `"airlock.integrations.django"` to INSTALLED_APPS auto-configures airlock so that
+all `airlock.scope()` and `@airlock.scoped()` calls automatically use `DjangoScope` with
+transaction-aware dispatch and your configured executor/policy. This means Celery tasks,
+management commands, and any other code can use plain `airlock.scope()` without needing
+to explicitly pass `_cls=DjangoScope`.
 
 ### Basic usage
 
@@ -112,50 +123,66 @@ If you care about dispatching conditional on exceptions from middleware themselv
 
 ## Airlock in management commands
 
-Wrap commands with `@airlock_command` for automatic scoping:
+Wrap commands with `@airlock.scoped()` for automatic scoping:
 
 * All side effects enqueued during a command remain buffered until the end of the command.
 * When the command finishes:
   * If there was an unhandled exception, side effects are discarded.
   * If the command is successful, side effects are dispatched.
-* If your command supports a `--dry-run` flag, airlock will discard side effects when your command executes in dry-run mode.
 
 ```python
 from django.core.management.base import BaseCommand
-from airlock.integrations.django import airlock_command
+import airlock
 
+class Command(BaseCommand):
+    @airlock.scoped()
+    def handle(self, *args, **options):
+        for order in Order.objects.filter(status='pending'):
+            order.process()
+        # Side effects dispatch after handle() completes
+```
+
+For dry-run support, use a policy:
+
+```python
 class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--dry-run', action='store_true')
 
-    @airlock_command
     def handle(self, *args, **options):
-        # If --dry-run, all side effects will drop automatically
-        # Otherwise, all side effects will dispatch at the end of the script
-        for order in Order.objects.filter(status='pending'):
-            order.process()
+        policy = airlock.DropAll() if options['dry_run'] else airlock.AllowAll()
+        with airlock.scope(policy=policy):
+            for order in Order.objects.filter(status='pending'):
+                order.process()
 ```
 
 ## Manual scoping
 
-You can always maintain explicit control too with the context manager API. 
-Use `DjangoScope` to pick up settings and transaction-aware dispatch timing:
+You can always maintain explicit control with the context manager API or decorator.
+After adding `"airlock.integrations.django"` to INSTALLED_APPS, all scopes automatically
+use `DjangoScope` with transaction-aware dispatch:
 
 ```python
-from airlock.integrations.django import DjangoScope
+import airlock
 
-# In a script, task, etc:
+# In a Celery task, script, etc:
+@airlock.scoped()
 def background_job():
-    with airlock.scope(_cls=DjangoScope):
+    do_stuff()
+# Effects dispatch after transaction commit
+
+# Or using the context manager:
+def background_job():
+    with airlock.scope():
         do_stuff()
     # Effects dispatch after transaction commit
 
-# Or in a view with finer-grained control:
+# In a view with finer-grained control:
 def checkout(request):
     order = Order.objects.get(id=request.POST['order_id'])
-    with airlock.scope(_cls=DjangoScope):
+    with airlock.scope():
         order.process()
-    with airlock.scope(_cls=DjangoScope):
+    with airlock.scope():
         ping_analytics(request.user)
     return HttpResponse("OK")
 ```
@@ -163,3 +190,20 @@ def checkout(request):
 This pattern can also be combined with middleware-based implicit scopes.
 You'll want to read more about [how nested scopes work](../guide/nested-scopes.md)
 in that case!
+
+## Celery tasks
+
+With the INSTALLED_APPS configuration, Celery tasks can use `@airlock.scoped()` directly:
+
+```python
+from celery import shared_task
+import airlock
+
+@shared_task
+@airlock.scoped()
+def process_order(order_id):
+    order = Order.objects.get(id=order_id)
+    order.process()
+    # Side effects dispatch after task completes successfully
+    # and any database transaction commits
+```

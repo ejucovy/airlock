@@ -46,16 +46,25 @@ with airlock.scope(policy=airlock.BlockTasks({"send_confirmation_email"})):
 
 ## Using Django? Maybe with Celery?
 
-```
+```python
 # settings.py
+INSTALLED_APPS = [
+    ...
+    "airlock.integrations.django",  # Auto-configures airlock
+]
+
 MIDDLEWARE = [
-    # ... other middleware ...
+    ...
     "airlock.integrations.django.AirlockMiddleware",
 ]
 
+AIRLOCK = {
+    "EXECUTOR": "airlock.integrations.executors.celery.celery_executor",
+}
+
 # models.py
 import airlock
-import .tasks
+from . import tasks
 
 class Order(models.Model):
     def process(self):
@@ -79,6 +88,8 @@ Read more: [Django quickstart](quickstart/django.md) | [Celery integration](cele
 ```bash
 pip install airlock
 ```
+
+**Using gevent or eventlet?** Ensure you have `greenlet>=1.0` for correct context isolation. See [Design Invariants](understanding/design-invariants.md#4-concurrent-units-of-work-have-isolated-scopes) for details.
 
 ## Documentation
 

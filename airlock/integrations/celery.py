@@ -2,9 +2,15 @@
 Celery integration for airlock.
 
 Provides:
-- AirlockTask: Base class for tasks that use airlock internally
 - LegacyTaskShim: Migration helper for converting .delay() calls
 - install_global_intercept: Patch all tasks to route through airlock
+
+For wrapping task execution, use @airlock.scoped() decorator:
+
+    @app.task
+    @airlock.scoped()
+    def my_task():
+        airlock.enqueue(downstream_task, ...)
 """
 
 import warnings
@@ -17,24 +23,6 @@ from airlock import AllowAll, get_current_scope
 
 if TYPE_CHECKING:
     from celery import Celery
-
-
-class AirlockTask(Task):
-    """
-    A Celery Task base class that wraps execution in an airlock scope.
-
-    - On success: flushes intents (downstream effects fire)
-    - On exception: discards intents (no side effects)
-
-    Usage:
-        @app.task(base=AirlockTask)
-        def my_task():
-            airlock.enqueue(downstream_task, ...)
-    """
-
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
-        with airlock.scope(policy=AllowAll()):
-            return super().__call__(*args, **kwargs)
 
 
 class LegacyTaskShim(Task):
@@ -186,7 +174,7 @@ def install_global_intercept(
 
     With wrap_task_execution=True (default), task execution is also wrapped
     in an airlock scope. This means:
-    - Tasks automatically get an airlock scope (like using AirlockTask)
+    - Tasks automatically get an airlock scope
     - Any .delay() calls within tasks are intercepted and buffered
     - On task success: buffered intents flush
     - On task exception: buffered intents are discarded

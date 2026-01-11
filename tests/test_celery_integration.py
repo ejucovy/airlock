@@ -9,7 +9,6 @@ import airlock
 from airlock import DropAll, AllowAll
 from airlock.integrations.celery import (
     LegacyTaskShim,
-    AirlockTask,
     install_global_intercept,
     uninstall_global_intercept,
     _installed,
@@ -63,30 +62,6 @@ def test_legacy_task_shim_apply_async_with_options(mock_enqueue):
     mock_enqueue.assert_called_once_with(
         t, 1, _dispatch_options={"countdown": 10, "queue": "high"}, a=2
     )
-
-
-def test_airlock_task_wraps_run_in_scope():
-    """Test that AirlockTask wraps execution in a scope."""
-
-    class MyWorker(AirlockTask):
-        def run(self):
-            return "done"
-
-    t = MyWorker()
-
-    # Mock super().__call__ to avoid Celery internals needing an app
-    with patch("celery.Task.__call__") as mock_super_call:
-        mock_super_call.return_value = "done"
-
-        # Mock scope to verify it's used
-        with patch("airlock.integrations.celery.airlock.scope") as mock_scope:
-            t()
-
-            mock_scope.assert_called_once()
-            # Verify policy is AllowAll
-
-            args = mock_scope.call_args[1]
-            assert isinstance(args["policy"], AllowAll)
 
 
 # =============================================================================
@@ -289,3 +264,55 @@ class TestGlobalIntercept:
 
         # __call__ should not be patched
         assert Task.__call__ is original_call
+
+    def test_celery_executor_does_not_recurse_with_global_intercept(self, clean_intercept_state):
+        """
+        Test that celery_executor dispatch doesn't cause infinite recursion
+        when global intercept is installed.
+
+        The invariant: scope.exit() removes scope from context var BEFORE
+        flush() calls the executor, so when executor calls task.apply_async(),
+        get_current_scope() returns None and the passthrough path is used.
+
+        This test uses a real Celery Task subclass (not a mock) so that
+        celery_executor's call to task.apply_async() actually hits the
+        intercepted version.
+        """
+        from airlock.integrations.executors.celery import celery_executor
+
+        install_global_intercept(wrap_task_execution=False)
+
+        apply_async_calls = []
+
+        class TrackedTask(Task):
+            name = "test.recursion.task"
+
+        # Patch the ORIGINAL apply_async to track calls
+        # This is what _intercepted_apply_async calls in passthrough mode
+        original_apply_async = celery_module._original_apply_async
+
+        def tracking_apply_async(self, args=None, kwargs=None, **options):
+            apply_async_calls.append((self.name, args, kwargs, options))
+            # Don't actually dispatch to Celery
+            return None
+
+        celery_module._original_apply_async = tracking_apply_async
+
+        try:
+            task = TrackedTask()
+
+            # Use celery_executor - when scope exits and flushes,
+            # celery_executor calls task.apply_async() which hits
+            # _intercepted_apply_async. Since scope has exited,
+            # get_current_scope() returns None -> passthrough path.
+            with airlock.scope(executor=celery_executor):
+                airlock.enqueue(task, "arg1", key="val")
+
+            # Should have exactly one call (no recursion)
+            assert len(apply_async_calls) == 1
+            name, args, kwargs, options = apply_async_calls[0]
+            assert name == "test.recursion.task"
+            assert args == ("arg1",)
+            assert kwargs == {"key": "val"}
+        finally:
+            celery_module._original_apply_async = original_apply_async
