@@ -72,7 +72,7 @@ def checkout(request):
 # Celery tasks dispatch in transaction.on_commit
 ```
 
-Read more: [Django quickstart](quickstart/django.md)
+Read more: [Django quickstart](quickstart/django.md) | [Celery integration](celery/index.md)
 
 ## Installation
 
@@ -82,12 +82,11 @@ pip install airlock
 
 ## Documentation
 
-Key pages:
-
 - [The Problem](understanding/the-problem.md) - Why airlock exists
 - [Core Model](understanding/core-model.md) - The 3 concerns (Policy/Executor/Scope)
-- [Nesting](understanding/nesting.md) - Nested scopes and safety
-- [Alternatives](understanding/alternatives.md) - Do I really need this...?
+- [Celery](celery/index.md) - Celery integration and migration
+- [Extending](extending/custom-policies.md) - Custom policies, executors, and scopes
+- [API Reference](api/index.md) - Full API documentation
 
 ## Contributing
 

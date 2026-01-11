@@ -1,28 +1,6 @@
-# Celery Task Wrapper (AirlockTask)
+# Task Wrapper (AirlockTask)
 
 Deep dive on wrapping Celery tasks with automatic scoping.
-
-## Basic Usage
-
-Use `AirlockTask` as base class to auto-scope task execution:
-
-```python
-from celery import Celery
-from airlock.integrations.celery import AirlockTask
-
-app = Celery('myapp')
-
-@app.task(base=AirlockTask)
-def process_order(order_id):
-    order = fetch_order(order_id)
-    order.status = "processed"
-    save_order(order)
-
-    # These are buffered within the task's scope
-    airlock.enqueue(send_email, order_id=order_id)
-    airlock.enqueue(notify_warehouse, order_id=order_id)
-    # Flushes when task completes successfully
-```
 
 ## What It Does
 
@@ -38,7 +16,7 @@ def my_task():
 @app.task(base=AirlockTask)
 def my_task():
     do_work()
-    airlock.enqueue(followup)  # ✓ Buffered
+    airlock.enqueue(followup)  # Buffered
     # Dispatches when task exits
 ```
 
@@ -46,17 +24,17 @@ def my_task():
 
 ```
 Task starts
-    ↓
+    |
 Scope created and activated
-    ↓
+    |
 Task body executes
-    ↓
+    |
 Task completes (success or error)
-    ↓
+    |
 Scope exits
-    ↓
+    |
 Should flush? (default: flush on success, discard on error)
-    ↓
+    |
 Effects dispatch (if flushed)
 ```
 
@@ -103,38 +81,6 @@ def send_error_alert():
     raise Exception("Something broke")
     # Still dispatches notification despite exception
 ```
-
-## Combining with Django
-
-Use both Django scoping and Celery scoping:
-
-```python
-# settings.py
-MIDDLEWARE = ["airlock.integrations.django.AirlockMiddleware"]
-
-AIRLOCK = {
-    "EXECUTOR": "airlock.integrations.executors.celery.celery_executor",
-}
-```
-
-```python
-# tasks.py
-@app.task(base=AirlockTask)
-def process_order(order_id):
-    # This task runs in its own scope
-    order = Order.objects.get(id=order_id)
-    order.process()
-    airlock.enqueue(send_email, order_id)
-    # Email dispatches when task completes
-
-# views.py (has middleware scope)
-def checkout(request):
-    order = create_order(request)
-    airlock.enqueue(process_order, order_id=order.id)
-    # process_order dispatches when request completes
-```
-
-**Result:** Nested scopes! Request scope captures task dispatch, task scope captures email dispatch.
 
 ## Task Chaining
 
@@ -201,14 +147,13 @@ def test_task_effects():
     assert s.intents[0].task.__name__ == "send_email"
 ```
 
-## Comparison: AirlockTask vs install_global_intercept
+## AirlockTask vs install_global_intercept
 
 | Feature | AirlockTask | install_global_intercept |
 |---------|-------------|--------------------------|
-| **Explicit** | ✅ Opt-in per task | ❌ All tasks affected |
-| **Safe** | ✅ No monkey-patching | ❌ Global side effects |
-| **Migration** | Medium effort | ⚠️ Quick but not steady-state |
-| **Control** | ✅ Per-task customization | ❌ Global behavior |
+| **Explicit** | Opt-in per task | All tasks affected |
+| **Safe** | No monkey-patching | Global side effects |
+| **Migration** | Medium effort | Quick but not steady-state |
+| **Control** | Per-task customization | Global behavior |
 
 **Recommendation:** Use `AirlockTask` for production. Use `install_global_intercept` for migration only.
-
