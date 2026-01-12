@@ -554,17 +554,15 @@ class Scope:
             intents: The list of intents the exiting scope wants to flush.
 
         Returns:
-            The list of intents to allow through (the exiting scope will flush these).
-            Any intents not in the returned list are captured into this scope's buffer.
-
-            IMPORTANT: Must return a list. Returning ``None`` or other types raises
-            ``TypeError``.
+            list[Intent]: The list of intents to allow through (the exiting scope will
+                flush these). Any intents not in the returned list are captured into
+                this scope's buffer. **Important**: Must return a list; returning
+                ``None`` or other types raises ``TypeError``.
 
         Raises:
-            TypeError: If return value is not a list.
-
-            Any other exception raised by this method will propagate and abort the
-            flush, potentially leaving the scope in a partially-modified state.
+            TypeError: If return value is not a list. Any other exception raised by
+                this method will propagate and abort the flush, potentially leaving
+                the scope in a partially-modified state.
 
         Default behavior: Capture all intents (return ``[]``).
         This is the controlled default - outer scopes have authority over nested scopes.
