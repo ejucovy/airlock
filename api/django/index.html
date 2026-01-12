@@ -105,10 +105,6 @@
     <li class="toctree-l2"><a class="reference internal" href="#functions">Functions</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#airlock.integrations.django.get_executor">get_executor</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#airlock.integrations.django.get_executor--or-use-a-custom-executor">Or use a custom executor</a>
-    </li>
-        </ul>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#airlock.integrations.django.get_policy">get_policy</a>
     </li>
@@ -179,12 +175,12 @@
 
 
         <p>A Django-specific scope that respects database transactions.</p>
-<p>Defers dispatch to transaction.on_commit() so side effects only
+<p>Defers dispatch to <code>transaction.on_commit()</code> so side effects only
 fire after the transaction commits successfully. When called outside
-a transaction (autocommit mode), on_commit executes immediately.</p>
-<p>If no executor is provided, uses get_executor() to select one based
-on EXECUTOR setting.</p>
-<p>Subclass and override schedule_dispatch() to customize dispatch timing.</p>
+a transaction (autocommit mode), <code>on_commit</code> executes immediately.</p>
+<p>If no executor is provided, uses <code>get_executor()</code> to select one based
+on <code>EXECUTOR</code> setting.</p>
+<p>Subclass and override <code>schedule_dispatch()</code> to customize dispatch timing.</p>
 
 
 
@@ -220,10 +216,10 @@ on EXECUTOR setting.</p>
     <div class="doc doc-contents ">
 
         <p>Schedule the dispatch callback. Override to customize dispatch timing.</p>
-<p>By default, uses transaction.on_commit(robust=True). This defers
+<p>By default, uses <code>transaction.on_commit(robust=True)</code>. This defers
 dispatch until the transaction commits, or runs immediately if
 outside a transaction (autocommit mode).</p>
-<p>Override to change timing, robust behavior, or skip on_commit entirely.</p>
+<p>Override to change timing, robust behavior, or skip <code>on_commit</code> entirely.</p>
 
 
     </div>
@@ -255,10 +251,12 @@ outside a transaction (autocommit mode).</p>
 
 
         <p>Django middleware that wraps each request in an airlock scope.</p>
-<p>By default:
-- 1xx/2xx/3xx responses: flush
-- 4xx/5xx responses or exceptions: discard</p>
-<p>Subclass and override should_flush() for custom behavior.</p>
+<p>By default:</p>
+<ul>
+<li>1xx/2xx/3xx responses: flush</li>
+<li>4xx/5xx responses or exceptions: discard</li>
+</ul>
+<p>Subclass and override <code>should_flush()</code> for custom behavior.</p>
 
 
 
@@ -296,6 +294,29 @@ outside a transaction (autocommit mode).</p>
         <p>Override to customize flush behavior.</p>
 
 
+<table class="field-list">
+  <colgroup>
+    <col class="field-name" />
+    <col class="field-body" />
+  </colgroup>
+  <tbody valign="top">
+    <tr class="field">
+      <th class="field-name">Returns:</th>
+      <td class="field-body">
+        <ul class="first simple">
+            <li>
+                  <code><span title="bool">bool</span></code>
+              –
+              <div class="doc-md-description">
+                <p><code>True</code> to flush (dispatch intents), <code>False</code> to discard.</p>
+              </div>
+            </li>
+        </ul>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
     </div>
 
 </div>
@@ -323,19 +344,19 @@ outside a transaction (autocommit mode).</p>
 
     <div class="doc doc-contents first">
 
-        <p>Get the appropriate executor based on EXECUTOR setting.</p>
-<p>EXECUTOR should be a dotted import path to an executor callable,
-or None for synchronous execution.</p>
+        <p>Get the appropriate executor based on <code>EXECUTOR</code> setting.</p>
+<p><code>EXECUTOR</code> should be a dotted import path to an executor callable,
+or <code>None</code> for synchronous execution.</p>
+<p>Example::</p>
+<div class="language-text highlight"><pre><span></span><code>AIRLOCK = {
+    &#39;EXECUTOR&#39;: &#39;airlock.integrations.executors.django_q.django_q_executor&#39;,
+}
 
-
-<p><span class="doc-section-title">Examples:</span></p>
-    <p>AIRLOCK = {
-    'EXECUTOR': 'airlock.integrations.executors.django_q.django_q_executor',
-}</p>
-<h3 id="airlock.integrations.django.get_executor--or-use-a-custom-executor">Or use a custom executor<a class="headerlink" href="#airlock.integrations.django.get_executor--or-use-a-custom-executor" title="Permanent link">&para;</a></h3>
-<p>AIRLOCK = {
-    'EXECUTOR': 'myapp.executors.custom_executor',
-}</p>
+# Or use a custom executor
+AIRLOCK = {
+    &#39;EXECUTOR&#39;: &#39;myapp.executors.custom_executor&#39;,
+}
+</code></pre></div>
 
 
 <table class="field-list">
@@ -352,7 +373,7 @@ or None for synchronous execution.</p>
                   <code><a class="autorefs autorefs-internal" title="Executor (airlock.Executor)" href="../core/#airlock.Executor">Executor</a></code>
               –
               <div class="doc-md-description">
-                <p>Executor function based on EXECUTOR setting</p>
+                <p>Executor function based on <code>EXECUTOR</code> setting.</p>
               </div>
             </li>
         </ul>
@@ -375,7 +396,7 @@ or None for synchronous execution.</p>
                   <code><span title="ImportError">ImportError</span></code>
               –
               <div class="doc-md-description">
-                <p>If the executor module/callable cannot be imported</p>
+                <p>If the executor module/callable cannot be imported.</p>
               </div>
             </li>
         </ul>
@@ -401,7 +422,7 @@ or None for synchronous execution.</p>
 
     <div class="doc doc-contents first">
 
-        <p>Get the policy instance based on POLICY setting.</p>
+        <p>Get the policy instance based on <code>POLICY</code> setting.</p>
 
 
     </div>
@@ -421,7 +442,7 @@ or None for synchronous execution.</p>
 
     <div class="doc doc-contents first">
 
-        <p>Get the scope class to use, based on SCOPE setting.</p>
+        <p>Get the scope class to use, based on <code>SCOPE</code> setting.</p>
 
 
     </div>

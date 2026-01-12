@@ -170,8 +170,8 @@
     <div class="doc doc-contents first">
 
         <p>Execute intent synchronously by calling the task directly.</p>
-<p>This is the simplest executor - no queue, no threading, just immediate execution.
-Dispatch options are ignored.</p>
+<p>This is the simplest executor - no queue, no threading, just immediate
+execution. Dispatch options are ignored.</p>
 
 
     </div>
@@ -193,8 +193,8 @@ Dispatch options are ignored.</p>
     <div class="doc doc-contents first">
 
         <p>Execute intent via Celery task queue.</p>
-<p>Passes dispatch_options directly to apply_async() or ignores them for .delay().
-Falls back to synchronous execution for plain callables.</p>
+<p>Passes <code>dispatch_options</code> directly to <code>apply_async()</code> or ignores them
+for <code>.delay()</code>. Falls back to synchronous execution for plain callables.</p>
 
 
     </div>
@@ -215,8 +215,8 @@ Falls back to synchronous execution for plain callables.</p>
 
     <div class="doc doc-contents first">
 
-        <p>Execute intent via django-q's async_task().</p>
-<p>Passes dispatch_options directly to async_task() as keyword arguments.</p>
+        <p>Execute intent via django-q's <code>async_task()</code>.</p>
+<p>Passes <code>dispatch_options</code> directly to <code>async_task()</code> as keyword arguments.</p>
 
 
     </div>
@@ -238,20 +238,17 @@ Falls back to synchronous execution for plain callables.</p>
     <div class="doc doc-contents first">
 
         <p>Execute intent via Django's built-in tasks framework.</p>
-<p>Passes dispatch_options to the task's .using() method for configuration
-of priority, run_after, queue_name, and backend options.
+<p>Passes <code>dispatch_options</code> to the task's <code>.using()</code> method for configuration
+of <code>priority</code>, <code>run_after</code>, <code>queue_name</code>, and <code>backend</code> options.
 Falls back to synchronous execution for plain callables.</p>
-
-
-<details class="supported-dispatch_options" open>
-  <summary>Supported dispatch_options</summary>
-  <ul>
-<li>priority: Integer between -100 and 100 (higher = higher priority)</li>
-<li>run_after: datetime for deferred execution</li>
-<li>queue_name: Specific queue for task execution</li>
-<li>backend: Backend name from TASKS configuration</li>
+<p>Supported dispatch_options:</p>
+<ul>
+<li><code>priority</code>: Integer between -100 and 100 (higher = higher priority)</li>
+<li><code>run_after</code>: datetime for deferred execution</li>
+<li><code>queue_name</code>: Specific queue for task execution</li>
+<li><code>backend</code>: Backend name from <code>TASKS</code> configuration</li>
 </ul>
-</details>
+
 
     </div>
 
@@ -272,7 +269,7 @@ Falls back to synchronous execution for plain callables.</p>
     <div class="doc doc-contents first">
 
         <p>Execute intent via Huey task queue.</p>
-<p>Passes dispatch_options directly to schedule() as keyword arguments.
+<p>Passes <code>dispatch_options</code> directly to <code>schedule()</code> as keyword arguments.
 Falls back to synchronous execution for plain callables.</p>
 
 
@@ -295,8 +292,8 @@ Falls back to synchronous execution for plain callables.</p>
     <div class="doc doc-contents first">
 
         <p>Execute intent via Dramatiq task queue.</p>
-<p>Passes dispatch_options directly to send_with_options() or ignores them for .send().
-Falls back to synchronous execution for plain callables.</p>
+<p>Passes <code>dispatch_options</code> directly to <code>send_with_options()</code> or ignores
+them for <code>.send()</code>. Falls back to synchronous execution for plain callables.</p>
 
 
     </div>

@@ -87,12 +87,6 @@
     <li class="toctree-l2"><a class="reference internal" href="#functions">Functions</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#airlock.scope">scope</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#airlock.scope--use-celery-executor">Use celery executor</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#airlock.scope--use-django-q-executor">Use django-q executor</a>
-    </li>
-        </ul>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#airlock.enqueue">enqueue</a>
     </li>
@@ -267,7 +261,7 @@
               –
               <div class="doc-md-description">
                 <p>Policy controlling what intents are allowed. Defaults to configured
-policy or AllowAll if not configured.</p>
+policy or <code>AllowAll</code> if not configured.</p>
               </div>
             </li>
             <li>
@@ -277,16 +271,16 @@ policy or AllowAll if not configured.</p>
 )
               –
               <div class="doc-md-description">
-                <p>Scope class to use. Defaults to configured scope_cls or Scope if not
-configured. Subclass Scope and override should_flush() to customize
-flush/discard behavior.</p>
+                <p><code>Scope</code> class to use. Defaults to configured <code>scope_cls</code> or <code>Scope</code>
+if not configured. Subclass <code>Scope</code> and override <code>should_flush()</code> to
+customize flush/discard behavior.</p>
               </div>
             </li>
             <li>
               <b><code>**kwargs</code></b>
               –
               <div class="doc-md-description">
-                <p>Additional arguments passed to Scope constructor (e.g., executor).</p>
+                <p>Additional arguments passed to <code>Scope</code> constructor (e.g., executor).</p>
               </div>
             </li>
         </ul>
@@ -295,38 +289,57 @@ flush/discard behavior.</p>
   </tbody>
 </table>
 
-<details class="common-kwargs" open>
-  <summary>Common kwargs</summary>
-  <p>executor: Callable that executes intents. Defaults to configured executor
-    or synchronous execution if not configured.
-    See airlock.integrations.executors for available executors.</p>
-</details>
+<table class="field-list">
+  <colgroup>
+    <col class="field-name" />
+    <col class="field-body" />
+  </colgroup>
+  <tbody valign="top">
+    <tr class="field">
+      <th class="field-name"></th>
+      <td class="field-body">
+        <ul class="first simple">
+            <li>
+              <b><code>executor</code></b>
+              –
+              <div class="doc-md-description">
+                <p>Callable that executes intents. Defaults to configured executor
+or synchronous execution if not configured.
+See <code>airlock.integrations.executors</code> for available executors.</p>
+              </div>
+            </li>
+        </ul>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 <details class="behavior" open>
   <summary>Behavior</summary>
   <ul>
-<li>On normal exit: calls flush() if should_flush(None) returns True</li>
-<li>On exception: calls flush() if should_flush(error) returns True, else discard()</li>
+<li>On normal exit: calls <code>flush()</code> if <code>should_flush(None)</code> returns <code>True</code></li>
+<li>On exception: calls <code>flush()</code> if <code>should_flush(error)</code> returns <code>True</code>,
+  else <code>discard()</code></li>
 </ul>
-</details>        <p>The default Scope.should_flush() returns True on success, False on error.
-Subclass Scope to customize this behavior.</p>
+</details>        <p>The default <code>Scope.should_flush()</code> returns <code>True</code> on success, <code>False</code> on error.
+Subclass <code>Scope</code> to customize this behavior.</p>
 
 
 <details class="note" open>
   <summary>Note</summary>
   <p>Arguments passed explicitly always override configured defaults.
-Use airlock.configure() to set application-wide defaults.</p>
-</details>
-
-<p><span class="doc-section-title">Examples:</span></p>
-    <h3 id="airlock.scope--use-celery-executor">Use celery executor<a class="headerlink" href="#airlock.scope--use-celery-executor" title="Permanent link">&para;</a></h3>
-<p>from airlock.integrations.executors.celery import celery_executor
+Use <code>airlock.configure()</code> to set application-wide defaults.</p>
+</details>        <p>Example::</p>
+<div class="language-text highlight"><pre><span></span><code># Use celery executor
+from airlock.integrations.executors.celery import celery_executor
 with airlock.scope(executor=celery_executor):
-    airlock.enqueue(my_task, ...)</p>
-<h3 id="airlock.scope--use-django-q-executor">Use django-q executor<a class="headerlink" href="#airlock.scope--use-django-q-executor" title="Permanent link">&para;</a></h3>
-<p>from airlock.integrations.executors.django_q import django_q_executor
+    airlock.enqueue(my_task, ...)
+
+# Use django-q executor
+from airlock.integrations.executors.django_q import django_q_executor
 with airlock.scope(executor=django_q_executor):
-    airlock.enqueue(my_task, ...)</p>
+    airlock.enqueue(my_task, ...)
+</code></pre></div>
 
 
     </div>
@@ -365,7 +378,7 @@ with airlock.scope(executor=django_q_executor):
                   (<code><span title="typing.Callable">Callable</span></code>)
               –
               <div class="doc-md-description">
-                <p>The callable to execute (Celery task, function, etc.)</p>
+                <p>The callable to execute (Celery task, function, etc.).</p>
               </div>
             </li>
             <li>
@@ -399,8 +412,8 @@ For structured observability, prefer OpenTelemetry span context.</p>
 )
               –
               <div class="doc-md-description">
-                <p>Optional dispatch options (countdown, queue, etc.)
-Passed through to the task queue backend (e.g., Celery's apply_async).
+                <p>Optional dispatch options (countdown, queue, etc.).
+Passed through to the task queue backend (e.g., Celery's <code>apply_async</code>).
 Ignored for plain callables.</p>
               </div>
             </li>
@@ -448,9 +461,9 @@ Ignored for plain callables.</p>
                   <code><a class="autorefs autorefs-internal" title="PolicyViolation (airlock.PolicyViolation)" href="#airlock.PolicyViolation">PolicyViolation</a></code>
               –
               <div class="doc-md-description">
-                <p>If a policy explicitly rejects the intent via on_enqueue().
-For example, AssertNoEffects policy raises PolicyViolation on any enqueue.
-When this happens, the intent is NOT added to the buffer.</p>
+                <p>If a policy explicitly rejects the intent via <code>on_enqueue()</code>.
+For example, <code>AssertNoEffects</code> policy raises <code>PolicyViolation</code> on any
+enqueue. When this happens, the intent is NOT added to the buffer.</p>
               </div>
             </li>
         </ul>
@@ -479,25 +492,27 @@ When this happens, the intent is NOT added to the buffer.</p>
         <p>Context manager for local policy contexts.</p>
 <p>Intents enqueued within this context capture the policy and apply it
 at flush time. This enables local control without nested buffers.</p>
+<p>Example::</p>
+<div class="language-text highlight"><pre><span></span><code>with airlock.scope():
+    airlock.enqueue(task_a)  # will dispatch
 
+    with airlock.policy(DropAll()):
+        airlock.enqueue(task_b)  # will NOT dispatch
 
-<details class="example" open>
-  <summary>Example</summary>
-  <p>with airlock.scope():
-    airlock.enqueue(task_a)  # will dispatch</p>
-<div class="language-text highlight"><pre><span></span><code>with airlock.policy(DropAll()):
-    airlock.enqueue(task_b)  # will NOT dispatch
-
-airlock.enqueue(task_c)  # will dispatch
+    airlock.enqueue(task_c)  # will dispatch
 </code></pre></div>
-</details>        <p>Unlike nested scopes, all intents go to the same buffer. The local
+<p>Unlike nested scopes, all intents go to the same buffer. The local
 policy is metadata that affects dispatch decisions at flush.</p>
-<p>NOTE: This does NOT create a new buffer or nested scope. All intents
+
+
+<details class="note" open>
+  <summary>Note</summary>
+  <p>This does NOT create a new buffer or nested scope. All intents
 from within this context still go to the enclosing scope's buffer.
 The policy is captured on each intent at enqueue time and evaluated
 at flush. This is intentional - it preserves a single dispatch boundary
 while allowing fine-grained control over which intents survive.</p>
-
+</details>
 
     </div>
 
@@ -557,7 +572,7 @@ while allowing fine-grained control over which intents survive.</p>
                   (<code><a class="autorefs autorefs-internal" title="Policy (airlock.Policy)" href="#airlock.Policy">Policy</a></code>)
               –
               <div class="doc-md-description">
-                <p>Policy controlling what intents are allowed</p>
+                <p>Policy controlling what intents are allowed.</p>
               </div>
             </li>
             <li>
@@ -568,7 +583,7 @@ while allowing fine-grained control over which intents survive.</p>
               –
               <div class="doc-md-description">
                 <p>Callable that executes intents. Defaults to synchronous execution.
-See airlock.integrations.executors for available executors.</p>
+See <code>airlock.integrations.executors</code> for available executors.</p>
               </div>
             </li>
         </ul>
@@ -750,8 +765,8 @@ See airlock.integrations.executors for available executors.</p>
     <div class="doc doc-contents ">
 
         <p>Activate this scope.</p>
-<p>Sets the context var so enqueue() routes intents to this scope.
-Must call exit() when done, before calling flush() or discard().</p>
+<p>Sets the context var so <code>enqueue()</code> routes intents to this scope.
+Must call <code>exit()</code> when done, before calling <code>flush()</code> or <code>discard()</code>.</p>
 
 
 <table class="field-list">
@@ -768,7 +783,7 @@ Must call exit() when done, before calling flush() or discard().</p>
                   <code><a class="autorefs autorefs-internal" title="Scope (airlock.Scope)" href="#airlock.Scope">Scope</a></code>
               –
               <div class="doc-md-description">
-                <p>self (for chaining)</p>
+                <p>Self for chaining.</p>
               </div>
             </li>
         </ul>
@@ -818,8 +833,8 @@ Must call exit() when done, before calling flush() or discard().</p>
     <div class="doc doc-contents ">
 
         <p>Deactivate this scope.</p>
-<p>Resets the context var to the previous scope (or None).
-Must be called before flush() or discard().</p>
+<p>Resets the context var to the previous scope (or <code>None</code>).
+Must be called before <code>flush()</code> or <code>discard()</code>.</p>
 
 
 <table class="field-list">
@@ -912,6 +927,15 @@ them in FIFO order using the configured executor.</p>
                 <p>If scope is already flushed, discarded, or still active.</p>
               </div>
             </li>
+            <li>
+                  <code><span title="Exception">Exception</span></code>
+              –
+              <div class="doc-md-description">
+                <p>Any exception raised by the executor during dispatch (fail-fast
+behavior). See <code>_dispatch_all()</code> docstring for details on exception
+handling.</p>
+              </div>
+            </li>
         </ul>
       </td>
     </tr>
@@ -981,7 +1005,7 @@ This prevents retry attempts, as the scope is in an inconsistent state
                   (<code><span title="BaseException">BaseException</span> | None</code>)
               –
               <div class="doc-md-description">
-                <p>The exception that caused exit, or None for normal exit.</p>
+                <p>The exception that caused exit, or <code>None</code> for normal exit.</p>
               </div>
             </li>
         </ul>
@@ -1004,7 +1028,7 @@ This prevents retry attempts, as the scope is in an inconsistent state
                   <code><span title="bool">bool</span></code>
               –
               <div class="doc-md-description">
-                <p>True to flush (dispatch intents), False to discard.</p>
+                <p><code>True</code> to flush (dispatch intents), <code>False</code> to discard.</p>
               </div>
             </li>
         </ul>
@@ -1051,7 +1075,7 @@ to decide which intents the exiting scope may flush vs which to capture.</p>
                   (<code><a class="autorefs autorefs-internal" title="Scope (airlock.Scope)" href="#airlock.Scope">Scope</a></code>)
               –
               <div class="doc-md-description">
-                <p>The nested scope that is exiting (may be deeply nested)</p>
+                <p>The nested scope that is exiting (may be deeply nested).</p>
               </div>
             </li>
             <li>
@@ -1064,7 +1088,7 @@ to decide which intents the exiting scope may flush vs which to capture.</p>
    (airlock.Intent)" href="#airlock.Intent">Intent</a>]</code>)
               –
               <div class="doc-md-description">
-                <p>The list of intents the exiting scope wants to flush</p>
+                <p>The list of intents the exiting scope wants to flush.</p>
               </div>
             </li>
         </ul>
@@ -1116,7 +1140,19 @@ to decide which intents the exiting scope may flush vs which to capture.</p>
    (airlock.Intent)" href="#airlock.Intent">Intent</a>]</code>
 )              –
               <div class="doc-md-description">
-                <p>Must return a list. Returning None or other types raises TypeError.</p>
+                <p>Must return a list. Returning <code>None</code> or other types raises</p>
+              </div>
+            </li>
+            <li>
+                  <code><span title="list">list</span>[<a class="autorefs autorefs-internal" title="Intent
+
+
+  
+      dataclass
+   (airlock.Intent)" href="#airlock.Intent">Intent</a>]</code>
+              –
+              <div class="doc-md-description">
+                <p><code>TypeError</code>.</p>
               </div>
             </li>
         </ul>
@@ -1146,39 +1182,35 @@ to decide which intents the exiting scope may flush vs which to capture.</p>
       </td>
     </tr>
   </tbody>
-</table>        <p>Default behavior: Capture all intents (return []).
+</table>        <p>Default behavior: Capture all intents (return <code>[]</code>).
 This is the controlled default - outer scopes have authority over nested scopes.</p>
-
-
-<details class="override-this-method-to-allow-nested-scopes-to-flush-independently" open>
-  <summary>Override this method to allow nested scopes to flush independently</summary>
-  <ul>
-<li>Return [] to capture all intents (default, controlled)</li>
-<li>Return intents to allow all (independent nested scopes)</li>
+<p>Override this method to allow nested scopes to flush independently:</p>
+<ul>
+<li>Return <code>[]</code> to capture all intents (default, controlled)</li>
+<li>Return <code>intents</code> to allow all (independent nested scopes)</li>
 <li>Return filtered list to selectively capture</li>
 </ul>
-</details>
 
-<details class="notes" open>
-  <summary>Notes</summary>
+
+<details class="note" open>
+  <summary>Note</summary>
   <ul>
 <li>Do not mutate the <code>intents</code> list. Return a new list or slice.</li>
 <li>Returning intents not in the input list has undefined behavior.</li>
 <li>In multi-level nesting, <code>exiting_scope</code> is always the innermost scope,
   not necessarily the immediate child. Intermediate scopes haven't exited yet.</li>
 </ul>
-</details>
-
-<details class="example" open>
-  <summary>Example</summary>
-  <p>class IndependentScope(Scope):
+</details>        <p>Example::</p>
+<div class="language-text highlight"><pre><span></span><code>class IndependentScope(Scope):
     def before_descendant_flushes(self, exiting_scope, intents):
-        return intents  # Allow nested scopes to flush independently</p>
-<p>class SmartScope(Scope):
+        return intents  # Allow nested scopes to flush independently
+
+class SmartScope(Scope):
     def before_descendant_flushes(self, exiting_scope, intents):
         # Capture dangerous tasks, allow safe ones
-        return [i for i in intents if 'dangerous' not in i.name]</p>
-</details>
+        return [i for i in intents if &#39;dangerous&#39; not in i.name]
+</code></pre></div>
+
 
     </div>
 
@@ -1213,7 +1245,7 @@ This is the controlled default - outer scopes have authority over nested scopes.
 
 
         <p>Represents the intent to perform a side effect.</p>
-<p>Stores the actual callable, not just a name. The name property
+<p>Stores the actual callable, not just a name. The <code>name</code> property
 derives a string for serialization/logging.</p>
 <p>Captures local policy context at enqueue time for introspection
 and deferred application at flush.</p>
@@ -1412,18 +1444,42 @@ and deferred application at flush.</p>
     <div class="doc doc-contents ">
 
         <p>Check if this intent passes its captured local policies.</p>
-<p>Returns True if all local policies allow this intent.</p>
 
+
+<table class="field-list">
+  <colgroup>
+    <col class="field-name" />
+    <col class="field-body" />
+  </colgroup>
+  <tbody valign="top">
+    <tr class="field">
+      <th class="field-name">Returns:</th>
+      <td class="field-body">
+        <ul class="first simple">
+            <li>
+                  <code><span title="bool">bool</span></code>
+              –
+              <div class="doc-md-description">
+                <p>True if all local policies allow this intent.</p>
+              </div>
+            </li>
+        </ul>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 <details class="note" open>
-  <summary>This does NOT guarantee the intent will be dispatched. It does not consider:</summary>
-  <ul>
-<li>scope-level policy (checked separately at flush)</li>
-<li>whether the scope flushes or discards</li>
-<li>dispatch execution success</li>
+  <summary>Note</summary>
+  <p>This does NOT guarantee the intent will be dispatched. It does not
+consider:</p>
+<ul>
+<li>Scope-level policy (checked separately at flush)</li>
+<li>Whether the scope flushes or discards</li>
+<li>Dispatch execution success</li>
 </ul>
-</details>        <p>Use for inspection and audit, not execution prediction.</p>
-
+<p>Use for inspection and audit, not execution prediction.</p>
+</details>
 
     </div>
 
@@ -1476,7 +1532,7 @@ intents but cannot reorder them.</p>
               <td>
                 <div class="doc-md-description">
                   <p>Called when an intent is added to the buffer. Use for
-observation, logging, or raising PolicyViolation for hard blocks.</p>
+observation, logging, or raising <code>PolicyViolation</code> for hard blocks.</p>
                 </div>
               </td>
             </tr>
@@ -1484,8 +1540,8 @@ observation, logging, or raising PolicyViolation for hard blocks.</p>
               <td><code><a class="autorefs autorefs-internal" title="allows (airlock.Policy.allows)" href="#airlock.Policy.allows">allows</a></code></td>
               <td>
                 <div class="doc-md-description">
-                  <p>Called at flush time for each intent. Return True to dispatch,
-False to silently drop.</p>
+                  <p>Called at flush time for each intent. Return <code>True</code> to dispatch,
+<code>False</code> to silently drop.</p>
                 </div>
               </td>
             </tr>
@@ -1525,7 +1581,7 @@ False to silently drop.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Called when an intent is added to the buffer. Observe or raise.</p>
+        <p>Called when an intent is added to the buffer. Observe or raise <code>PolicyViolation</code>.</p>
 
 
     </div>
@@ -1545,7 +1601,7 @@ False to silently drop.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Called at flush time. Return True to dispatch, False to drop.</p>
+        <p>Called at flush time. Return <code>True</code> to dispatch, <code>False</code> to drop.</p>
 
 
     </div>
@@ -1579,15 +1635,17 @@ False to silently drop.</p>
 
 
         <p>Protocol for intent executors.</p>
-<p>An executor is a callable that takes an Intent and executes it
+<p>An executor is a callable that takes an <code>Intent</code> and executes it
 via some dispatch mechanism (synchronous, Celery, django-q, etc.).</p>
-<p>Built-in executors are available in airlock.integrations.executors:
-- sync_executor: Synchronous execution (default)
-- celery_executor: Dispatch via Celery .delay() / .apply_async()
-- django_q_executor: Dispatch via django-q's async_task()
-- django_tasks_executor: Dispatch via Django 6+'s built-in tasks framework
-- huey_executor: Dispatch via Huey's .schedule()
-- dramatiq_executor: Dispatch via Dramatiq's .send()</p>
+<p>Built-in executors are available in <code>airlock.integrations.executors</code>:</p>
+<ul>
+<li><code>sync_executor</code>: Synchronous execution (default)</li>
+<li><code>celery_executor</code>: Dispatch via Celery <code>.delay()</code> / <code>.apply_async()</code></li>
+<li><code>django_q_executor</code>: Dispatch via django-q's <code>async_task()</code></li>
+<li><code>django_tasks_executor</code>: Dispatch via Django 6+'s built-in tasks framework</li>
+<li><code>huey_executor</code>: Dispatch via Huey's <code>.schedule()</code></li>
+<li><code>dramatiq_executor</code>: Dispatch via Dramatiq's <code>.send()</code></li>
+</ul>
 <p>Custom executors can be written by implementing this protocol.</p>
 
 
@@ -1996,11 +2054,11 @@ via some dispatch mechanism (synchronous, Celery, django-q, etc.).</p>
 
 
 
-        <p>Raised when enqueue() is called with no active scope.</p>
+        <p>Raised when <code>enqueue()</code> is called with no active scope.</p>
 <p>This is intentional: airlock requires explicit lifecycle boundaries.
-Side effects should not escape silently. Every enqueue() must occur
-within a scope() that decides when (and whether) effects dispatch.</p>
-<p>If you're seeing this error, wrap your code in an airlock.scope():</p>
+Side effects should not escape silently. Every <code>enqueue()</code> must occur
+within a <code>scope()</code> that decides when (and whether) effects dispatch.</p>
+<p>If you're seeing this error, wrap your code in an <code>airlock.scope()</code>::</p>
 <div class="language-text highlight"><pre><span></span><code>with airlock.scope():
     do_stuff()  # enqueue() calls are now valid
 </code></pre></div>
@@ -2034,7 +2092,7 @@ within a scope() that decides when (and whether) effects dispatch.</p>
 
 
 
-        <p>Raised when enqueue() is called from within a policy callback.</p>
+        <p>Raised when <code>enqueue()</code> is called from within a policy callback.</p>
 
 
 

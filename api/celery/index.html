@@ -91,20 +91,10 @@
     <li class="toctree-l2"><a class="reference internal" href="#task-base-classes">Task Base Classes</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#airlock.integrations.celery.LegacyTaskShim">LegacyTaskShim</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#airlock.integrations.celery.LegacyTaskShim--this-now-goes-through-airlock">This now goes through airlock:</a>
-    </li>
-        </ul>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#global-intercept">Global Intercept</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#airlock.integrations.celery.install_global_intercept">install_global_intercept</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#airlock.integrations.celery.install_global_intercept--celerypy-or-conftestpy">celery.py or conftest.py</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#airlock.integrations.celery.install_global_intercept--or-without-execution-wrapping-only-intercept-delay-calls">Or without execution wrapping (only intercept .delay() calls):</a>
-    </li>
-        </ul>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#airlock.integrations.celery.uninstall_global_intercept">uninstall_global_intercept</a>
     </li>
@@ -162,18 +152,17 @@
 
 
 
-        <p>Migration helper that intercepts .delay() and routes through airlock.</p>
-<p>Emits DeprecationWarning to encourage updating call sites.</p>
-
-
-<details class="usage" open>
-  <summary>Usage</summary>
-  <p>@app.task(base=LegacyTaskShim)
+        <p>Migration helper that intercepts <code>.delay()</code> and routes through airlock.</p>
+<p>Emits <code>DeprecationWarning</code> to encourage updating call sites.</p>
+<p>Example::</p>
+<div class="language-text highlight"><pre><span></span><code>@app.task(base=LegacyTaskShim)
 def old_task(...):
-    ...</p>
-<h3 id="airlock.integrations.celery.LegacyTaskShim--this-now-goes-through-airlock">This now goes through airlock:<a class="headerlink" href="#airlock.integrations.celery.LegacyTaskShim--this-now-goes-through-airlock" title="Permanent link">&para;</a></h3>
-<p>old_task.delay(...)  # DeprecationWarning</p>
-</details>
+    ...
+
+# This now goes through airlock:
+old_task.delay(...)  # DeprecationWarning
+</code></pre></div>
+
 
 
 
@@ -217,29 +206,31 @@ def old_task(...):
 
     <div class="doc doc-contents first">
 
-        <p>Install global interception of .delay() and .apply_async() calls.</p>
-<p>When a scope is active, all .delay()/.apply_async() calls are routed
-through airlock.enqueue(). When no scope is active, calls emit a
+        <p>Install global interception of <code>.delay()</code> and <code>.apply_async()</code> calls.</p>
+<p>When a scope is active, all <code>.delay()</code>/<code>.apply_async()</code> calls are routed
+through <code>airlock.enqueue()</code>. When no scope is active, calls emit a
 deprecation warning and pass through normally.</p>
-<p>With wrap_task_execution=True (default), task execution is also wrapped
-in an airlock scope. This means:
-- Tasks automatically get an airlock scope
-- Any .delay() calls within tasks are intercepted and buffered
-- On task success: buffered intents flush
-- On task exception: buffered intents are discarded</p>
+<p>With <code>wrap_task_execution=True</code> (default), task execution is also wrapped
+in an airlock scope. This means:</p>
+<ul>
+<li>Tasks automatically get an airlock scope</li>
+<li>Any <code>.delay()</code> calls within tasks are intercepted and buffered</li>
+<li>On task success: buffered intents flush</li>
+<li>On task exception: buffered intents are discarded</li>
+</ul>
 <p>This is a monkey-patch. Call it once at app startup, after Celery is
 configured but before tasks are invoked.</p>
+<p>Example::</p>
+<div class="language-text highlight"><pre><span></span><code># celery.py or conftest.py
+from airlock.integrations.celery import install_global_intercept
 
+app = Celery(...)
+install_global_intercept(app)
 
-<details class="usage" open>
-  <summary>Usage</summary>
-  <h3 id="airlock.integrations.celery.install_global_intercept--celerypy-or-conftestpy">celery.py or conftest.py<a class="headerlink" href="#airlock.integrations.celery.install_global_intercept--celerypy-or-conftestpy" title="Permanent link">&para;</a></h3>
-<p>from airlock.integrations.celery import install_global_intercept</p>
-<p>app = Celery(...)
-install_global_intercept(app)</p>
-<h3 id="airlock.integrations.celery.install_global_intercept--or-without-execution-wrapping-only-intercept-delay-calls">Or without execution wrapping (only intercept .delay() calls):<a class="headerlink" href="#airlock.integrations.celery.install_global_intercept--or-without-execution-wrapping-only-intercept-delay-calls" title="Permanent link">&para;</a></h3>
-<p>install_global_intercept(app, wrap_task_execution=False)</p>
-</details>
+# Or without execution wrapping (only intercept .delay() calls):
+install_global_intercept(app, wrap_task_execution=False)
+</code></pre></div>
+
 
 <table class="field-list">
   <colgroup>
@@ -259,7 +250,7 @@ install_global_intercept(app)</p>
               –
               <div class="doc-md-description">
                 <p>Optional Celery app. Currently unused but reserved for future
- per-app scoping.</p>
+per-app scoping.</p>
               </div>
             </li>
             <li>
@@ -269,7 +260,7 @@ install_global_intercept(app)</p>
 )
               –
               <div class="doc-md-description">
-                <p>If True (default), wrap Task.<strong>call</strong> in an
+                <p>If <code>True</code> (default), wrap <code>Task.__call__</code> in an
 airlock scope so tasks automatically buffer and flush effects.</p>
               </div>
             </li>
