@@ -1,7 +1,6 @@
-"""
-Celery executor for airlock.
+"""Celery executor for airlock.
 
-Dispatches tasks via Celery's .delay() or .apply_async() methods.
+Dispatches tasks via Celery's ``.delay()`` or ``.apply_async()`` methods.
 Falls back to synchronous execution for plain callables.
 """
 
@@ -9,11 +8,10 @@ from airlock import Intent
 
 
 def celery_executor(intent: Intent) -> None:
-    """
-    Execute intent via Celery task queue.
+    """Execute intent via Celery task queue.
 
-    Passes dispatch_options directly to apply_async() or ignores them for .delay().
-    Falls back to synchronous execution for plain callables.
+    Passes ``dispatch_options`` directly to ``apply_async()`` or ignores them
+    for ``.delay()``. Falls back to synchronous execution for plain callables.
     """
     task = intent.task
     opts = intent.dispatch_options or {}

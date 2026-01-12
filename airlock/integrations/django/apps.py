@@ -1,22 +1,22 @@
-"""
-Django AppConfig for airlock auto-configuration.
+"""Django AppConfig for airlock auto-configuration.
 
-When "airlock.integrations.django" is added to INSTALLED_APPS, Django
-automatically discovers this AppConfig and calls ready() on startup.
+When ``airlock.integrations.django`` is added to ``INSTALLED_APPS``, Django
+automatically discovers this AppConfig and calls `ready()` on startup.
 
 This configures airlock with Django-appropriate defaults:
-- DjangoScope as the default scope class (defers dispatch to on_commit)
-- Executor and policy from AIRLOCK settings
+
+- `DjangoScope` as the default scope class (defers dispatch to ``on_commit``)
+- Executor and policy from ``AIRLOCK`` settings
 """
 
 from django.apps import AppConfig
 
 
 class AirlockConfig(AppConfig):
-    """
-    AppConfig that auto-configures airlock for Django.
+    """AppConfig that auto-configures airlock for Django.
 
-    Usage:
+    Example::
+
         # settings.py
         INSTALLED_APPS = [
             ...
@@ -29,12 +29,13 @@ class AirlockConfig(AppConfig):
             "EXECUTOR": "airlock.integrations.executors.celery.celery_executor",
         }
 
-    This automatically calls airlock.configure() with:
-    - scope_cls=DjangoScope (defers dispatch to transaction.on_commit)
-    - policy from AIRLOCK["POLICY"] setting
-    - executor from AIRLOCK["EXECUTOR"] setting
+    This automatically calls `airlock.configure()` with:
 
-    After this, all airlock.scope() and @airlock.scoped() calls will
+    - ``scope_cls=DjangoScope`` (defers dispatch to ``transaction.on_commit``)
+    - policy from ``AIRLOCK["POLICY"]`` setting
+    - executor from ``AIRLOCK["EXECUTOR"]`` setting
+
+    After this, all `airlock.scope()` and ``@airlock.scoped()`` calls will
     use these defaults unless explicitly overridden.
     """
 

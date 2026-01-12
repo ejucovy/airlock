@@ -81,27 +81,28 @@ def configure(
     Configure global defaults for airlock scopes.
 
     Call this once at application startup to set defaults that apply to
-    all scope() and scoped() calls. Explicit arguments to scope()/scoped()
+    all `scope()` and `scoped()` calls. Explicit arguments to `scope()`/`scoped()`
     always override these defaults.
 
     Args:
-        scope_cls: Default Scope class. Use this to set DjangoScope as the
+        scope_cls: Default `Scope` class. Use this to set `DjangoScope` as the
             default in Django applications.
         policy: Default policy for all scopes.
         executor: Default executor for all scopes.
 
     Example:
-        # In Django, this is called automatically by AppConfig.ready()
-        # if you add "airlock.integrations.django" to INSTALLED_APPS.
+        In Django, this is called automatically by `AppConfig.ready()`
+        if you add ``airlock.integrations.django`` to ``INSTALLED_APPS``.
 
-        # Manual configuration:
-        from airlock import configure, Scope
-        from airlock.integrations.django import DjangoScope
+        Manual configuration::
 
-        configure(scope_cls=DjangoScope)
+            from airlock import configure, Scope
+            from airlock.integrations.django import DjangoScope
+
+            configure(scope_cls=DjangoScope)
 
     Note:
-        Configuration is stored globally. In tests, use reset_configuration()
+        Configuration is stored globally. In tests, use `reset_configuration()`
         to restore defaults between tests.
     """
     if scope_cls is not None:
@@ -113,17 +114,14 @@ def configure(
 
 
 def reset_configuration() -> None:
-    """
-    Reset configuration to defaults. Primarily for testing.
-    """
+    """Reset configuration to defaults. Primarily for testing."""
     _config["scope_cls"] = None
     _config["policy"] = None
     _config["executor"] = None
 
 
 def get_configuration() -> dict[str, Any]:
-    """
-    Get current configuration. Primarily for testing/debugging.
+    """Get current configuration. Primarily for testing/debugging.
 
     Returns a copy to prevent mutation.
     """
@@ -162,10 +160,9 @@ def get_current_scope() -> "Scope | None":
 
 @dataclass(frozen=True)
 class Intent:
-    """
-    Represents the intent to perform a side effect.
+    """Represents the intent to perform a side effect.
 
-    Stores the actual callable, not just a name. The name property
+    Stores the actual callable, not just a name. The `name` property
     derives a string for serialization/logging.
 
     Captures local policy context at enqueue time for introspection
@@ -211,17 +208,20 @@ class Intent:
         return self._local_policies
 
     def passes_local_policies(self) -> bool:
-        """
-        Check if this intent passes its captured local policies.
+        """Check if this intent passes its captured local policies.
 
-        Returns True if all local policies allow this intent.
+        Returns:
+            True if all local policies allow this intent.
 
-        NOTE: This does NOT guarantee the intent will be dispatched. It does not consider:
-          - scope-level policy (checked separately at flush)
-          - whether the scope flushes or discards
-          - dispatch execution success
+        Note:
+            This does NOT guarantee the intent will be dispatched. It does not
+            consider:
 
-        Use for inspection and audit, not execution prediction.
+            - Scope-level policy (checked separately at flush)
+            - Whether the scope flushes or discards
+            - Dispatch execution success
+
+            Use for inspection and audit, not execution prediction.
         """
         for p in reversed(self._local_policies):
             if not p.allows(self):
@@ -236,19 +236,19 @@ class Intent:
 
 @runtime_checkable
 class Executor(Protocol):
-    """
-    Protocol for intent executors.
+    """Protocol for intent executors.
 
-    An executor is a callable that takes an Intent and executes it
+    An executor is a callable that takes an `Intent` and executes it
     via some dispatch mechanism (synchronous, Celery, django-q, etc.).
 
-    Built-in executors are available in airlock.integrations.executors:
-    - sync_executor: Synchronous execution (default)
-    - celery_executor: Dispatch via Celery .delay() / .apply_async()
-    - django_q_executor: Dispatch via django-q's async_task()
-    - django_tasks_executor: Dispatch via Django 6+'s built-in tasks framework
-    - huey_executor: Dispatch via Huey's .schedule()
-    - dramatiq_executor: Dispatch via Dramatiq's .send()
+    Built-in executors are available in ``airlock.integrations.executors``:
+
+    - ``sync_executor``: Synchronous execution (default)
+    - ``celery_executor``: Dispatch via Celery ``.delay()`` / ``.apply_async()``
+    - ``django_q_executor``: Dispatch via django-q's ``async_task()``
+    - ``django_tasks_executor``: Dispatch via Django 6+'s built-in tasks framework
+    - ``huey_executor``: Dispatch via Huey's ``.schedule()``
+    - ``dramatiq_executor``: Dispatch via Dramatiq's ``.send()``
 
     Custom executors can be written by implementing this protocol.
     """
@@ -276,20 +276,19 @@ class UsageError(AirlockError):
 
 
 class PolicyEnqueueError(UsageError):
-    """Raised when enqueue() is called from within a policy callback."""
+    """Raised when `enqueue()` is called from within a policy callback."""
 
     pass
 
 
 class NoScopeError(UsageError):
-    """
-    Raised when enqueue() is called with no active scope.
+    """Raised when `enqueue()` is called with no active scope.
 
     This is intentional: airlock requires explicit lifecycle boundaries.
-    Side effects should not escape silently. Every enqueue() must occur
-    within a scope() that decides when (and whether) effects dispatch.
+    Side effects should not escape silently. Every `enqueue()` must occur
+    within a `scope()` that decides when (and whether) effects dispatch.
 
-    If you're seeing this error, wrap your code in an airlock.scope():
+    If you're seeing this error, wrap your code in an `airlock.scope()`::
 
         with airlock.scope():
             do_stuff()  # enqueue() calls are now valid
@@ -317,8 +316,7 @@ class PolicyViolation(AirlockError):
 
 @runtime_checkable
 class Policy(Protocol):
-    """
-    Protocol for side effect policies.
+    """Protocol for side effect policies.
 
     Policies are per-intent boolean gates that decide which intents dispatch.
     This design enforces FIFO order by construction - policies can filter
@@ -326,17 +324,17 @@ class Policy(Protocol):
 
     Methods:
         on_enqueue: Called when an intent is added to the buffer. Use for
-            observation, logging, or raising PolicyViolation for hard blocks.
-        allows: Called at flush time for each intent. Return True to dispatch,
-            False to silently drop.
+            observation, logging, or raising `PolicyViolation` for hard blocks.
+        allows: Called at flush time for each intent. Return ``True`` to dispatch,
+            ``False`` to silently drop.
     """
 
     def on_enqueue(self, intent: Intent) -> None:
-        """Called when an intent is added to the buffer. Observe or raise."""
+        """Called when an intent is added to the buffer. Observe or raise `PolicyViolation`."""
         ...
 
     def allows(self, intent: Intent) -> bool:
-        """Called at flush time. Return True to dispatch, False to drop."""
+        """Called at flush time. Return ``True`` to dispatch, ``False`` to drop."""
         ...
 
 
@@ -441,13 +439,12 @@ def _execute(intent: Intent) -> None:
 
 
 class Scope:
-    """
-    A lifecycle scope that buffers and controls side effect intents.
+    """A lifecycle scope that buffers and controls side effect intents.
 
     Args:
-        policy: Policy controlling what intents are allowed
+        policy: Policy controlling what intents are allowed.
         executor: Callable that executes intents. Defaults to synchronous execution.
-            See airlock.integrations.executors for available executors.
+            See ``airlock.integrations.executors`` for available executors.
     """
 
     def __init__(
@@ -497,14 +494,13 @@ class Scope:
         return list(self._own_intents_cache)
 
     def enter(self) -> "Scope":
-        """
-        Activate this scope.
+        """Activate this scope.
 
-        Sets the context var so enqueue() routes intents to this scope.
-        Must call exit() when done, before calling flush() or discard().
+        Sets the context var so `enqueue()` routes intents to this scope.
+        Must call `exit()` when done, before calling `flush()` or `discard()`.
 
         Returns:
-            self (for chaining)
+            Self for chaining.
 
         Raises:
             ScopeStateError: If this scope is already active.
@@ -519,11 +515,10 @@ class Scope:
         return self
 
     def exit(self) -> None:
-        """
-        Deactivate this scope.
+        """Deactivate this scope.
 
-        Resets the context var to the previous scope (or None).
-        Must be called before flush() or discard().
+        Resets the context var to the previous scope (or ``None``).
+        Must be called before `flush()` or `discard()`.
 
         Raises:
             ScopeStateError: If this scope is not active.
@@ -534,59 +529,60 @@ class Scope:
         self._token = None
 
     def should_flush(self, error: BaseException | None) -> bool:
-        """
-        Decide terminal action when context manager exits.
+        """Decide terminal action when context manager exits.
 
         Override this method in subclasses to customize flush/discard behavior.
 
         Args:
-            error: The exception that caused exit, or None for normal exit.
+            error: The exception that caused exit, or ``None`` for normal exit.
 
         Returns:
-            True to flush (dispatch intents), False to discard.
+            ``True`` to flush (dispatch intents), ``False`` to discard.
 
         Default behavior: flush on success, discard on error.
         """
         return error is None
 
     def before_descendant_flushes(self, exiting_scope: "Scope", intents: list[Intent]) -> list[Intent]:
-        """
-        Called when a nested scope exits and attempts to flush.
+        """Called when a nested scope exits and attempts to flush.
 
         This method is called during the parent chain walk, allowing each ancestor
         to decide which intents the exiting scope may flush vs which to capture.
 
         Args:
-            exiting_scope: The nested scope that is exiting (may be deeply nested)
-            intents: The list of intents the exiting scope wants to flush
+            exiting_scope: The nested scope that is exiting (may be deeply nested).
+            intents: The list of intents the exiting scope wants to flush.
 
         Returns:
             The list of intents to allow through (the exiting scope will flush these).
             Any intents not in the returned list are captured into this scope's buffer.
 
-            IMPORTANT: Must return a list. Returning None or other types raises TypeError.
+            IMPORTANT: Must return a list. Returning ``None`` or other types raises
+            ``TypeError``.
 
         Raises:
             TypeError: If return value is not a list.
 
-            Any other exception raised by this method will propagate and abort the flush,
-            potentially leaving the scope in a partially-modified state.
+            Any other exception raised by this method will propagate and abort the
+            flush, potentially leaving the scope in a partially-modified state.
 
-        Default behavior: Capture all intents (return []).
+        Default behavior: Capture all intents (return ``[]``).
         This is the controlled default - outer scopes have authority over nested scopes.
 
         Override this method to allow nested scopes to flush independently:
-            - Return [] to capture all intents (default, controlled)
-            - Return intents to allow all (independent nested scopes)
-            - Return filtered list to selectively capture
 
-        Notes:
-            - Do not mutate the `intents` list. Return a new list or slice.
+        - Return ``[]`` to capture all intents (default, controlled)
+        - Return ``intents`` to allow all (independent nested scopes)
+        - Return filtered list to selectively capture
+
+        Note:
+            - Do not mutate the ``intents`` list. Return a new list or slice.
             - Returning intents not in the input list has undefined behavior.
-            - In multi-level nesting, `exiting_scope` is always the innermost scope,
+            - In multi-level nesting, ``exiting_scope`` is always the innermost scope,
               not necessarily the immediate child. Intermediate scopes haven't exited yet.
 
-        Example:
+        Example::
+
             class IndependentScope(Scope):
                 def before_descendant_flushes(self, exiting_scope, intents):
                     return intents  # Allow nested scopes to flush independently
@@ -599,7 +595,7 @@ class Scope:
         return []  # Controlled default: capture everything
 
     def _add(self, intent: Intent) -> None:
-        """Add an intent to the buffer. Internal - use enqueue() instead."""
+        """Add an intent to the buffer. Internal - use `enqueue()` instead."""
         if self._flushed or self._discarded:
             raise ScopeStateError(
                 f"Cannot add intents to a scope that has been "
@@ -617,8 +613,7 @@ class Scope:
         self._own_intents_cache = None  # Invalidate cache
 
     def flush(self) -> list[Intent]:
-        """
-        Flush all buffered intents - apply policy and dispatch.
+        """Flush all buffered intents - apply policy and dispatch.
 
         Filters intents through policies (both local and scope-level), then dispatches
         them in FIFO order using the configured executor.
@@ -628,8 +623,9 @@ class Scope:
 
         Raises:
             ScopeStateError: If scope is already flushed, discarded, or still active.
-            Any exception raised by the executor during dispatch (fail-fast behavior).
-                See _dispatch_all() docstring for details on exception handling.
+            Exception: Any exception raised by the executor during dispatch (fail-fast
+                behavior). See `_dispatch_all()` docstring for details on exception
+                handling.
 
         Note:
             The scope is marked as flushed even if an executor raises an exception.
@@ -675,13 +671,13 @@ class Scope:
         return intents_to_dispatch
 
     def _walk_parent_chain_for_approval(self, intents: list[Intent]) -> list[Intent]:
-        """
-        Walk up the parent chain, calling before_descendant_flushes on each parent.
+        """Walk up the parent chain, calling `before_descendant_flushes` on each parent.
 
         Each parent decides which intents this scope is allowed to flush.
         Intents not approved are captured into the parent's buffer.
 
-        Returns the list of intents that survived all parent approvals.
+        Returns:
+            The list of intents that survived all parent approvals.
         """
         if self._parent is None:
             # No parent - we're the root scope, can flush everything
@@ -718,18 +714,20 @@ class Scope:
         return current_intents
 
     def _dispatch_all(self, intents: list[Intent]) -> None:
-        """
-        Dispatch intents using the configured executor.
+        """Dispatch intents using the configured executor.
 
-        Subclasses may override to customize dispatch timing (e.g., defer to on_commit).
-        The executor itself determines HOW intents are executed (sync, Celery, django-q, etc.).
+        Subclasses may override to customize dispatch timing (e.g., defer to
+        ``on_commit``). The executor itself determines HOW intents are executed
+        (sync, Celery, django-q, etc.).
 
         Exception behavior (fail-fast):
-            If an executor raises an exception while dispatching an intent, the exception
-            propagates immediately and remaining intents in the queue are NOT dispatched.
-            This is intentional - executor failures are out of scope.
+            If an executor raises an exception while dispatching an intent, the
+            exception propagates immediately and remaining intents in the queue
+            are NOT dispatched. This is intentional - executor failures are out
+            of scope.
 
-            Example:
+            Example::
+
                 with scope():
                     enqueue(task_a)  # succeeds
                     enqueue(task_b)  # executor raises during flush
@@ -739,9 +737,10 @@ class Scope:
                 # task_b raises exception (e.g., broker connection failure)
                 # task_c is never attempted (fail-fast)
 
-            For async executors (Celery, django-q, etc.), dispatch exceptions are rare -
-            they typically only occur when the broker/queue is unreachable. The actual
-            task execution happens asynchronously, so task failures are not visible here.
+            For async executors (Celery, django-q, etc.), dispatch exceptions are
+            rare - they typically only occur when the broker/queue is unreachable.
+            The actual task execution happens asynchronously, so task failures are
+            not visible here.
         """
         for intent in intents:
             self._executor(intent)
@@ -771,34 +770,35 @@ def scope(
     _cls: type[Scope] | None = None,
     **kwargs,
 ) -> Iterator[Scope]:
-    """
-    Context manager defining a lifecycle boundary for side effects.
+    """Context manager defining a lifecycle boundary for side effects.
 
     Args:
         policy: Policy controlling what intents are allowed. Defaults to configured
-            policy or AllowAll if not configured.
-        _cls: Scope class to use. Defaults to configured scope_cls or Scope if not
-            configured. Subclass Scope and override should_flush() to customize
-            flush/discard behavior.
-        **kwargs: Additional arguments passed to Scope constructor (e.g., executor).
+            policy or `AllowAll` if not configured.
+        _cls: `Scope` class to use. Defaults to configured ``scope_cls`` or `Scope`
+            if not configured. Subclass `Scope` and override `should_flush()` to
+            customize flush/discard behavior.
+        **kwargs: Additional arguments passed to `Scope` constructor (e.g., executor).
 
-    Common kwargs:
+    Keyword Args:
         executor: Callable that executes intents. Defaults to configured executor
             or synchronous execution if not configured.
-            See airlock.integrations.executors for available executors.
+            See ``airlock.integrations.executors`` for available executors.
 
     Behavior:
-        - On normal exit: calls flush() if should_flush(None) returns True
-        - On exception: calls flush() if should_flush(error) returns True, else discard()
+        - On normal exit: calls `flush()` if `should_flush(None)` returns ``True``
+        - On exception: calls `flush()` if `should_flush(error)` returns ``True``,
+          else `discard()`
 
-    The default Scope.should_flush() returns True on success, False on error.
-    Subclass Scope to customize this behavior.
+    The default `Scope.should_flush()` returns ``True`` on success, ``False`` on error.
+    Subclass `Scope` to customize this behavior.
 
     Note:
         Arguments passed explicitly always override configured defaults.
-        Use airlock.configure() to set application-wide defaults.
+        Use `airlock.configure()` to set application-wide defaults.
 
-    Examples:
+    Example::
+
         # Use celery executor
         from airlock.integrations.executors.celery import celery_executor
         with airlock.scope(executor=celery_executor):
@@ -842,21 +842,21 @@ def scoped(
     _cls: type[Scope] | None = None,
     **kwargs,
 ) -> Callable[[Callable], Callable]:
-    """
-    Decorator that wraps a function in an airlock scope.
+    """Decorator that wraps a function in an airlock scope.
 
     This is a convenience for wrapping task functions, command handlers,
     or any callable that should run inside a scope.
 
     Args:
         policy: Policy controlling what intents are allowed. Defaults to configured
-            policy or AllowAll if not configured.
-        _cls: Scope class to use. Defaults to configured scope_cls or Scope if not
-            configured. Subclass Scope and override should_flush() to customize
-            flush/discard behavior.
-        **kwargs: Additional arguments passed to Scope constructor (e.g., executor).
+            policy or `AllowAll` if not configured.
+        _cls: `Scope` class to use. Defaults to configured ``scope_cls`` or `Scope`
+            if not configured. Subclass `Scope` and override `should_flush()` to
+            customize flush/discard behavior.
+        **kwargs: Additional arguments passed to `Scope` constructor (e.g., executor).
 
-    Usage:
+    Example::
+
         @airlock.scoped()
         def my_task():
             airlock.enqueue(send_email, user_id=123)
@@ -900,13 +900,13 @@ def scoped(
 
 @contextmanager
 def policy(p: Policy) -> Iterator[None]:
-    """
-    Context manager for local policy contexts.
+    """Context manager for local policy contexts.
 
     Intents enqueued within this context capture the policy and apply it
     at flush time. This enables local control without nested buffers.
 
-    Example:
+    Example::
+
         with airlock.scope():
             airlock.enqueue(task_a)  # will dispatch
 
@@ -918,11 +918,12 @@ def policy(p: Policy) -> Iterator[None]:
     Unlike nested scopes, all intents go to the same buffer. The local
     policy is metadata that affects dispatch decisions at flush.
 
-    NOTE: This does NOT create a new buffer or nested scope. All intents
-    from within this context still go to the enclosing scope's buffer.
-    The policy is captured on each intent at enqueue time and evaluated
-    at flush. This is intentional - it preserves a single dispatch boundary
-    while allowing fine-grained control over which intents survive.
+    Note:
+        This does NOT create a new buffer or nested scope. All intents
+        from within this context still go to the enclosing scope's buffer.
+        The policy is captured on each intent at enqueue time and evaluated
+        at flush. This is intentional - it preserves a single dispatch boundary
+        while allowing fine-grained control over which intents survive.
     """
     current_stack = _policy_stack.get()
     new_stack = current_stack + (p,)
@@ -945,30 +946,29 @@ def enqueue(
     _dispatch_options: dict[str, Any] | None = None,
     **kwargs: Any,
 ) -> None:
-    """
-    Express intent to perform a side effect.
+    """Express intent to perform a side effect.
 
     This is the ONLY function domain code should call.
 
     Args:
-        task: The callable to execute (Celery task, function, etc.)
+        task: The callable to execute (Celery task, function, etc.).
         *args: Positional arguments for the task.
         _origin: Optional origin metadata for debugging/observability.
             This is NOT auto-detected - it must be set explicitly if needed.
             Integrations (Django middleware, Celery task wrapper) may set this
             to provide context like request path, task name, or trace/span IDs.
             For structured observability, prefer OpenTelemetry span context.
-        _dispatch_options: Optional dispatch options (countdown, queue, etc.)
-            Passed through to the task queue backend (e.g., Celery's apply_async).
+        _dispatch_options: Optional dispatch options (countdown, queue, etc.).
+            Passed through to the task queue backend (e.g., Celery's ``apply_async``).
             Ignored for plain callables.
         **kwargs: Keyword arguments for the task.
 
     Raises:
         PolicyEnqueueError: If called from within a policy callback.
         NoScopeError: If no scope is active.
-        PolicyViolation: If a policy explicitly rejects the intent via on_enqueue().
-            For example, AssertNoEffects policy raises PolicyViolation on any enqueue.
-            When this happens, the intent is NOT added to the buffer.
+        PolicyViolation: If a policy explicitly rejects the intent via `on_enqueue()`.
+            For example, `AssertNoEffects` policy raises `PolicyViolation` on any
+            enqueue. When this happens, the intent is NOT added to the buffer.
     """
     # INVARIANT: Policies do not enqueue
     if _in_policy.get():
