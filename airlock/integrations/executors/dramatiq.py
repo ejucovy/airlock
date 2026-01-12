@@ -1,7 +1,6 @@
-"""
-Dramatiq executor for airlock.
+"""Dramatiq executor for airlock.
 
-Dispatches tasks via Dramatiq's .send() or .send_with_options() methods.
+Dispatches tasks via Dramatiq's ``.send()`` or ``.send_with_options()`` methods.
 Falls back to synchronous execution for plain callables.
 """
 
@@ -9,11 +8,10 @@ from airlock import Intent
 
 
 def dramatiq_executor(intent: Intent) -> None:
-    """
-    Execute intent via Dramatiq task queue.
+    """Execute intent via Dramatiq task queue.
 
-    Passes dispatch_options directly to send_with_options() or ignores them for .send().
-    Falls back to synchronous execution for plain callables.
+    Passes ``dispatch_options`` directly to ``send_with_options()`` or ignores
+    them for ``.send()``. Falls back to synchronous execution for plain callables.
     """
     task = intent.task
     opts = intent.dispatch_options or {}

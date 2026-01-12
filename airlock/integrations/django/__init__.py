@@ -1,39 +1,43 @@
-"""
-Django integration for airlock.
+"""Django integration for airlock.
 
 Provides:
-- AirlockConfig: AppConfig for auto-configuration via INSTALLED_APPS
-- DjangoScope: Defers dispatch to transaction.on_commit()
-- AirlockMiddleware: Wraps requests in a scope
-- get_executor(): Helper to select executor based on EXECUTOR setting
 
-For management commands and Celery tasks, use @airlock.scoped() decorator.
+- `AirlockConfig`: AppConfig for auto-configuration via ``INSTALLED_APPS``
+- `DjangoScope`: Defers dispatch to ``transaction.on_commit()``
+- `AirlockMiddleware`: Wraps requests in a scope
+- `get_executor()`: Helper to select executor based on ``EXECUTOR`` setting
 
-Quick Start:
+For management commands and Celery tasks, use ``@airlock.scoped()`` decorator.
+
+Quick Start::
+
     # settings.py
     INSTALLED_APPS = [
         ...
         "airlock.integrations.django",  # Auto-configures airlock
     ]
 
-    This automatically configures airlock.scope() and @airlock.scoped() to use:
-    - DjangoScope (defers dispatch to transaction.on_commit)
-    - Policy and executor from AIRLOCK settings
+This automatically configures ``airlock.scope()`` and ``@airlock.scoped()`` to use:
 
-Settings (in settings.py):
+- `DjangoScope` (defers dispatch to ``transaction.on_commit``)
+- Policy and executor from ``AIRLOCK`` settings
+
+Settings (in ``settings.py``)::
+
     AIRLOCK = {
         "POLICY": "airlock.AllowAll",  # Dotted path or callable
         "EXECUTOR": None,              # Dotted path to executor callable
         "SCOPE": "airlock.integrations.django.DjangoScope",  # Scope class for middleware
     }
 
-EXECUTOR is a dotted import path to an executor callable:
-    - None (default): sync_executor (synchronous execution)
-    - "airlock.integrations.executors.celery.celery_executor"
-    - "airlock.integrations.executors.django_q.django_q_executor"
-    - "airlock.integrations.executors.huey.huey_executor"
-    - "airlock.integrations.executors.dramatiq.dramatiq_executor"
-    - "myapp.executors.custom_executor" (or any custom executor)
+``EXECUTOR`` is a dotted import path to an executor callable:
+
+- ``None`` (default): ``sync_executor`` (synchronous execution)
+- ``"airlock.integrations.executors.celery.celery_executor"``
+- ``"airlock.integrations.executors.django_q.django_q_executor"``
+- ``"airlock.integrations.executors.huey.huey_executor"``
+- ``"airlock.integrations.executors.dramatiq.dramatiq_executor"``
+- ``"myapp.executors.custom_executor"`` (or any custom executor)
 """
 
 from functools import wraps
@@ -73,7 +77,7 @@ def import_string(dotted_path: str) -> Any:
 
 
 def get_policy():
-    """Get the policy instance based on POLICY setting."""
+    """Get the policy instance based on ``POLICY`` setting."""
     policy_setting = get_setting("POLICY")
     if callable(policy_setting):
         return policy_setting()
@@ -89,13 +93,13 @@ def get_policy():
 
 
 def get_executor() -> Executor:
-    """
-    Get the appropriate executor based on EXECUTOR setting.
+    """Get the appropriate executor based on ``EXECUTOR`` setting.
 
-    EXECUTOR should be a dotted import path to an executor callable,
-    or None for synchronous execution.
+    ``EXECUTOR`` should be a dotted import path to an executor callable,
+    or ``None`` for synchronous execution.
 
-    Examples:
+    Example::
+
         AIRLOCK = {
             'EXECUTOR': 'airlock.integrations.executors.django_q.django_q_executor',
         }
@@ -106,10 +110,10 @@ def get_executor() -> Executor:
         }
 
     Returns:
-        Executor function based on EXECUTOR setting
+        Executor function based on ``EXECUTOR`` setting.
 
     Raises:
-        ImportError: If the executor module/callable cannot be imported
+        ImportError: If the executor module/callable cannot be imported.
     """
     executor_path = get_setting("EXECUTOR")
 
@@ -123,7 +127,7 @@ def get_executor() -> Executor:
 
 
 def get_scope_class():
-    """Get the scope class to use, based on SCOPE setting."""
+    """Get the scope class to use, based on ``SCOPE`` setting."""
     scope_class_path = get_setting("SCOPE")
     return import_string(scope_class_path)
 
@@ -134,17 +138,16 @@ def get_scope_class():
 
 
 class DjangoScope(Scope):
-    """
-    A Django-specific scope that respects database transactions.
+    """A Django-specific scope that respects database transactions.
 
-    Defers dispatch to transaction.on_commit() so side effects only
+    Defers dispatch to ``transaction.on_commit()`` so side effects only
     fire after the transaction commits successfully. When called outside
-    a transaction (autocommit mode), on_commit executes immediately.
+    a transaction (autocommit mode), ``on_commit`` executes immediately.
 
-    If no executor is provided, uses get_executor() to select one based
-    on EXECUTOR setting.
+    If no executor is provided, uses `get_executor()` to select one based
+    on ``EXECUTOR`` setting.
 
-    Subclass and override schedule_dispatch() to customize dispatch timing.
+    Subclass and override `schedule_dispatch()` to customize dispatch timing.
     """
 
     def __init__(
@@ -160,19 +163,18 @@ class DjangoScope(Scope):
         super().__init__(executor=executor, **kwargs)
 
     def schedule_dispatch(self, callback: Callable[[], None]) -> None:
-        """
-        Schedule the dispatch callback. Override to customize dispatch timing.
+        """Schedule the dispatch callback. Override to customize dispatch timing.
 
-        By default, uses transaction.on_commit(robust=True). This defers
+        By default, uses ``transaction.on_commit(robust=True)``. This defers
         dispatch until the transaction commits, or runs immediately if
         outside a transaction (autocommit mode).
 
-        Override to change timing, robust behavior, or skip on_commit entirely.
+        Override to change timing, robust behavior, or skip ``on_commit`` entirely.
         """
         transaction.on_commit(callback, robust=True)
 
     def _dispatch_all(self, intents: list[Intent]) -> None:
-        """Dispatch each intent via schedule_dispatch(), orthogonally."""
+        """Dispatch each intent via `schedule_dispatch()`, orthogonally."""
         for intent in intents:
             # Wrap in lambda to give Django's on_commit logging a __qualname__
             self.schedule_dispatch(lambda i=intent: self._executor(i))
@@ -184,21 +186,25 @@ class DjangoScope(Scope):
 
 
 class AirlockMiddleware:
-    """
-    Django middleware that wraps each request in an airlock scope.
+    """Django middleware that wraps each request in an airlock scope.
 
     By default:
+
     - 1xx/2xx/3xx responses: flush
     - 4xx/5xx responses or exceptions: discard
 
-    Subclass and override should_flush() for custom behavior.
+    Subclass and override `should_flush()` for custom behavior.
     """
 
     def __init__(self, get_response: Callable) -> None:
         self.get_response = get_response
 
     def should_flush(self, request, response) -> bool:
-        """Override to customize flush behavior."""
+        """Override to customize flush behavior.
+
+        Returns:
+            ``True`` to flush (dispatch intents), ``False`` to discard.
+        """
         return response.status_code < 400
 
     def __call__(self, request):

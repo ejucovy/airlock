@@ -1,11 +1,11 @@
-"""
-Celery integration for airlock.
+"""Celery integration for airlock.
 
 Provides:
-- LegacyTaskShim: Migration helper for converting .delay() calls
-- install_global_intercept: Patch all tasks to route through airlock
 
-For wrapping task execution, use @airlock.scoped() decorator:
+- `LegacyTaskShim`: Migration helper for converting ``.delay()`` calls
+- `install_global_intercept`: Patch all tasks to route through airlock
+
+For wrapping task execution, use ``@airlock.scoped()`` decorator::
 
     @app.task
     @airlock.scoped()
@@ -26,12 +26,12 @@ if TYPE_CHECKING:
 
 
 class LegacyTaskShim(Task):
-    """
-    Migration helper that intercepts .delay() and routes through airlock.
+    """Migration helper that intercepts ``.delay()`` and routes through airlock.
 
-    Emits DeprecationWarning to encourage updating call sites.
+    Emits `DeprecationWarning` to encourage updating call sites.
 
-    Usage:
+    Example::
+
         @app.task(base=LegacyTaskShim)
         def old_task(...):
             ...
@@ -82,10 +82,9 @@ _wrap_execution = False
 
 
 def _intercepted_delay(self, *args: Any, **kwargs: Any) -> Any:
-    """
-    Replacement for Task.delay() that routes through airlock when in scope.
+    """Replacement for ``Task.delay()`` that routes through airlock when in scope.
 
-    Always emits a deprecation warning to encourage migration to airlock.enqueue().
+    Always emits a deprecation warning to encourage migration to ``airlock.enqueue()``.
     """
     scope = get_current_scope()
 
@@ -116,10 +115,9 @@ def _intercepted_apply_async(
     kwargs: dict[str, Any] | None = None,
     **options: Any,
 ) -> Any:
-    """
-    Replacement for Task.apply_async() that routes through airlock when in scope.
+    """Replacement for ``Task.apply_async()`` that routes through airlock when in scope.
 
-    Always emits a deprecation warning to encourage migration to airlock.enqueue().
+    Always emits a deprecation warning to encourage migration to ``airlock.enqueue()``.
     """
     scope = get_current_scope()
 
@@ -150,10 +148,9 @@ def _intercepted_apply_async(
 
 
 def _intercepted_call(self, *args: Any, **kwargs: Any) -> Any:
-    """
-    Replacement for Task.__call__() that wraps execution in an airlock scope.
+    """Replacement for ``Task.__call__()`` that wraps execution in an airlock scope.
 
-    This ensures that any .delay() calls made during task execution are
+    This ensures that any ``.delay()`` calls made during task execution are
     intercepted and buffered, with flush on success and discard on exception.
     """
     with airlock.scope(policy=AllowAll()):
@@ -165,24 +162,25 @@ def install_global_intercept(
     *,
     wrap_task_execution: bool = True,
 ) -> None:
-    """
-    Install global interception of .delay() and .apply_async() calls.
+    """Install global interception of ``.delay()`` and ``.apply_async()`` calls.
 
-    When a scope is active, all .delay()/.apply_async() calls are routed
-    through airlock.enqueue(). When no scope is active, calls emit a
+    When a scope is active, all ``.delay()``/``.apply_async()`` calls are routed
+    through ``airlock.enqueue()``. When no scope is active, calls emit a
     deprecation warning and pass through normally.
 
-    With wrap_task_execution=True (default), task execution is also wrapped
+    With ``wrap_task_execution=True`` (default), task execution is also wrapped
     in an airlock scope. This means:
+
     - Tasks automatically get an airlock scope
-    - Any .delay() calls within tasks are intercepted and buffered
+    - Any ``.delay()`` calls within tasks are intercepted and buffered
     - On task success: buffered intents flush
     - On task exception: buffered intents are discarded
 
     This is a monkey-patch. Call it once at app startup, after Celery is
     configured but before tasks are invoked.
 
-    Usage:
+    Example::
+
         # celery.py or conftest.py
         from airlock.integrations.celery import install_global_intercept
 
@@ -194,8 +192,8 @@ def install_global_intercept(
 
     Args:
         app: Optional Celery app. Currently unused but reserved for future
-             per-app scoping.
-        wrap_task_execution: If True (default), wrap Task.__call__ in an
+            per-app scoping.
+        wrap_task_execution: If ``True`` (default), wrap ``Task.__call__`` in an
             airlock scope so tasks automatically buffer and flush effects.
 
     Raises:
@@ -227,9 +225,7 @@ def install_global_intercept(
 
 
 def uninstall_global_intercept() -> None:
-    """
-    Remove global interception. Mainly for testing.
-    """
+    """Remove global interception. Mainly for testing."""
     global _original_delay, _original_apply_async, _original_call, _installed, _wrap_execution
 
     if not _installed:

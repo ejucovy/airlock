@@ -1,12 +1,13 @@
-"""
-Flake8 plugin for detecting direct .delay() and .apply_async() calls.
+"""Flake8 plugin for detecting direct ``.delay()`` and ``.apply_async()`` calls.
 
-Flags calls that bypass airlock, encouraging use of airlock.enqueue().
+Flags calls that bypass airlock, encouraging use of ``airlock.enqueue()``.
 
-Usage:
+Usage::
+
     flake8 src/
 
-Suppression:
+Suppression::
+
     task.delay(arg)  # noqa: AIR001
 """
 
@@ -26,7 +27,7 @@ class AirlockChecker:
         self.tree = tree
 
     def run(self) -> Iterator[tuple[int, int, str, type]]:
-        """Yield lint errors for direct .delay() and .apply_async() calls."""
+        """Yield lint errors for direct ``.delay()`` and ``.apply_async()`` calls."""
         for node in ast.walk(self.tree):
             if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
                 if node.func.attr in ("delay", "apply_async"):
