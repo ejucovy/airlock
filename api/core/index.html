@@ -1116,43 +1116,10 @@ to decide which intents the exiting scope may flush vs which to capture.</p>
    (airlock.Intent)" href="#airlock.Intent">Intent</a>]</code>
               –
               <div class="doc-md-description">
-                <p>The list of intents to allow through (the exiting scope will flush these).</p>
-              </div>
-            </li>
-            <li>
-                  <code><span title="list">list</span>[<a class="autorefs autorefs-internal" title="Intent
-
-
-  
-      dataclass
-   (airlock.Intent)" href="#airlock.Intent">Intent</a>]</code>
-              –
-              <div class="doc-md-description">
-                <p>Any intents not in the returned list are captured into this scope's buffer.</p>
-              </div>
-            </li>
-            <li>
-<b><code>IMPORTANT</code></b>(                  <code><span title="list">list</span>[<a class="autorefs autorefs-internal" title="Intent
-
-
-  
-      dataclass
-   (airlock.Intent)" href="#airlock.Intent">Intent</a>]</code>
-)              –
-              <div class="doc-md-description">
-                <p>Must return a list. Returning <code>None</code> or other types raises</p>
-              </div>
-            </li>
-            <li>
-                  <code><span title="list">list</span>[<a class="autorefs autorefs-internal" title="Intent
-
-
-  
-      dataclass
-   (airlock.Intent)" href="#airlock.Intent">Intent</a>]</code>
-              –
-              <div class="doc-md-description">
-                <p><code>TypeError</code>.</p>
+                <p>list[Intent]: The list of intents to allow through (the exiting scope will
+flush these). Any intents not in the returned list are captured into
+this scope's buffer. <strong>Important</strong>: Must return a list; returning
+<code>None</code> or other types raises <code>TypeError</code>.</p>
               </div>
             </li>
         </ul>
@@ -1175,7 +1142,9 @@ to decide which intents the exiting scope may flush vs which to capture.</p>
                   <code><span title="TypeError">TypeError</span></code>
               –
               <div class="doc-md-description">
-                <p>If return value is not a list.</p>
+                <p>If return value is not a list. Any other exception raised by
+this method will propagate and abort the flush, potentially leaving
+the scope in a partially-modified state.</p>
               </div>
             </li>
         </ul>
