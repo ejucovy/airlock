@@ -1,7 +1,7 @@
 """
 airlock - Policy-controlled lifecycle boundary for side effects.
 
-Buffer side effects. Control what escapes. ~200 lines.
+Buffer side effects. Control what escapes.
 
 Usage:
     import airlock
