@@ -1,18 +1,23 @@
 # Celery Integration
 
-Airlock integrates with Celery to buffer and control task dispatch.
+Airlock provides first-class integration with Celery, giving you control over when and how tasks are dispatched. You can use Airlock to buffer task dispatch until your code completes successfully, automatically discard tasks when errors occur, and route tasks through Celery's queue system.
 
-## Quickstart
+There are two main integration points:
 
-### Install
+1. **Task execution scoping** - Wrap Celery task execution in Airlock scopes so that any side effects enqueued during a task are buffered and only dispatched when the task completes successfully.
+2. **Task dispatch via Celery** - Use Celery as the executor so that `airlock.enqueue()` dispatches tasks through Celery's queue system.
+
+These can be used independently or together.
+
+## Installation
 
 ```bash
 pip install airlock celery
 ```
 
-### Wrap Task Execution
+## Task Execution Scoping
 
-Use `@airlock.scoped()` decorator to auto-scope task execution:
+The `@airlock.scoped()` decorator wraps task execution in an Airlock scope. Any side effects enqueued during the task are buffered until the task completes, then dispatched. If the task raises an exception, all buffered effects are discarded.
 
 ```python
 from celery import Celery
@@ -34,9 +39,9 @@ def process_order(order_id):
     # Discards if task raises exception
 ```
 
-### Dispatch via Celery
+## Dispatching via Celery
 
-Use `celery_executor` to dispatch intents through Celery:
+To dispatch tasks through Celery's queue system, use the `celery_executor`. When you pass this executor to a scope, any calls to `airlock.enqueue()` will dispatch via Celery's `.delay()` method when the scope exits.
 
 ```python
 from airlock.integrations.executors.celery import celery_executor
@@ -44,12 +49,12 @@ from airlock.integrations.executors.celery import celery_executor
 with airlock.scope(executor=celery_executor):
     airlock.enqueue(send_email, user_id=123)
     airlock.enqueue(process_data, item_id=456)
-# Dispatches via .delay()
+# Both tasks dispatch via .delay() when scope exits
 ```
 
-### Combining Both
+## Combining Both Patterns
 
-Task execution scoping + Celery dispatch:
+You can use task execution scoping and Celery dispatch together. This is a common pattern where tasks are both scoped (so their effects are buffered) and dispatched via Celery:
 
 ```python
 @app.task
@@ -69,7 +74,9 @@ with airlock.scope(executor=celery_executor):
 # When it runs, send_email is also queued via Celery
 ```
 
-### Pass Celery Options
+## Celery Options
+
+You can pass Celery-specific options like `countdown`, `queue`, and `priority` via the `_dispatch_options` parameter:
 
 ```python
 airlock.enqueue(
@@ -83,11 +90,15 @@ airlock.enqueue(
 )
 ```
 
+These options are passed through to Celery's `.apply_async()` method.
+
 ## Migrating Existing Code
+
+If you have an existing codebase with direct `.delay()` calls, Airlock provides migration tools to help you transition gradually without a big-bang rewrite.
 
 ### Selective Migration
 
-Apply `LegacyTaskShim` to tasks you're migrating:
+For smaller codebases or when you want fine-grained control, apply `LegacyTaskShim` to individual tasks you're migrating:
 
 ```python
 from airlock.integrations.celery import LegacyTaskShim
@@ -106,7 +117,7 @@ with airlock.scope():
 
 ### Blanket Migration
 
-For large codebases, intercept all tasks globally:
+For large codebases with many `.delay()` calls, you can intercept all tasks globally with a single line of code:
 
 ```python
 # celery.py
@@ -137,13 +148,13 @@ Outside scope:
 my_task.delay(123)  # Passes through to Celery, warns
 ```
 
-⚠️ **Global intercept is a migration tool, not steady state.** Use it to migrate legacy code, but prefer `airlock.enqueue()` for new code.
+**Note:** Global intercept is a migration tool, not steady-state architecture. Use it to migrate legacy code, but prefer `airlock.enqueue()` for new code.
 
-[Full migration guide →](../migration/from-direct-delay.md)
+[Full migration guide](migration.md)
 
-## With Django
+## Using with Django
 
-Add to INSTALLED_APPS for automatic configuration:
+If you're using Django, the Airlock Django integration provides automatic configuration for Celery. Add Airlock to your `INSTALLED_APPS` and configure it to use the Celery executor:
 
 ```python
 # settings.py
@@ -162,7 +173,7 @@ AIRLOCK = {
 }
 ```
 
-Now every request auto-scopes and dispatches via Celery:
+With this configuration, every request is automatically scoped, and tasks dispatch via Celery when the request completes successfully:
 
 ```python
 import airlock
@@ -175,7 +186,7 @@ def checkout_view(request):
 # Both tasks dispatch via Celery after transaction.on_commit()
 ```
 
-And Celery tasks can use `@airlock.scoped()` to get the same Django-configured behavior:
+Celery tasks can also use `@airlock.scoped()` to get the same Django-configured behavior, including transaction-aware dispatch:
 
 ```python
 @app.task
@@ -185,3 +196,5 @@ def process_order(order_id):
     order = Order.objects.get(id=order_id)
     airlock.enqueue(send_notification, order_id=order_id)
 ```
+
+For more details on the Django integration, see the [Django documentation](../django/index.md).
