@@ -86,7 +86,7 @@ Read more: [Django integration](django/index.md) | [Celery integration](celery/i
 ## Installation
 
 ```bash
-pip install airlock
+pip install airlock-py
 ```
 
 **Using gevent or eventlet?** Ensure you have `greenlet>=1.0` for correct context isolation. See [Design Invariants](understanding/design-invariants.md#4-concurrent-units-of-work-have-isolated-scopes) for details.

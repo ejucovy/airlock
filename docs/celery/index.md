@@ -12,7 +12,7 @@ These can be used independently or together.
 ## Installation
 
 ```bash
-pip install airlock celery
+pip install airlock-py celery
 ```
 
 ## Task Execution Scoping

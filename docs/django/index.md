@@ -19,7 +19,7 @@ These default behaviors are [configurable](#configuration).
 ## Installation & setup
 
 ```bash
-pip install airlock
+pip install airlock-py
 ```
 
 In `settings.py`, add to INSTALLED_APPS, add middleware, and configure your task framework:

@@ -77,7 +77,7 @@ Read more: [Django integration](docs/django/index.md)
 ## Installation
 
 ```bash
-pip install airlock
+pip install airlock-py
 ```
 
 ## Documentation
