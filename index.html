@@ -131,6 +131,10 @@
               
                 <h1 id="airlock">airlock<a class="headerlink" href="#airlock" title="Permanent link">&para;</a></h1>
 <p><strong>Express side effects anywhere. Control whether &amp; when they escape.</strong></p>
+<p><a href="https://github.com/ejucovy/airlock/actions/workflows/tests.yml"><img alt="Tests" src="https://github.com/ejucovy/airlock/actions/workflows/tests.yml/badge.svg" /></a>
+<a href="https://ejucovy.github.io/airlock"><img alt="Docs" src="https://github.com/ejucovy/airlock/actions/workflows/docs.yml/badge.svg" /></a>
+<a href="https://codecov.io/gh/ejucovy/airlock"><img alt="codecov" src="https://codecov.io/gh/ejucovy/airlock/graph/badge.svg?token=AZ8U5BHG1M" /></a></p>
+<p><img width="1263" height="550" alt="Screenshot 2026-01-12 at 11 21 29 PM" src="https://github.com/user-attachments/assets/d5aa2526-53d4-40a7-a6de-8589a5e7cad6" /></p>
 <h2 id="tldr">tl;dr<a class="headerlink" href="#tldr" title="Permanent link">&para;</a></h2>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">airlock</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
@@ -165,54 +169,45 @@
 </span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">policy</span><span class="o">=</span><span class="n">airlock</span><span class="o">.</span><span class="n">BlockTasks</span><span class="p">({</span><span class="s2">&quot;send_confirmation_email&quot;</span><span class="p">})):</span>
 </span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>    <span class="n">order</span><span class="o">.</span><span class="n">process</span><span class="p">()</span>
 </span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intents</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="c1"># the blocked task remains enqueued while we&#39;re in the scope</span>
-</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="c1"># side effects dispatch or discard here -- warehouse notified, but no confirmation email sent</span>
+</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="c1"># side effects dispatch or discard here -- warehouse notified, but no confirmation email sent </span>
 </span></code></pre></div>
 <h2 id="using-django-maybe-with-celery">Using Django? Maybe with Celery?<a class="headerlink" href="#using-django-maybe-with-celery" title="Permanent link">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># settings.py</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">INSTALLED_APPS</span> <span class="o">=</span> <span class="p">[</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="o">...</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="s2">&quot;airlock.integrations.django&quot;</span><span class="p">,</span>  <span class="c1"># Auto-configures airlock</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="p">]</span>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a># settings.py
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>MIDDLEWARE = [
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    # ... other middleware ...
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    &quot;airlock.integrations.django.AirlockMiddleware&quot;,
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>]
 </span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="n">MIDDLEWARE</span> <span class="o">=</span> <span class="p">[</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="o">...</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    <span class="s2">&quot;airlock.integrations.django.AirlockMiddleware&quot;</span><span class="p">,</span>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="p">]</span>
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>
-</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="n">AIRLOCK</span> <span class="o">=</span> <span class="p">{</span>
-</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    <span class="s2">&quot;EXECUTOR&quot;</span><span class="p">:</span> <span class="s2">&quot;airlock.integrations.executors.celery.celery_executor&quot;</span><span class="p">,</span>
-</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="p">}</span>
-</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>
-</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="c1"># models.py</span>
-</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="kn">import</span><span class="w"> </span><span class="nn">airlock</span>
-</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">tasks</span>
-</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>
-</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="k">class</span><span class="w"> </span><span class="nc">Order</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
-</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="__span-2-22"><a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;processed&quot;</span>
-</span><span id="__span-2-23"><a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-</span><span id="__span-2-24"><a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>        <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">tasks</span><span class="o">.</span><span class="n">send_confirmation_email</span><span class="p">,</span> <span class="n">order_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-</span><span id="__span-2-25"><a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>        <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">tasks</span><span class="o">.</span><span class="n">notify_warehouse</span><span class="p">,</span> <span class="n">order_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-</span><span id="__span-2-26"><a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>
-</span><span id="__span-2-27"><a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a><span class="c1"># views.py</span>
-</span><span id="__span-2-28"><a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a><span class="k">def</span><span class="w"> </span><span class="nf">checkout</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-</span><span id="__span-2-29"><a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>    <span class="n">order</span> <span class="o">=</span> <span class="n">Order</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">[</span><span class="s1">&#39;order_id&#39;</span><span class="p">])</span>
-</span><span id="__span-2-30"><a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a>    <span class="n">order</span><span class="o">.</span><span class="n">process</span><span class="p">()</span>
-</span><span id="__span-2-31"><a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a>    <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span><span class="s2">&quot;OK&quot;</span><span class="p">)</span>
-</span><span id="__span-2-32"><a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a><span class="c1"># Celery tasks dispatch in transaction.on_commit</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a># models.py
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>import airlock
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>import .tasks
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>class Order(models.Model):
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    def process(self):
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>        self.status = &quot;processed&quot;
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>        self.save()
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>        airlock.enqueue(tasks.send_confirmation_email, order_id=self.id)
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>        airlock.enqueue(tasks.notify_warehouse, order_id=self.id)
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a># views.py
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>def checkout(request):
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>    order = Order.objects.get(id=request.POST[&#39;order_id&#39;])
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>    order.process()
+</span><span id="__span-2-22"><a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>    return HttpResponse(&quot;OK&quot;)
+</span><span id="__span-2-23"><a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a># Celery tasks dispatch in middleware, after transaction has committed
 </span></code></pre></div>
-<p>Read more: <a href="django/">Django integration</a> | <a href="celery/">Celery integration</a></p>
+<p>Read more: <a href="django/">Django integration</a></p>
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>pip<span class="w"> </span>install<span class="w"> </span>airlock-py
 </span></code></pre></div>
-<p><strong>Using gevent or eventlet?</strong> Ensure you have <code>greenlet&gt;=1.0</code> for correct context isolation. See <a href="understanding/design-invariants/#4-concurrent-units-of-work-have-isolated-scopes">Design Invariants</a> for details.</p>
 <h2 id="documentation">Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h2>
+<p><a href="">Full documentation</a></p>
+<p>Key pages:</p>
 <ul>
 <li><a href="understanding/the-problem/">The Problem</a> - Why airlock exists</li>
 <li><a href="understanding/core-model/">Core Model</a> - The 3 concerns (Policy/Executor/Scope)</li>
-<li><a href="celery/">Celery</a> - Celery integration and migration</li>
-<li><a href="extending/custom-policies/">Extending</a> - Custom policies, executors, and scopes</li>
-<li><a href="api/">API Reference</a> - Full API documentation</li>
+<li><a href="understanding/nesting/">Nesting</a> - Nested scopes and safety</li>
+<li><a href="understanding/alternatives/">Alternatives</a> - Do I really need this...?</li>
 </ul>
 <h2 id="contributing">Contributing<a class="headerlink" href="#contributing" title="Permanent link">&para;</a></h2>
 <p>See <a href="https://github.com/ejucovy/airlock/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a> for development setup.</p>
@@ -270,5 +265,5 @@
 
 <!--
 MkDocs version : 1.6.1
-Build Date UTC : 2026-01-13 04:55:54.277012+00:00
+Build Date UTC : 2026-01-13 05:20:13.348485+00:00
 -->
