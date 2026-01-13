@@ -196,6 +196,13 @@ class Intent:
     # If you need to dedupe intents, use explicit identity comparison.
     __hash__ = None  # type: ignore[assignment]
 
+    def __str__(self) -> str:
+        """User-friendly string showing the task call signature."""
+        parts = [repr(a) for a in self.args]
+        parts.extend(f"{k}={v!r}" for k, v in self.kwargs.items())
+        args_str = ", ".join(parts)
+        return f"{self.name}({args_str})"
+
     def __repr__(self) -> str:
         origin_str = f", origin={self.origin!r}" if self.origin else ""
         opts_str = f", dispatch_options={self.dispatch_options!r}" if self.dispatch_options else ""
@@ -347,6 +354,9 @@ class AllowAll:
     def allows(self, intent: Intent) -> bool:
         return True
 
+    def __repr__(self) -> str:
+        return "AllowAll()"
+
 
 class DropAll:
     """Policy that drops all side effects."""
@@ -356,6 +366,9 @@ class DropAll:
 
     def allows(self, intent: Intent) -> bool:
         return False
+
+    def __repr__(self) -> str:
+        return "DropAll()"
 
 
 class AssertNoEffects:
@@ -369,6 +382,9 @@ class AssertNoEffects:
 
     def allows(self, intent: Intent) -> bool:
         return False  # Unreachable - on_enqueue always raises
+
+    def __repr__(self) -> str:
+        return "AssertNoEffects()"
 
 
 class BlockTasks:
@@ -392,6 +408,10 @@ class BlockTasks:
     def allows(self, intent: Intent) -> bool:
         return intent.name not in self._blocked
 
+    def __repr__(self) -> str:
+        raise_str = ", raise_on_enqueue=True" if self._raise_on_enqueue else ""
+        return f"BlockTasks({set(self._blocked)!r}{raise_str})"
+
 
 class LogOnFlush:
     """Policy that logs intents at flush time (allows all)."""
@@ -411,6 +431,9 @@ class LogOnFlush:
         )
         return True
 
+    def __repr__(self) -> str:
+        return f"LogOnFlush(logger={self._logger.name!r})"
+
 
 class CompositePolicy:
     """Policy that combines multiple policies (all must allow)."""
@@ -424,6 +447,10 @@ class CompositePolicy:
 
     def allows(self, intent: Intent) -> bool:
         return all(policy.allows(intent) for policy in self._policies)
+
+    def __repr__(self) -> str:
+        policies_str = ", ".join(repr(p) for p in self._policies)
+        return f"CompositePolicy({policies_str})"
 
 
 # ============================================================================
