@@ -147,7 +147,7 @@
 </ol>
 <p>These can be used independently or together.</p>
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>airlock<span class="w"> </span>celery
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>airlock-py<span class="w"> </span>celery
 </span></code></pre></div>
 <h2 id="task-execution-scoping">Task Execution Scoping<a class="headerlink" href="#task-execution-scoping" title="Permanent link">&para;</a></h2>
 <p>The <code>@airlock.scoped()</code> decorator wraps task execution in an Airlock scope. Any side effects enqueued during the task are buffered until the task completes, then dispatched. If the task raises an exception, all buffered effects are discarded.</p>
