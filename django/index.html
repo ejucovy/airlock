@@ -65,6 +65,8 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#installation-setup">Installation &amp; setup</a>
         <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#whats-djangoscope">What's DjangoScope?</a>
+    </li>
     <li class="toctree-l3"><a class="reference internal" href="#basic-usage">Basic usage</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#configuration">Configuration</a>
@@ -139,25 +141,25 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="django-integration">Django integration<a class="headerlink" href="#django-integration" title="Permanent link">&para;</a></h1>
-<p>Airlock provides a Django middleware that automatically creates a scopes for your view code. 
+<p>Airlock provides a Django middleware that automatically creates a scope for your view code. 
 Out of the box, Airlock is compatible with many popular task frameworks including Celery, 
 django-q, Dramatiq, huey, and Django Tasks.</p>
 <h2 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h2>
 <p>The middleware automatically wraps each request in a scope with the following behaviors:</p>
 <ul>
 <li>All side effects enqueued during a request remain buffered until the end of the request.</li>
-<li>When the Response reaches airlock's middleware:</li>
+<li>When the Response reaches airlock's middleware:<ul>
 <li>If the response is an error (4xx/5xx or unhandled exception) side effects are discarded.</li>
-<li>If the response is successful (1xx/2xx/3xx) side effects are dispatched.<ul>
-<li>If you're in a database transaction, side effects will be deferred until after the transaction has committed automatically.</li>
+<li>If the response is successful (1xx/2xx/3xx) side effects are dispatched.</li>
 </ul>
 </li>
+<li>If you're in a database transaction, side effects will be deferred until after the transaction has committed automatically. (<a href="#whats-djangoscope">What's <code>DjangoScope</code>?</a>)</li>
 </ul>
 <p>These default behaviors are <a href="#configuration">configurable</a>.</p>
 <h2 id="installation-setup">Installation &amp; setup<a class="headerlink" href="#installation-setup" title="Permanent link">&para;</a></h2>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>airlock-py
 </span></code></pre></div>
-<p>In <code>settings.py</code>, add to INSTALLED_APPS, add middleware, and configure your task framework:</p>
+<p>In <code>settings.py</code>, add to <code>INSTALLED_APPS</code>, add middleware, and configure your task framework:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">INSTALLED_APPS</span> <span class="o">=</span> <span class="p">[</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="o">...</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="s2">&quot;airlock.integrations.django&quot;</span><span class="p">,</span>  <span class="c1"># Auto-configures airlock</span>
@@ -172,11 +174,15 @@ django-q, Dramatiq, huey, and Django Tasks.</p>
 </span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    <span class="s2">&quot;EXECUTOR&quot;</span><span class="p">:</span> <span class="s2">&quot;airlock.integrations.executors.celery.celery_executor&quot;</span><span class="p">,</span>
 </span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="p">}</span>
 </span></code></pre></div>
-<p>Adding <code>"airlock.integrations.django"</code> to INSTALLED_APPS auto-configures airlock so that
-all <code>airlock.scope()</code> and <code>@airlock.scoped()</code> calls automatically use <code>DjangoScope</code> with
-transaction-aware dispatch and your configured executor/policy. This means Celery tasks,
-management commands, and any other code can use plain <code>airlock.scope()</code> without needing
-to explicitly pass <code>_cls=DjangoScope</code>.</p>
+<p>Adding <code>"airlock.integrations.django"</code> to INSTALLED_APPS auto-configures airlock. 
+This means Celery tasks, management commands, and any other code can use plain 
+<code>with airlock.scope()</code> or <code>@airlock.scoped()</code> without needing to explicitly pass 
+<code>_cls=DjangoScope</code>.</p>
+<h3 id="whats-djangoscope">What's <code>DjangoScope</code>?<a class="headerlink" href="#whats-djangoscope" title="Permanent link">&para;</a></h3>
+<p><code>DjangoScope</code> is a thin layer on top of <code>airlock.Scope</code> which hooks into <code>transaction.on_commit</code>
+for dispatching intents. This ensures that if a scope exits within a transaction -- or in
+view code with <code>ATOMIC_REQUESTS=True</code> -- the resulting side effects will still only run after 
+database state has settled.</p>
 <h3 id="basic-usage">Basic usage<a class="headerlink" href="#basic-usage" title="Permanent link">&para;</a></h3>
 <p>Anywhere in your models/views/services/etc, pass your task functions to <code>airlock.enqueue()</code>:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">## models.py</span>
@@ -267,7 +273,7 @@ subclass <code>AirlockMiddleware</code> and override <code>should_flush</code>:<
 </span></code></pre></div>
 <h2 id="manual-scoping">Manual scoping<a class="headerlink" href="#manual-scoping" title="Permanent link">&para;</a></h2>
 <p>You can always maintain explicit control with the context manager API or decorator.
-After adding <code>"airlock.integrations.django"</code> to INSTALLED_APPS, all scopes automatically
+After adding <code>"airlock.integrations.django"</code> to <code>INSTALLED_APPS</code>, all scopes automatically
 use <code>DjangoScope</code> with transaction-aware dispatch:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">airlock</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
@@ -296,7 +302,7 @@ use <code>DjangoScope</code> with transaction-aware dispatch:</p>
 You'll want to read more about <a href="../guide/nested-scopes.md">how nested scopes work</a>
 in that case!</p>
 <h2 id="celery-tasks">Celery tasks<a class="headerlink" href="#celery-tasks" title="Permanent link">&para;</a></h2>
-<p>With the INSTALLED_APPS configuration, Celery tasks can use <code>@airlock.scoped()</code> directly:</p>
+<p>With the <code>INSTALLED_APPS</code> configuration, Celery tasks can use <code>@airlock.scoped()</code> directly:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">celery</span><span class="w"> </span><span class="kn">import</span> <span class="n">shared_task</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">airlock</span>
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
