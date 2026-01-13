@@ -172,40 +172,6 @@ def allow_side_effects():
         yield
 ```
 
-## Django Test Integration
-
-When using Django with airlock, tests typically need the scope fixture:
-
-```python
-# conftest.py
-import pytest
-import airlock
-
-@pytest.fixture(autouse=True)
-def airlock_test_scope():
-    """Wrap all tests in a scope that suppresses side effects."""
-    with airlock.scope(policy=airlock.DropAll()):
-        yield
-
-# tests/test_views.py
-from django.test import Client
-
-def test_checkout_view(client):
-    response = client.post("/checkout/", {"order_id": 1})
-    assert response.status_code == 200
-    # Side effects from the view are suppressed
-```
-
-For integration tests that need real task execution:
-
-```python
-@pytest.mark.django_db(transaction=True)
-def test_full_checkout_flow(allow_side_effects, celery_worker):
-    """Integration test with real Celery tasks."""
-    response = client.post("/checkout/", {"order_id": 1})
-    # Tasks actually dispatch to Celery
-```
-
 ## Testing Without Scopes
 
 If your code uses `airlock.enqueue()` outside of any scope, it raises `NoScopeError`:
@@ -256,19 +222,25 @@ def test_order_triggers_notifications():
 
 ### Pattern 2: Parameterized policy tests
 
+Test how different policies filter intents:
+
 ```python
 import pytest
+import airlock
 
-@pytest.mark.parametrize("policy,expected_count", [
-    (airlock.AllowAll(), 2),
-    (airlock.BlockTasks({"send_email"}), 1),
-    (airlock.DropAll(), 0),
+@pytest.mark.parametrize("policy,expected_allowed", [
+    (airlock.AllowAll(), {"send_email", "notify_warehouse"}),
+    (airlock.BlockTasks({"send_email"}), {"notify_warehouse"}),
+    (airlock.DropAll(), set()),
 ])
-def test_policy_behavior(policy, expected_count, mocker):
-    executor = mocker.Mock()
-    with airlock.scope(policy=policy, executor=executor):
-        order.process()
-    assert executor.call_count == expected_count
+def test_policy_filters_correctly(policy, expected_allowed):
+    with airlock.scope(policy=airlock.DropAll()) as scope:
+        airlock.enqueue(send_email, order_id=1)
+        airlock.enqueue(notify_warehouse, order_id=1)
+
+    # Check which intents the policy would allow
+    allowed = {i.name for i in scope.intents if policy.allows(i)}
+    assert allowed == expected_allowed
 ```
 
 ### Pattern 3: Test that specific args are passed
