@@ -234,3 +234,20 @@ def test_email_contains_order_id():
         )
         assert email_intent.kwargs["order_id"] == 42
 ```
+
+### Pattern 3: Inspect all enqueued intents
+
+```python
+def test_order_enqueues_expected_tasks():
+    with airlock.scope(policy=airlock.DropAll()) as scope:
+        order = Order(id=42)
+        order.process()
+
+    # Check which tasks were enqueued
+    intent_names = [i.name for i in scope.intents]
+    assert intent_names == ["send_confirmation_email", "notify_warehouse"]
+
+    # Inspect each intent's arguments
+    for intent in scope.intents:
+        assert intent.kwargs["order_id"] == 42
+```
