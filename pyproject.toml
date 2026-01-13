@@ -25,6 +25,7 @@ keywords = ["side-effects", "celery", "tasks", "lifecycle", "outbox", "airlock"]
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
+    "pytest-asyncio>=0.21",
     "pytest-cov>=4.0",
     "flake8>=6.0",
 ]
