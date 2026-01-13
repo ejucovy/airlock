@@ -108,13 +108,13 @@ def enrich_from_api(user_id):
 ```
 
 
-## Migrating Existing Code
+## Migrating existing code
 
 So maybe you have an existing codebase with tons of direct `.delay()` calls. You want to migrate to `airlock.enqueue` but don't want to spend all that time on the boring find and replace!
 
 Airlock provides migration tools to help you transition gradually without a big-bang rewrite. (But Claude Code can probably do the big-bang rewrite in five minutes. Don't rule it out.)
 
-### Selective Migration
+### Selective migration
 
 For smaller codebases or when you want fine-grained control, apply `LegacyTaskShim` to individual tasks you're migrating. This just overrides the task's `.delay()` method to yell at you with a `DeprecationWarning` and then send it to `airlock.enqueue()`.
 
@@ -133,9 +133,9 @@ with airlock.scope():
 
 **Note:** `LegacyTaskShim` requires an active scope. It will raise `NoScopeError` if called outside a scope.
 
-### Blanket Migration
+### Blanket migration
 
-For large codebases with many `.delay()` calls, you can intercept all tasks globally with a single line of code:
+For large codebases with many `.delay()` calls, you can intercept all tasks globally with a single line of code. **This will effectively make no behavioral changes until you start using airlock scopes**.
 
 ```python
 # celery.py
