@@ -1,6 +1,6 @@
 # Django integration
 
-Airlock provides a Django middleware that automatically creates a scopes for your view code. 
+Airlock provides a Django middleware that automatically creates a scope for your view code. 
 Out of the box, Airlock is compatible with many popular task frameworks including Celery, 
 django-q, Dramatiq, huey, and Django Tasks.
 
@@ -10,9 +10,9 @@ The middleware automatically wraps each request in a scope with the following be
 
 * All side effects enqueued during a request remain buffered until the end of the request.
 * When the Response reaches airlock's middleware:
-  * If the response is an error (4xx/5xx or unhandled exception) side effects are discarded.
-  * If the response is successful (1xx/2xx/3xx) side effects are dispatched.
-    * If you're in a database transaction, side effects will be deferred until after the transaction has committed automatically.
+    * If the response is an error (4xx/5xx or unhandled exception) side effects are discarded.
+    * If the response is successful (1xx/2xx/3xx) side effects are dispatched.
+* If you're in a database transaction, side effects will be deferred until after the transaction has committed automatically. ([What's `DjangoScope`?](#whats-djangoscope))
 
 These default behaviors are [configurable](#configuration).
 
@@ -22,7 +22,7 @@ These default behaviors are [configurable](#configuration).
 pip install airlock-py
 ```
 
-In `settings.py`, add to INSTALLED_APPS, add middleware, and configure your task framework:
+In `settings.py`, add to `INSTALLED_APPS`, add middleware, and configure your task framework:
 
 ```python
 INSTALLED_APPS = [
@@ -40,11 +40,17 @@ AIRLOCK = {
 }
 ```
 
-Adding `"airlock.integrations.django"` to INSTALLED_APPS auto-configures airlock so that
-all `airlock.scope()` and `@airlock.scoped()` calls automatically use `DjangoScope` with
-transaction-aware dispatch and your configured executor/policy. This means Celery tasks,
-management commands, and any other code can use plain `airlock.scope()` without needing
-to explicitly pass `_cls=DjangoScope`.
+Adding `"airlock.integrations.django"` to INSTALLED_APPS auto-configures airlock. 
+This means Celery tasks, management commands, and any other code can use plain 
+`with airlock.scope()` or `@airlock.scoped()` without needing to explicitly pass 
+`_cls=DjangoScope`.
+
+### What's `DjangoScope`?
+
+`DjangoScope` is a thin layer on top of `airlock.Scope` which hooks into `transaction.on_commit`
+for dispatching intents. This ensures that if a scope exits within a transaction -- or in
+view code with `ATOMIC_REQUESTS=True` -- the resulting side effects will still only run after 
+database state has settled.
 
 ### Basic usage
 
@@ -159,7 +165,7 @@ class Command(BaseCommand):
 ## Manual scoping
 
 You can always maintain explicit control with the context manager API or decorator.
-After adding `"airlock.integrations.django"` to INSTALLED_APPS, all scopes automatically
+After adding `"airlock.integrations.django"` to `INSTALLED_APPS`, all scopes automatically
 use `DjangoScope` with transaction-aware dispatch:
 
 ```python
@@ -193,7 +199,7 @@ in that case!
 
 ## Celery tasks
 
-With the INSTALLED_APPS configuration, Celery tasks can use `@airlock.scoped()` directly:
+With the `INSTALLED_APPS` configuration, Celery tasks can use `@airlock.scoped()` directly:
 
 ```python
 from celery import shared_task
