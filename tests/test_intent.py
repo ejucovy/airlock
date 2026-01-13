@@ -104,6 +104,30 @@ class TestIntent:
         assert "urgent" in repr_str
         assert "models:save" in repr_str
 
+    def test_intent_str(self):
+        """Test intent __str__ shows task call signature."""
+        intent = Intent(
+            task=dummy_task,
+            args=(1, "hello"),
+            kwargs={"user_id": 42, "flag": True},
+        )
+
+        str_repr = str(intent)
+        # Should show: task_name(1, 'hello', user_id=42, flag=True)
+        assert "dummy_task" in str_repr
+        assert "1" in str_repr
+        assert "'hello'" in str_repr
+        assert "user_id=42" in str_repr
+        assert "flag=True" in str_repr
+
+    def test_intent_str_no_args(self):
+        """Test intent __str__ with no arguments."""
+        intent = Intent(task=dummy_task, args=(), kwargs={})
+
+        str_repr = str(intent)
+        assert "dummy_task" in str_repr
+        assert "()" in str_repr
+
     def test_args_converted_to_tuple(self):
         """Test that list args are converted to tuple."""
         intent = Intent(task=dummy_task, args=[1, 2, 3], kwargs={})

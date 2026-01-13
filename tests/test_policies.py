@@ -74,6 +74,11 @@ class TestAllowAll:
         for intent in intents:
             assert policy.allows(intent) is True
 
+    def test_repr(self):
+        """Test AllowAll string representation."""
+        policy = AllowAll()
+        assert repr(policy) == "AllowAll()"
+
 
 class TestDropAll:
     """Tests for DropAll policy."""
@@ -93,6 +98,11 @@ class TestDropAll:
 
         for intent in intents:
             assert policy.allows(intent) is False
+
+    def test_repr(self):
+        """Test DropAll string representation."""
+        policy = DropAll()
+        assert repr(policy) == "DropAll()"
 
 
 class TestAssertNoEffects:
@@ -116,6 +126,11 @@ class TestAssertNoEffects:
         # on_enqueue always raises, so allows is never called in practice
         # But it must return False to satisfy the Protocol
         assert policy.allows(intent) is False
+
+    def test_repr(self):
+        """Test AssertNoEffects string representation."""
+        policy = AssertNoEffects()
+        assert repr(policy) == "AssertNoEffects()"
 
 
 class TestBlockTasks:
@@ -162,6 +177,21 @@ class TestBlockTasks:
         assert policy.allows(make_intent(name="blocked_a")) is False
         assert policy.allows(make_intent(name="blocked_b")) is False
 
+    def test_repr(self):
+        """Test BlockTasks string representation."""
+        policy = BlockTasks({"task_a", "task_b"})
+        repr_str = repr(policy)
+        assert "BlockTasks" in repr_str
+        assert "task_a" in repr_str
+        assert "task_b" in repr_str
+
+    def test_repr_with_raise_on_enqueue(self):
+        """Test BlockTasks repr includes raise_on_enqueue flag."""
+        policy = BlockTasks({"task_a"}, raise_on_enqueue=True)
+        repr_str = repr(policy)
+        assert "BlockTasks" in repr_str
+        assert "raise_on_enqueue=True" in repr_str
+
 
 class TestLogOnFlush:
     """Tests for LogOnFlush policy."""
@@ -192,6 +222,21 @@ class TestLogOnFlush:
             policy.allows(intent)
 
         assert "task_a" in caplog.text
+
+    def test_repr(self):
+        """Test LogOnFlush string representation."""
+        policy = LogOnFlush()
+        repr_str = repr(policy)
+        assert "LogOnFlush" in repr_str
+        assert "airlock" in repr_str  # Default logger name
+
+    def test_repr_custom_logger(self):
+        """Test LogOnFlush repr with custom logger."""
+        logger = logging.getLogger("custom.logger")
+        policy = LogOnFlush(logger=logger)
+        repr_str = repr(policy)
+        assert "LogOnFlush" in repr_str
+        assert "custom.logger" in repr_str
 
 
 class TestCompositePolicy:
@@ -291,3 +336,11 @@ class TestCompositePolicy:
 
         # Blocked intent
         assert policy.allows(make_intent(name="blocked_task")) is False
+
+    def test_repr(self):
+        """Test CompositePolicy string representation."""
+        policy = CompositePolicy(AllowAll(), DropAll())
+        repr_str = repr(policy)
+        assert "CompositePolicy" in repr_str
+        assert "AllowAll()" in repr_str
+        assert "DropAll()" in repr_str
