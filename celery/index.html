@@ -80,11 +80,11 @@
     </li>
         </ul>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#migrating-existing-code">Migrating Existing Code</a>
+    <li class="toctree-l2"><a class="reference internal" href="#migrating-existing-code">Migrating existing code</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#selective-migration">Selective Migration</a>
+    <li class="toctree-l3"><a class="reference internal" href="#selective-migration">Selective migration</a>
     </li>
-    <li class="toctree-l3"><a class="reference internal" href="#blanket-migration">Blanket Migration</a>
+    <li class="toctree-l3"><a class="reference internal" href="#blanket-migration">Blanket migration</a>
     </li>
         </ul>
     </li>
@@ -225,10 +225,10 @@
 </span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>        <span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">policy</span><span class="p">(</span><span class="n">airlock</span><span class="o">.</span><span class="n">BlockTasks</span><span class="p">({</span><span class="s2">&quot;enrich_from_api&quot;</span><span class="p">})):</span>
 </span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>            <span class="n">user</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 </span></code></pre></div>
-<h2 id="migrating-existing-code">Migrating Existing Code<a class="headerlink" href="#migrating-existing-code" title="Permanent link">&para;</a></h2>
+<h2 id="migrating-existing-code">Migrating existing code<a class="headerlink" href="#migrating-existing-code" title="Permanent link">&para;</a></h2>
 <p>So maybe you have an existing codebase with tons of direct <code>.delay()</code> calls. You want to migrate to <code>airlock.enqueue</code> but don't want to spend all that time on the boring find and replace!</p>
 <p>Airlock provides migration tools to help you transition gradually without a big-bang rewrite. (But Claude Code can probably do the big-bang rewrite in five minutes. Don't rule it out.)</p>
-<h3 id="selective-migration">Selective Migration<a class="headerlink" href="#selective-migration" title="Permanent link">&para;</a></h3>
+<h3 id="selective-migration">Selective migration<a class="headerlink" href="#selective-migration" title="Permanent link">&para;</a></h3>
 <p>For smaller codebases or when you want fine-grained control, apply <code>LegacyTaskShim</code> to individual tasks you're migrating. This just overrides the task's <code>.delay()</code> method to yell at you with a <code>DeprecationWarning</code> and then send it to <code>airlock.enqueue()</code>.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airlock.integrations.celery</span><span class="w"> </span><span class="kn">import</span> <span class="n">LegacyTaskShim</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
@@ -242,8 +242,8 @@
 </span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="c1"># Dispatches here</span>
 </span></code></pre></div>
 <p><strong>Note:</strong> <code>LegacyTaskShim</code> requires an active scope. It will raise <code>NoScopeError</code> if called outside a scope.</p>
-<h3 id="blanket-migration">Blanket Migration<a class="headerlink" href="#blanket-migration" title="Permanent link">&para;</a></h3>
-<p>For large codebases with many <code>.delay()</code> calls, you can intercept all tasks globally with a single line of code:</p>
+<h3 id="blanket-migration">Blanket migration<a class="headerlink" href="#blanket-migration" title="Permanent link">&para;</a></h3>
+<p>For large codebases with many <code>.delay()</code> calls, you can intercept all tasks globally with a single line of code. <strong>This will effectively make no behavioral changes until you start using airlock scopes</strong>.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># celery.py</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">celery</span><span class="w"> </span><span class="kn">import</span> <span class="n">Celery</span>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airlock.integrations.celery</span><span class="w"> </span><span class="kn">import</span> <span class="n">install_global_intercept</span>
