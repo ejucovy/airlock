@@ -194,7 +194,7 @@ def checkout(request):
 ```
 
 This pattern can also be combined with middleware-based implicit scopes.
-You'll want to read more about [how nested scopes work](../guide/nested-scopes.md)
+You'll want to read more about [how nested scopes work](../understanding/nesting.md)
 in that case!
 
 ## Celery tasks
