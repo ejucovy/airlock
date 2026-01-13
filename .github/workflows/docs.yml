@@ -5,6 +5,7 @@ on:
     branches:
       - main
     paths:
+      - 'README.md'
       - 'docs/**'
       - 'mkdocs.yml'
       - 'airlock/**'
@@ -30,6 +31,15 @@ jobs:
         run: |
           pip install mkdocs mkdocs-material "mkdocstrings[python]"
           pip install -e .
+
+      - name: Copy README to docs index
+        run: |
+          # Copy README.md to docs/index.md, transforming links:
+          # - docs/foo/bar.md -> foo/bar.md (relative links within docs)
+          # - CONTRIBUTING.md -> GitHub URL
+          sed -e 's|(docs/|(|g' \
+              -e 's|(CONTRIBUTING.md)|(https://github.com/ejucovy/airlock/blob/main/CONTRIBUTING.md)|g' \
+              README.md > docs/index.md
 
       - name: Deploy docs
         run: mkdocs gh-deploy --force
