@@ -220,30 +220,7 @@ def test_order_triggers_notifications():
         assert len(scope.intents) == 2
 ```
 
-### Pattern 2: Parameterized policy tests
-
-Test how different policies filter intents:
-
-```python
-import pytest
-import airlock
-
-@pytest.mark.parametrize("policy,expected_allowed", [
-    (airlock.AllowAll(), {"send_email", "notify_warehouse"}),
-    (airlock.BlockTasks({"send_email"}), {"notify_warehouse"}),
-    (airlock.DropAll(), set()),
-])
-def test_policy_filters_correctly(policy, expected_allowed):
-    with airlock.scope(policy=airlock.DropAll()) as scope:
-        airlock.enqueue(send_email, order_id=1)
-        airlock.enqueue(notify_warehouse, order_id=1)
-
-    # Check which intents the policy would allow
-    allowed = {i.name for i in scope.intents if policy.allows(i)}
-    assert allowed == expected_allowed
-```
-
-### Pattern 3: Test that specific args are passed
+### Pattern 2: Test that specific args are passed
 
 ```python
 def test_email_contains_order_id():
