@@ -55,7 +55,7 @@
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#2-wrap-execution-in-a-scope">2. Wrap execution in a scope</a>
     </li>
-    <li class="toctree-l3"><a class="reference internal" href="#3-use-the-decorator-for-functions">3. Use the decorator for functions</a>
+    <li class="toctree-l3"><a class="reference internal" href="#3-andor-use-the-decorator-for-functions">3. And/or use the decorator for functions</a>
     </li>
         </ul>
     </li>
@@ -73,9 +73,9 @@
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#assert-no-effects-for-testing">Assert no effects (for testing)</a>
     </li>
-    <li class="toctree-l3"><a class="reference internal" href="#inspect-buffered-intents">Inspect buffered intents</a>
-    </li>
         </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#inspect-buffered-intents">Inspect buffered intents</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#putting-it-together">Putting It Together</a>
     </li>
@@ -188,7 +188,7 @@
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Something went wrong&quot;</span><span class="p">)</span>
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Side effects are NOT dispatched</span>
 </span></code></pre></div>
-<h3 id="3-use-the-decorator-for-functions">3. Use the decorator for functions<a class="headerlink" href="#3-use-the-decorator-for-functions" title="Permanent link">&para;</a></h3>
+<h3 id="3-andor-use-the-decorator-for-functions">3. And/or use the decorator for functions<a class="headerlink" href="#3-andor-use-the-decorator-for-functions" title="Permanent link">&para;</a></h3>
 <p>The <code>@airlock.scoped()</code> decorator wraps an entire function:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nd">@airlock</span><span class="o">.</span><span class="n">scoped</span><span class="p">()</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">handle_checkout</span><span class="p">(</span><span class="n">order</span><span class="p">):</span>
@@ -209,18 +209,22 @@
 </span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="c1"># Now all scopes use Celery by default</span>
 </span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">():</span>
 </span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>    <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">my_task</span><span class="p">)</span>  <span class="c1"># Will dispatch via Celery</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">second_task</span><span class="p">,</span> <span class="n">_dispatch_options</span><span class="o">=</span><span class="p">{</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>        <span class="s2">&quot;queue&quot;</span><span class="p">:</span> <span class="s2">&quot;priority.low&quot;</span><span class="p">,</span> <span class="s2">&quot;countdown&quot;</span><span class="p">:</span> <span class="s2">&quot;60&quot;</span><span class="p">,</span> <span class="s2">&quot;max_retries&quot;</span><span class="p">:</span> <span class="mi">0</span>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>    <span class="p">})</span>
 </span></code></pre></div>
 <h3 id="available-executors">Available executors<a class="headerlink" href="#available-executors" title="Permanent link">&para;</a></h3>
 <p>Airlock provides built-in executors for common task backends:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airlock.integrations.executors.sync</span><span class="w"> </span><span class="kn">import</span> <span class="n">sync_executor</span>       <span class="c1"># Direct function call</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airlock.integrations.executors.celery</span><span class="w"> </span><span class="kn">import</span> <span class="n">celery_executor</span>   <span class="c1"># Celery .delay()</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airlock.integrations.executors.django_q</span><span class="w"> </span><span class="kn">import</span> <span class="n">django_q_executor</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airlock.integrations.executors.huey</span><span class="w"> </span><span class="kn">import</span> <span class="n">huey_executor</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airlock.integrations.executors.dramatiq</span><span class="w"> </span><span class="kn">import</span> <span class="n">dramatiq_executor</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airlock.integrations.executors.celery</span><span class="w"> </span><span class="kn">import</span> <span class="n">celery_executor</span>   <span class="c1"># Celery .apply_async()</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airlock.integrations.executors.django_tasks</span><span class="w"> </span><span class="kn">import</span> <span class="n">django_tasks_executor</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airlock.integrations.executors.django_q</span><span class="w"> </span><span class="kn">import</span> <span class="n">django_q_executor</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airlock.integrations.executors.huey</span><span class="w"> </span><span class="kn">import</span> <span class="n">huey_executor</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airlock.integrations.executors.dramatiq</span><span class="w"> </span><span class="kn">import</span> <span class="n">dramatiq_executor</span>
 </span></code></pre></div>
 <p>The default executor is <code>sync_executor</code>, which calls functions directly.</p>
 <h2 id="controlling-what-executes-policies">Controlling What Executes: Policies<a class="headerlink" href="#controlling-what-executes-policies" title="Permanent link">&para;</a></h2>
-<p>Policies let you filter, observe, or block side effects.</p>
+<p>Policies let you filter, observe, or block side effects. Several common policies are built in:</p>
 <h3 id="drop-all-effects-dry-run-mode">Drop all effects (dry-run mode)<a class="headerlink" href="#drop-all-effects-dry-run-mode" title="Permanent link">&para;</a></h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">policy</span><span class="o">=</span><span class="n">airlock</span><span class="o">.</span><span class="n">DropAll</span><span class="p">()):</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    <span class="n">process_order</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
@@ -235,7 +239,9 @@
 <div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">policy</span><span class="o">=</span><span class="n">airlock</span><span class="o">.</span><span class="n">AssertNoEffects</span><span class="p">()):</span>
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>    <span class="n">calculate_total</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>  <span class="c1"># Raises if any enqueue() is called</span>
 </span></code></pre></div>
-<h3 id="inspect-buffered-intents">Inspect buffered intents<a class="headerlink" href="#inspect-buffered-intents" title="Permanent link">&para;</a></h3>
+<p>You can also <a href="../extending/custom-policies/">write your own policies</a>.</p>
+<h2 id="inspect-buffered-intents">Inspect buffered intents<a class="headerlink" href="#inspect-buffered-intents" title="Permanent link">&para;</a></h2>
+<p>A scope's buffer is designed to be easily inspectable with a read-only <code>.intents</code> property:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">policy</span><span class="o">=</span><span class="n">airlock</span><span class="o">.</span><span class="n">DropAll</span><span class="p">())</span> <span class="k">as</span> <span class="n">scope</span><span class="p">:</span>
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>    <span class="n">process_order</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
 </span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
