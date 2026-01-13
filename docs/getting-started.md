@@ -47,7 +47,7 @@ with airlock.scope():
 # Side effects are NOT dispatched
 ```
 
-### 3. Use the decorator for functions
+### 3. And/or use the decorator for functions
 
 The `@airlock.scoped()` decorator wraps an entire function:
 
@@ -75,6 +75,10 @@ airlock.configure(
 # Now all scopes use Celery by default
 with airlock.scope():
     airlock.enqueue(my_task)  # Will dispatch via Celery
+    airlock.enqueue(second_task, _dispatch_options={
+        "queue": "priority.low", "countdown": "60", "max_retries": 0
+    })
+
 ```
 
 ### Available executors
@@ -83,7 +87,8 @@ Airlock provides built-in executors for common task backends:
 
 ```python
 from airlock.integrations.executors.sync import sync_executor       # Direct function call
-from airlock.integrations.executors.celery import celery_executor   # Celery .delay()
+from airlock.integrations.executors.celery import celery_executor   # Celery .apply_async()
+from airlock.integrations.executors.django_tasks import django_tasks_executor
 from airlock.integrations.executors.django_q import django_q_executor
 from airlock.integrations.executors.huey import huey_executor
 from airlock.integrations.executors.dramatiq import dramatiq_executor
@@ -93,7 +98,7 @@ The default executor is `sync_executor`, which calls functions directly.
 
 ## Controlling What Executes: Policies
 
-Policies let you filter, observe, or block side effects.
+Policies let you filter, observe, or block side effects. Several common policies are built in:
 
 ### Drop all effects (dry-run mode)
 
@@ -118,7 +123,11 @@ with airlock.scope(policy=airlock.AssertNoEffects()):
     calculate_total(order)  # Raises if any enqueue() is called
 ```
 
-### Inspect buffered intents
+You can also [write your own policies](./extending/custom-policies.md).
+
+## Inspect buffered intents
+
+A scope's buffer is designed to be easily inspectable with a read-only `.intents` property:
 
 ```python
 with airlock.scope(policy=airlock.DropAll()) as scope:
