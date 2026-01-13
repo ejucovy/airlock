@@ -2,6 +2,10 @@
 
 **Express side effects anywhere. Control whether & when they escape.**
 
+[![Tests](https://github.com/ejucovy/airlock/actions/workflows/tests.yml/badge.svg)](https://github.com/ejucovy/airlock/actions/workflows/tests.yml)
+[![Docs](https://github.com/ejucovy/airlock/actions/workflows/docs.yml/badge.svg)](https://ejucovy.github.io/airlock)
+[![codecov](https://codecov.io/gh/ejucovy/airlock/graph/badge.svg?token=AZ8U5BHG1M)](https://codecov.io/gh/ejucovy/airlock)
+
 ## tl;dr
 
 ```python
