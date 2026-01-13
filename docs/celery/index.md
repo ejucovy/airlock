@@ -168,8 +168,6 @@ my_task.delay(123)  # Passes through to Celery, warns
 
 **Note:** Global intercept is a (questionable) migration tool, not steady-state architecture. Use it to migrate legacy code, but prefer `airlock.enqueue()` for new code.
 
-[Full migration guide](migration.md)
-
 ## Using with Django
 
 If you're using Django, the Airlock Django integration provides automatic configuration for Celery. Add Airlock to your `INSTALLED_APPS` and configure it to use the Celery executor:
