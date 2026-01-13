@@ -101,6 +101,14 @@ class TestEnqueue:
         intent = s.intents[0]
         assert intent.origin == "custom:origin"
 
+    def test_enqueue_name_can_be_set_explicitly(self):
+        """Test that name can be explicitly set via _name parameter."""
+        with scope(policy=AllowAll()) as s:
+            enqueue(my_task, _name="custom_task_name")
+
+        intent = s.intents[0]
+        assert intent.name == "custom_task_name"
+
     def test_enqueue_respects_policy_on_enqueue(self):
         """Test that policy.on_enqueue is called."""
         with pytest.raises(PolicyViolation):

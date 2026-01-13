@@ -72,11 +72,11 @@ class TestIntent:
         """Test that name is derived from the task callable."""
         intent = Intent(task=dummy_task, args=(), kwargs={})
 
-        # Name should include module and function name
-        assert "dummy_task" in intent.name
+        # Name should be just the function name
+        assert intent.name == "dummy_task"
 
     def test_intent_name_from_celery_like_task(self):
-        """Test that name uses .name attribute if available."""
+        """Test that name extracts function name from Celery task's .name attribute."""
 
         class FakeCeleryTask:
             name = "myapp.tasks.send_email"
@@ -87,7 +87,19 @@ class TestIntent:
         task = FakeCeleryTask()
         intent = Intent(task=task, args=(), kwargs={})
 
-        assert intent.name == "myapp.tasks.send_email"
+        # Should extract just the function name, not the full dotted path
+        assert intent.name == "send_email"
+
+    def test_intent_name_explicit(self):
+        """Test that explicit name overrides derived name."""
+        intent = Intent(
+            task=dummy_task,
+            args=(),
+            kwargs={},
+            _explicit_name="custom_name",
+        )
+
+        assert intent.name == "custom_name"
 
     def test_intent_repr(self):
         """Test intent string representation."""
