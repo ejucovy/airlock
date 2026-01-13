@@ -74,3 +74,6 @@ dmypy.json
 # MkDocs
 site/
 docs/index.md  # Auto-generated from README.md during docs build
+
+# uv
+uv.lock
