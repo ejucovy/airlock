@@ -22,21 +22,24 @@ def process_order(request, order_id):
 
 Changing every `.delay()` to `airlock.enqueue()` is tedious and error-prone.
 
-## Decision Tree
+## Choosing a Strategy
 
-```
-Do you have 100+ .delay() calls?
-+-- Yes -> Start with blanket migration
-+-- No  -> Use selective migration
+Consider these questions when deciding how to migrate:
 
-Is this a new feature/module?
-+-- Yes -> Use greenfield (airlock.enqueue from start)
-+-- No  -> Continue below
+**How many `.delay()` calls do you have?**
 
-Can you afford 1-2 weeks of migration work?
-+-- Yes -> Selective migration (safest)
-+-- No  -> Blanket migration (fastest)
-```
+- 100+ calls: Start with blanket migration for quick coverage
+- Fewer calls: Use selective migration for more control
+
+**Is this a new feature or module?**
+
+- Yes: Use greenfield approach with `airlock.enqueue()` from the start
+- No: Continue evaluating below
+
+**How much time can you invest in migration?**
+
+- More time available: Use selective migration for the safest, most controlled approach
+- Need quick results: Use blanket migration to get immediate benefits
 
 ## Strategy 1: Selective Migration (Recommended)
 
