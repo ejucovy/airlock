@@ -90,11 +90,16 @@ def test_notifications(suppress_side_effects):
 
 ## Reset Configuration Between Tests
 
-If tests modify global configuration, reset it:
+If a test modifies global configuration via `airlock.configure()`, reset it afterward with `airlock.reset_configuration()`:
 
 ```python
-@pytest.fixture(autouse=True)
-def reset_airlock_config():
-    yield
-    airlock.reset_configuration()
+class TestWithCustomConfig(unittest.TestCase):
+    def setUp(self):
+        airlock.configure(executor=my_executor)
+
+    def tearDown(self):
+        airlock.reset_configuration()
+
+    def test_something(self):
+        ...
 ```
