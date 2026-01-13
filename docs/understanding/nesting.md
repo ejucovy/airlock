@@ -82,13 +82,15 @@ with airlock.scope() as outer:
 ```
 
 This enables:
-- Auditing where intents came from
-- Different handling for own vs captured
-- Debugging nested behavior
+* Auditing where intents came from
+* Different handling for own vs captured
+* Debugging nested behavior
 
 ### The `before_descendant_flushes` Hook
 
 If you want to change this behavior, create your own scope class to define what happens when nested scopes exit.
+Whenever a scope exits and is about to flush, this will be called **on each active outer scope in turn** (immediate parent first) 
+so all ancestors have a chance to opine. Note that this means `exiting_scope` may not be your immediate child; it might be a great-grandchild or whatever. 
 
 ```python
 class Scope:
@@ -132,33 +134,6 @@ with SafetyScope():
 # dangerous_task executes here ✓
 ```
 
-**Batching:**
-
-```python
-class EmailBatchScope(Scope):
-    """Batch emails, allow others through."""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.email_batch = []
-
-    def before_descendant_flushes(self, exiting_scope, intents):
-        emails = [i for i in intents if 'email' in i.name]
-        others = [i for i in intents if 'email' not in i.name]
-
-        self.email_batch.extend(emails)  # Capture for batching
-        return others                     # Others execute now
-
-with EmailBatchScope() as batch:
-    with airlock.scope():
-        airlock.enqueue(send_email, to="user1@example.com")
-        airlock.enqueue(log_event, event="email_queued")
-    # log_event executes ✓, email captured
-
-# Send batch
-send_batch_emails(batch.email_batch)
-```
-
 **Independent scopes (opt-out of capture):**
 
 ```python
@@ -172,116 +147,5 @@ with IndependentScope():
     with airlock.scope():
         airlock.enqueue(task)
     # task dispatches here (not captured) ✓
-```
-
-## Policy vs Capture
-
-**Policy** controls **WHAT** executes (filtering):
-
-```python
-with airlock.scope(policy=BlockTasks({"send_email"})):
-    airlock.enqueue(send_email)  # Blocked - never executes
-    airlock.enqueue(log_event)   # Allowed - executes
-```
-
-**Capture** controls **WHEN** executes (timing):
-
-```python
-with airlock.scope() as outer:
-    with airlock.scope():
-        airlock.enqueue(send_email)  # Captured - executes later
-        airlock.enqueue(log_event)   # Captured - executes later
-# Both execute here (deferred, not blocked)
-```
-
-**Key difference:**
-- Policy: intent **filtered out** (never executes)
-- Capture: intent **deferred** (executes later at outer scope)
-
-## Extension Points Summary
-
-Control different aspects of composition:
-
-| Extension Point | Controls | Default |
-|-----------------|----------|---------|
-| **Policy** | What intents are allowed | `AllowAll()` |
-| **`should_flush()`** | Whether scope flushes/discards | Flush on success |
-| **`before_descendant_flushes()`** | When nested intents execute | Capture all |
-| **Executor** | How intents execute | Sync |
-
-These are **independent** and compose freely.
-
-## Mental Model
-
-```
-┌─────────────────────────────────────┐
-│ Outer Scope                         │
-│                                     │
-│  Own intent: task_a                 │
-│                                     │
-│  ┌───────────────────────────────┐ │
-│  │ Inner Scope                   │ │
-│  │                               │ │
-│  │  Own intent: task_b           │ │
-│  │                               │ │
-│  └───────────────────────────────┘ │
-│         │                           │
-│         │ before_descendant_flushes()│
-│         ▼                           │
-│  Captured intent: task_b            │
-│                                     │
-└─────────────────────────────────────┘
-         │
-         │ flush()
-         ▼
-   [task_a, task_b] dispatch together
-```
-
-## Common Patterns
-
-### Pattern 1: Transaction Boundary
-
-```python
-class TransactionScope(DjangoScope):
-    def before_descendant_flushes(self, exiting_scope, intents):
-        return []  # Capture all
-
-with transaction.atomic():
-    with airlock.scope(_cls=TransactionScope):
-        complex_operation()  # May have nested scopes
-    # Nothing dispatches yet
-# All dispatches after commit ✓
-```
-
-### Pattern 2: Conditional Batching
-
-```python
-class ConditionalBatchScope(Scope):
-    def before_descendant_flushes(self, exiting_scope, intents):
-        # Batch high-volume tasks, allow low-volume through
-        high_volume = [i for i in intents if i.dispatch_options.get("batch")]
-        return [i for i in intents if i not in high_volume]
-
-with ConditionalBatchScope():
-    bulk_operation()
-    # Low-volume dispatches immediately, high-volume batched
-```
-
-### Pattern 3: Ordering Control
-
-```python
-class DBBeforeCacheScope(Scope):
-    """DB writes now, cache updates later."""
-
-    def before_descendant_flushes(self, exiting_scope, intents):
-        db_writes = [i for i in intents if 'db' in i.name]
-        return db_writes  # Allow DB writes through now
-
-with DBBeforeCacheScope():
-    with airlock.scope():
-        airlock.enqueue(update_cache)
-        airlock.enqueue(db_write)
-    # db_write executes ✓, update_cache captured
-# update_cache executes here (after DB commit) ✓
 ```
 
