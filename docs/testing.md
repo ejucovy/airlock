@@ -14,7 +14,7 @@ Airlock makes testing side effects straightforward. You can suppress them, asser
 
 ## Suppressing Side Effects
 
-Use `DropAll()` to silently suppress all side effects:
+Use `DropAll()` to test business logic without triggering external systems:
 
 ```python
 import airlock
@@ -23,55 +23,40 @@ def test_order_processing():
     with airlock.scope(policy=airlock.DropAll()):
         order = Order.create(user, cart)
         order.process()
-
         assert order.status == "processed"
     # No emails sent, no warehouse notified
 ```
-
-This is useful when you want to test business logic without triggering external systems.
 
 ## Asserting No Side Effects
 
 Use `AssertNoEffects()` when code should be pure:
 
 ```python
-import airlock
-import pytest
-
 def test_calculate_total_is_pure():
     with airlock.scope(policy=airlock.AssertNoEffects()):
         total = calculate_order_total(order)
         assert total == 99.99
-    # Raises if calculate_order_total() calls enqueue()
+    # Raises PolicyViolation if calculate_order_total() calls enqueue()
 ```
-
-This catches accidental side effects in code that should be pure computation.
 
 ## Inspecting Enqueued Intents
 
-Combine `DropAll()` with `scope.intents` to inspect what would have been dispatched:
+Use `scope.intents` to inspect what would have been dispatched:
 
 ```python
-import airlock
-
-def test_order_sends_correct_notifications():
+def test_order_enqueues_expected_tasks():
     with airlock.scope(policy=airlock.DropAll()) as scope:
-        order = Order.create(user, cart)
+        order = Order(id=42)
         order.process()
 
-        # Inspect the buffered intents
-        assert len(scope.intents) == 2
+    # Check which tasks were enqueued
+    intent_names = [i.name for i in scope.intents]
+    assert intent_names == ["send_confirmation_email", "notify_warehouse"]
 
-        intent_names = [intent.name for intent in scope.intents]
-        assert "send_confirmation_email" in intent_names
-        assert "notify_warehouse" in intent_names
-
-        # Check arguments
-        email_intent = next(i for i in scope.intents if i.name == "send_confirmation_email")
-        assert email_intent.kwargs["order_id"] == order.id
+    # Check arguments
+    email_intent = scope.intents[0]
+    assert email_intent.kwargs["order_id"] == 42
 ```
-
-### Intent properties
 
 Each `Intent` object has:
 
@@ -81,207 +66,40 @@ Each `Intent` object has:
 - `intent.kwargs` - Keyword arguments dict
 - `intent.dispatch_options` - Options passed via `_dispatch_options`
 
-## Testing with Specific Policies
+## Pytest Fixture
 
-### Block specific tasks
-
-```python
-def test_order_without_email():
-    with airlock.scope(policy=airlock.BlockTasks({"send_confirmation_email"})) as scope:
-        order.process()
-
-        # Email was enqueued but will be dropped
-        assert any(i.name == "send_confirmation_email" for i in scope.intents)
-    # Warehouse notification dispatches, email does not
-```
-
-### Custom test policy
+To suppress side effects across all tests, add an autouse fixture to `conftest.py`:
 
 ```python
-class RecordingPolicy:
-    def __init__(self):
-        self.enqueued = []
-        self.dispatched = []
-
-    def on_enqueue(self, intent):
-        self.enqueued.append(intent)
-
-    def allows(self, intent):
-        self.dispatched.append(intent)
-        return False  # Don't actually dispatch
-
-def test_with_recording():
-    policy = RecordingPolicy()
-    with airlock.scope(policy=policy):
-        order.process()
-
-    assert len(policy.enqueued) == 2
-    assert len(policy.dispatched) == 2
-```
-
-## Pytest Fixtures
-
-### Global suppression fixture
-
-```python
-# conftest.py
 import pytest
 import airlock
 
 @pytest.fixture(autouse=True)
 def suppress_side_effects():
-    """Suppress all side effects by default in tests."""
-    with airlock.scope(policy=airlock.DropAll()):
-        yield
-
-# All tests automatically run inside a DropAll scope
-def test_something():
-    order.process()  # Side effects suppressed
-```
-
-### Opt-in fixture for inspecting intents
-
-```python
-# conftest.py
-import pytest
-import airlock
-
-@pytest.fixture
-def airlock_scope():
-    """Provide a scope for inspecting intents."""
     with airlock.scope(policy=airlock.DropAll()) as scope:
         yield scope
+```
 
-# Usage
-def test_notifications(airlock_scope):
+Tests can then inspect `scope.intents` when needed by requesting the fixture explicitly:
+
+```python
+def test_notifications(suppress_side_effects):
     order.process()
-    assert len(airlock_scope.intents) == 2
+    assert len(suppress_side_effects.intents) == 2
 ```
-
-### Fixture for allowing side effects
-
-```python
-# conftest.py
-import pytest
-import airlock
-
-@pytest.fixture
-def allow_side_effects():
-    """Allow side effects (for integration tests)."""
-    with airlock.scope(policy=airlock.AllowAll()):
-        yield
-```
-
-## Django Test Integration
-
-When using Django with airlock, tests typically need the scope fixture:
-
-```python
-# conftest.py
-import pytest
-import airlock
-
-@pytest.fixture(autouse=True)
-def airlock_test_scope():
-    """Wrap all tests in a scope that suppresses side effects."""
-    with airlock.scope(policy=airlock.DropAll()):
-        yield
-
-# tests/test_views.py
-from django.test import Client
-
-def test_checkout_view(client):
-    response = client.post("/checkout/", {"order_id": 1})
-    assert response.status_code == 200
-    # Side effects from the view are suppressed
-```
-
-For integration tests that need real task execution:
-
-```python
-@pytest.mark.django_db(transaction=True)
-def test_full_checkout_flow(allow_side_effects, celery_worker):
-    """Integration test with real Celery tasks."""
-    response = client.post("/checkout/", {"order_id": 1})
-    # Tasks actually dispatch to Celery
-```
-
-## Testing Without Scopes
-
-If your code uses `airlock.enqueue()` outside of any scope, it raises `NoScopeError`:
-
-```python
-import airlock
-import pytest
-
-def test_enqueue_without_scope():
-    with pytest.raises(airlock.NoScopeError):
-        airlock.enqueue(some_task)
-```
-
-This is intentional - airlock requires explicit scope boundaries.
 
 ## Reset Configuration Between Tests
 
-If tests modify global configuration, reset it:
+If a test modifies global configuration via `airlock.configure()`, reset it afterward with `airlock.reset_configuration()`:
 
 ```python
-# conftest.py
-import pytest
-import airlock
+class TestWithCustomConfig(unittest.TestCase):
+    def setUp(self):
+        airlock.configure(executor=my_executor)
 
-@pytest.fixture(autouse=True)
-def reset_airlock_config():
-    yield
-    airlock.reset_configuration()
-```
+    def tearDown(self):
+        airlock.reset_configuration()
 
-## Common Testing Patterns
-
-### Pattern 1: Test business logic, then test side effects separately
-
-```python
-def test_order_status_updated():
-    """Test the business logic only."""
-    with airlock.scope(policy=airlock.DropAll()):
-        order.process()
-        assert order.status == "processed"
-
-def test_order_triggers_notifications():
-    """Test the side effect intents."""
-    with airlock.scope(policy=airlock.DropAll()) as scope:
-        order.process()
-        assert len(scope.intents) == 2
-```
-
-### Pattern 2: Parameterized policy tests
-
-```python
-import pytest
-
-@pytest.mark.parametrize("policy,expected_count", [
-    (airlock.AllowAll(), 2),
-    (airlock.BlockTasks({"send_email"}), 1),
-    (airlock.DropAll(), 0),
-])
-def test_policy_behavior(policy, expected_count, mocker):
-    executor = mocker.Mock()
-    with airlock.scope(policy=policy, executor=executor):
-        order.process()
-    assert executor.call_count == expected_count
-```
-
-### Pattern 3: Test that specific args are passed
-
-```python
-def test_email_contains_order_id():
-    with airlock.scope(policy=airlock.DropAll()) as scope:
-        order = Order(id=42)
-        order.process()
-
-        email_intent = next(
-            i for i in scope.intents
-            if i.name == "send_confirmation_email"
-        )
-        assert email_intent.kwargs["order_id"] == 42
+    def test_something(self):
+        ...
 ```
