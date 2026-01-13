@@ -230,7 +230,7 @@ from airlock.integrations.executors.huey import huey_executor
 from airlock.integrations.executors.dramatiq import dramatiq_executor
 ```
 
-See [Dispatch Guide](../guide/dispatch.md) for details.
+See the [API Reference](../api/executors.md) for details on each executor's behavior.
 
 ## Common Patterns
 

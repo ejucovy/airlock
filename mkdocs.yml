@@ -42,6 +42,8 @@ markdown_extensions:
 
 nav:
   - Home: index.md
+  - Getting Started: getting-started.md
+  - Testing: testing.md
 
   - Understanding Airlock:
     - The Problem: understanding/the-problem.md
@@ -55,7 +57,6 @@ nav:
 
   - Celery:
     - Overview: celery/index.md
-    - Migration: celery/migration.md
 
   - Extending:
     - Custom Policies: extending/custom-policies.md

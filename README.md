@@ -39,14 +39,14 @@ with airlock.scope(policy=airlock.AssertNoEffects()):
 
 # Test: surface the side effects
 with airlock.scope(policy=airlock.DropAll()) as scope:
-    order.process() # raises if any enqueue() called
-    assert len(self.intents) == 2
-    print((intent.name, intent.args, intent.kwargs) for intent in self.intents)
+    order.process()
+    assert len(scope.intents) == 2
+    print((intent.name, intent.args, intent.kwargs) for intent in scope.intents)
 
 # Admin API endpoint: selective control
-with airlock.scope(policy=airlock.BlockTasks({"send_confirmation_email"})):
+with airlock.scope(policy=airlock.BlockTasks({"send_confirmation_email"})) as scope:
     order.process()
-    assert len(self.intents) == 2 # the blocked task remains enqueued while we're in the scope
+    assert len(scope.intents) == 2  # the blocked task remains enqueued while we're in the scope
 # side effects dispatch or discard here -- warehouse notified, but no confirmation email sent 
 ```
 
@@ -61,7 +61,7 @@ MIDDLEWARE = [
 
 # models.py
 import airlock
-import .tasks
+from . import tasks
 
 class Order(models.Model):
     def process(self):
@@ -88,7 +88,7 @@ pip install airlock-py
 
 ## Documentation
 
-[Full documentation](docs/)
+[Full documentation](https://ejucovy.github.io/airlock/)
 
 Key pages:
 
