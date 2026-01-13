@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://ejucovy.github.io/airlock/testing/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Testing - Airlock</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../assets/_mkdocstrings.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Testing";
+        var mkdocs_page_input_path = "testing.md";
+        var mkdocs_page_url = "/airlock/testing/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> Airlock
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../getting-started/">Getting Started</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Testing</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#quick-reference">Quick Reference</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#suppressing-side-effects">Suppressing Side Effects</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#asserting-no-side-effects">Asserting No Side Effects</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#inspecting-enqueued-intents">Inspecting Enqueued Intents</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#intent-properties">Intent properties</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#testing-with-specific-policies">Testing with Specific Policies</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#block-specific-tasks">Block specific tasks</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#custom-test-policy">Custom test policy</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#pytest-fixtures">Pytest Fixtures</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#global-suppression-fixture">Global suppression fixture</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#opt-in-fixture-for-inspecting-intents">Opt-in fixture for inspecting intents</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#fixture-for-allowing-side-effects">Fixture for allowing side effects</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#django-test-integration">Django Test Integration</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#testing-without-scopes">Testing Without Scopes</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#reset-configuration-between-tests">Reset Configuration Between Tests</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#common-testing-patterns">Common Testing Patterns</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#pattern-1-test-business-logic-then-test-side-effects-separately">Pattern 1: Test business logic, then test side effects separately</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#pattern-2-parameterized-policy-tests">Pattern 2: Parameterized policy tests</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#pattern-3-test-that-specific-args-are-passed">Pattern 3: Test that specific args are passed</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Understanding Airlock</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../understanding/the-problem/">The Problem</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../understanding/core-model/">Core Model (3 Concerns)</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../understanding/design-invariants/">Design Invariants</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../understanding/nesting/">Nesting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../understanding/alternatives/">Alternatives</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Django</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../django/">Overview</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Celery</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../celery/">Overview</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Extending</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../extending/custom-policies/">Custom Policies</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../extending/custom-executors/">Custom Executors</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../extending/custom-scopes/">Custom Scopes</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">API Reference</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/core/">Core</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/django/">Django</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/celery/">Celery</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/executors/">Executors</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">Airlock</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Testing</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/ejucovy/airlock/edit/master/docs/testing.md">Edit on ejucovy/airlock</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="testing-guide">Testing Guide<a class="headerlink" href="#testing-guide" title="Permanent link">&para;</a></h1>
+<p>Airlock makes testing side effects straightforward. You can suppress them, assert they don't happen, or inspect what would have been dispatched.</p>
+<h2 id="quick-reference">Quick Reference<a class="headerlink" href="#quick-reference" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Goal</th>
+<th>Policy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Suppress all side effects</td>
+<td><code>DropAll()</code></td>
+</tr>
+<tr>
+<td>Fail if any side effect is enqueued</td>
+<td><code>AssertNoEffects()</code></td>
+</tr>
+<tr>
+<td>Inspect what was enqueued</td>
+<td><code>DropAll()</code> + <code>scope.intents</code></td>
+</tr>
+<tr>
+<td>Block specific tasks</td>
+<td><code>BlockTasks({"task_name"})</code></td>
+</tr>
+<tr>
+<td>Let side effects run normally</td>
+<td><code>AllowAll()</code> (default)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="suppressing-side-effects">Suppressing Side Effects<a class="headerlink" href="#suppressing-side-effects" title="Permanent link">&para;</a></h2>
+<p>Use <code>DropAll()</code> to silently suppress all side effects:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">airlock</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_order_processing</span><span class="p">():</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">policy</span><span class="o">=</span><span class="n">airlock</span><span class="o">.</span><span class="n">DropAll</span><span class="p">()):</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        <span class="n">order</span> <span class="o">=</span> <span class="n">Order</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">cart</span><span class="p">)</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        <span class="n">order</span><span class="o">.</span><span class="n">process</span><span class="p">()</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        <span class="k">assert</span> <span class="n">order</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;processed&quot;</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="c1"># No emails sent, no warehouse notified</span>
+</span></code></pre></div>
+<p>This is useful when you want to test business logic without triggering external systems.</p>
+<h2 id="asserting-no-side-effects">Asserting No Side Effects<a class="headerlink" href="#asserting-no-side-effects" title="Permanent link">&para;</a></h2>
+<p>Use <code>AssertNoEffects()</code> when code should be pure:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">airlock</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_calculate_total_is_pure</span><span class="p">():</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">policy</span><span class="o">=</span><span class="n">airlock</span><span class="o">.</span><span class="n">AssertNoEffects</span><span class="p">()):</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        <span class="n">total</span> <span class="o">=</span> <span class="n">calculate_order_total</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>        <span class="k">assert</span> <span class="n">total</span> <span class="o">==</span> <span class="mf">99.99</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="c1"># Raises if calculate_order_total() calls enqueue()</span>
+</span></code></pre></div>
+<p>This catches accidental side effects in code that should be pure computation.</p>
+<h2 id="inspecting-enqueued-intents">Inspecting Enqueued Intents<a class="headerlink" href="#inspecting-enqueued-intents" title="Permanent link">&para;</a></h2>
+<p>Combine <code>DropAll()</code> with <code>scope.intents</code> to inspect what would have been dispatched:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">airlock</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_order_sends_correct_notifications</span><span class="p">():</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">policy</span><span class="o">=</span><span class="n">airlock</span><span class="o">.</span><span class="n">DropAll</span><span class="p">())</span> <span class="k">as</span> <span class="n">scope</span><span class="p">:</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        <span class="n">order</span> <span class="o">=</span> <span class="n">Order</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">cart</span><span class="p">)</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>        <span class="n">order</span><span class="o">.</span><span class="n">process</span><span class="p">()</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>        <span class="c1"># Inspect the buffered intents</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">scope</span><span class="o">.</span><span class="n">intents</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>        <span class="n">intent_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">intent</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">intent</span> <span class="ow">in</span> <span class="n">scope</span><span class="o">.</span><span class="n">intents</span><span class="p">]</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>        <span class="k">assert</span> <span class="s2">&quot;send_confirmation_email&quot;</span> <span class="ow">in</span> <span class="n">intent_names</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>        <span class="k">assert</span> <span class="s2">&quot;notify_warehouse&quot;</span> <span class="ow">in</span> <span class="n">intent_names</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>        <span class="c1"># Check arguments</span>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>        <span class="n">email_intent</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">scope</span><span class="o">.</span><span class="n">intents</span> <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;send_confirmation_email&quot;</span><span class="p">)</span>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>        <span class="k">assert</span> <span class="n">email_intent</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;order_id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">order</span><span class="o">.</span><span class="n">id</span>
+</span></code></pre></div>
+<h3 id="intent-properties">Intent properties<a class="headerlink" href="#intent-properties" title="Permanent link">&para;</a></h3>
+<p>Each <code>Intent</code> object has:</p>
+<ul>
+<li><code>intent.name</code> - The task function name</li>
+<li><code>intent.task</code> - The actual callable</li>
+<li><code>intent.args</code> - Positional arguments tuple</li>
+<li><code>intent.kwargs</code> - Keyword arguments dict</li>
+<li><code>intent.dispatch_options</code> - Options passed via <code>_dispatch_options</code></li>
+</ul>
+<h2 id="testing-with-specific-policies">Testing with Specific Policies<a class="headerlink" href="#testing-with-specific-policies" title="Permanent link">&para;</a></h2>
+<h3 id="block-specific-tasks">Block specific tasks<a class="headerlink" href="#block-specific-tasks" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_order_without_email</span><span class="p">():</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">policy</span><span class="o">=</span><span class="n">airlock</span><span class="o">.</span><span class="n">BlockTasks</span><span class="p">({</span><span class="s2">&quot;send_confirmation_email&quot;</span><span class="p">}))</span> <span class="k">as</span> <span class="n">scope</span><span class="p">:</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>        <span class="n">order</span><span class="o">.</span><span class="n">process</span><span class="p">()</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>        <span class="c1"># Email was enqueued but will be dropped</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>        <span class="k">assert</span> <span class="nb">any</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;send_confirmation_email&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">scope</span><span class="o">.</span><span class="n">intents</span><span class="p">)</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="c1"># Warehouse notification dispatches, email does not</span>
+</span></code></pre></div>
+<h3 id="custom-test-policy">Custom test policy<a class="headerlink" href="#custom-test-policy" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">RecordingPolicy</span><span class="p">:</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">enqueued</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">dispatched</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_enqueue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">intent</span><span class="p">):</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">enqueued</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">intent</span><span class="p">)</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">allows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">intent</span><span class="p">):</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">dispatched</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">intent</span><span class="p">)</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>        <span class="k">return</span> <span class="kc">False</span>  <span class="c1"># Don&#39;t actually dispatch</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_with_recording</span><span class="p">():</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>    <span class="n">policy</span> <span class="o">=</span> <span class="n">RecordingPolicy</span><span class="p">()</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>    <span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">policy</span><span class="o">=</span><span class="n">policy</span><span class="p">):</span>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>        <span class="n">order</span><span class="o">.</span><span class="n">process</span><span class="p">()</span>
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>
+</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">policy</span><span class="o">.</span><span class="n">enqueued</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">policy</span><span class="o">.</span><span class="n">dispatched</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+</span></code></pre></div>
+<h2 id="pytest-fixtures">Pytest Fixtures<a class="headerlink" href="#pytest-fixtures" title="Permanent link">&para;</a></h2>
+<h3 id="global-suppression-fixture">Global suppression fixture<a class="headerlink" href="#global-suppression-fixture" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># conftest.py</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">airlock</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span><span class="p">(</span><span class="n">autouse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="k">def</span><span class="w"> </span><span class="nf">suppress_side_effects</span><span class="p">():</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Suppress all side effects by default in tests.&quot;&quot;&quot;</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">policy</span><span class="o">=</span><span class="n">airlock</span><span class="o">.</span><span class="n">DropAll</span><span class="p">()):</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>        <span class="k">yield</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="c1"># All tests automatically run inside a DropAll scope</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_something</span><span class="p">():</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>    <span class="n">order</span><span class="o">.</span><span class="n">process</span><span class="p">()</span>  <span class="c1"># Side effects suppressed</span>
+</span></code></pre></div>
+<h3 id="opt-in-fixture-for-inspecting-intents">Opt-in fixture for inspecting intents<a class="headerlink" href="#opt-in-fixture-for-inspecting-intents" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># conftest.py</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">airlock</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="k">def</span><span class="w"> </span><span class="nf">airlock_scope</span><span class="p">():</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Provide a scope for inspecting intents.&quot;&quot;&quot;</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>    <span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">policy</span><span class="o">=</span><span class="n">airlock</span><span class="o">.</span><span class="n">DropAll</span><span class="p">())</span> <span class="k">as</span> <span class="n">scope</span><span class="p">:</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>        <span class="k">yield</span> <span class="n">scope</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="c1"># Usage</span>
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_notifications</span><span class="p">(</span><span class="n">airlock_scope</span><span class="p">):</span>
+</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>    <span class="n">order</span><span class="o">.</span><span class="n">process</span><span class="p">()</span>
+</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">airlock_scope</span><span class="o">.</span><span class="n">intents</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+</span></code></pre></div>
+<h3 id="fixture-for-allowing-side-effects">Fixture for allowing side effects<a class="headerlink" href="#fixture-for-allowing-side-effects" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># conftest.py</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">airlock</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="k">def</span><span class="w"> </span><span class="nf">allow_side_effects</span><span class="p">():</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Allow side effects (for integration tests).&quot;&quot;&quot;</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>    <span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">policy</span><span class="o">=</span><span class="n">airlock</span><span class="o">.</span><span class="n">AllowAll</span><span class="p">()):</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>        <span class="k">yield</span>
+</span></code></pre></div>
+<h2 id="django-test-integration">Django Test Integration<a class="headerlink" href="#django-test-integration" title="Permanent link">&para;</a></h2>
+<p>When using Django with airlock, tests typically need the scope fixture:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># conftest.py</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">airlock</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span><span class="p">(</span><span class="n">autouse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="k">def</span><span class="w"> </span><span class="nf">airlock_test_scope</span><span class="p">():</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrap all tests in a scope that suppresses side effects.&quot;&quot;&quot;</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>    <span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">policy</span><span class="o">=</span><span class="n">airlock</span><span class="o">.</span><span class="n">DropAll</span><span class="p">()):</span>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>        <span class="k">yield</span>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="c1"># tests/test_views.py</span>
+</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="kn">from</span><span class="w"> </span><span class="nn">django.test</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
+</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>
+</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_checkout_view</span><span class="p">(</span><span class="n">client</span><span class="p">):</span>
+</span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>    <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;/checkout/&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;order_id&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
+</span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>    <span class="k">assert</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span>
+</span><span id="__span-8-17"><a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a>    <span class="c1"># Side effects from the view are suppressed</span>
+</span></code></pre></div>
+<p>For integration tests that need real task execution:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">django_db</span><span class="p">(</span><span class="n">transaction</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_full_checkout_flow</span><span class="p">(</span><span class="n">allow_side_effects</span><span class="p">,</span> <span class="n">celery_worker</span><span class="p">):</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Integration test with real Celery tasks.&quot;&quot;&quot;</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;/checkout/&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;order_id&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>    <span class="c1"># Tasks actually dispatch to Celery</span>
+</span></code></pre></div>
+<h2 id="testing-without-scopes">Testing Without Scopes<a class="headerlink" href="#testing-without-scopes" title="Permanent link">&para;</a></h2>
+<p>If your code uses <code>airlock.enqueue()</code> outside of any scope, it raises <code>NoScopeError</code>:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">airlock</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_enqueue_without_scope</span><span class="p">():</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>    <span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="n">airlock</span><span class="o">.</span><span class="n">NoScopeError</span><span class="p">):</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>        <span class="n">airlock</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">some_task</span><span class="p">)</span>
+</span></code></pre></div>
+<p>This is intentional - airlock requires explicit scope boundaries.</p>
+<h2 id="reset-configuration-between-tests">Reset Configuration Between Tests<a class="headerlink" href="#reset-configuration-between-tests" title="Permanent link">&para;</a></h2>
+<p>If tests modify global configuration, reset it:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># conftest.py</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">airlock</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span><span class="p">(</span><span class="n">autouse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="k">def</span><span class="w"> </span><span class="nf">reset_airlock_config</span><span class="p">():</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>    <span class="k">yield</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>    <span class="n">airlock</span><span class="o">.</span><span class="n">reset_configuration</span><span class="p">()</span>
+</span></code></pre></div>
+<h2 id="common-testing-patterns">Common Testing Patterns<a class="headerlink" href="#common-testing-patterns" title="Permanent link">&para;</a></h2>
+<h3 id="pattern-1-test-business-logic-then-test-side-effects-separately">Pattern 1: Test business logic, then test side effects separately<a class="headerlink" href="#pattern-1-test-business-logic-then-test-side-effects-separately" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_order_status_updated</span><span class="p">():</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Test the business logic only.&quot;&quot;&quot;</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>    <span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">policy</span><span class="o">=</span><span class="n">airlock</span><span class="o">.</span><span class="n">DropAll</span><span class="p">()):</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>        <span class="n">order</span><span class="o">.</span><span class="n">process</span><span class="p">()</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>        <span class="k">assert</span> <span class="n">order</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;processed&quot;</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_order_triggers_notifications</span><span class="p">():</span>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Test the side effect intents.&quot;&quot;&quot;</span>
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>    <span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">policy</span><span class="o">=</span><span class="n">airlock</span><span class="o">.</span><span class="n">DropAll</span><span class="p">())</span> <span class="k">as</span> <span class="n">scope</span><span class="p">:</span>
+</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>        <span class="n">order</span><span class="o">.</span><span class="n">process</span><span class="p">()</span>
+</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">scope</span><span class="o">.</span><span class="n">intents</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+</span></code></pre></div>
+<h3 id="pattern-2-parameterized-policy-tests">Pattern 2: Parameterized policy tests<a class="headerlink" href="#pattern-2-parameterized-policy-tests" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">parametrize</span><span class="p">(</span><span class="s2">&quot;policy,expected_count&quot;</span><span class="p">,</span> <span class="p">[</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>    <span class="p">(</span><span class="n">airlock</span><span class="o">.</span><span class="n">AllowAll</span><span class="p">(),</span> <span class="mi">2</span><span class="p">),</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>    <span class="p">(</span><span class="n">airlock</span><span class="o">.</span><span class="n">BlockTasks</span><span class="p">({</span><span class="s2">&quot;send_email&quot;</span><span class="p">}),</span> <span class="mi">1</span><span class="p">),</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>    <span class="p">(</span><span class="n">airlock</span><span class="o">.</span><span class="n">DropAll</span><span class="p">(),</span> <span class="mi">0</span><span class="p">),</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="p">])</span>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_policy_behavior</span><span class="p">(</span><span class="n">policy</span><span class="p">,</span> <span class="n">expected_count</span><span class="p">,</span> <span class="n">mocker</span><span class="p">):</span>
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>    <span class="n">executor</span> <span class="o">=</span> <span class="n">mocker</span><span class="o">.</span><span class="n">Mock</span><span class="p">()</span>
+</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a>    <span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">policy</span><span class="o">=</span><span class="n">policy</span><span class="p">,</span> <span class="n">executor</span><span class="o">=</span><span class="n">executor</span><span class="p">):</span>
+</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a>        <span class="n">order</span><span class="o">.</span><span class="n">process</span><span class="p">()</span>
+</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a>    <span class="k">assert</span> <span class="n">executor</span><span class="o">.</span><span class="n">call_count</span> <span class="o">==</span> <span class="n">expected_count</span>
+</span></code></pre></div>
+<h3 id="pattern-3-test-that-specific-args-are-passed">Pattern 3: Test that specific args are passed<a class="headerlink" href="#pattern-3-test-that-specific-args-are-passed" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_email_contains_order_id</span><span class="p">():</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>    <span class="k">with</span> <span class="n">airlock</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="n">policy</span><span class="o">=</span><span class="n">airlock</span><span class="o">.</span><span class="n">DropAll</span><span class="p">())</span> <span class="k">as</span> <span class="n">scope</span><span class="p">:</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>        <span class="n">order</span> <span class="o">=</span> <span class="n">Order</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>        <span class="n">order</span><span class="o">.</span><span class="n">process</span><span class="p">()</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>        <span class="n">email_intent</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>            <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">scope</span><span class="o">.</span><span class="n">intents</span>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>            <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;send_confirmation_email&quot;</span>
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>        <span class="p">)</span>
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>        <span class="k">assert</span> <span class="n">email_intent</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;order_id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">42</span>
+</span></code></pre></div>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../getting-started/" class="btn btn-neutral float-left" title="Getting Started"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../understanding/the-problem/" class="btn btn-neutral float-right" title="The Problem">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/ejucovy/airlock" class="fa fa-code-fork" style="color: #fcfcfc"> ejucovy/airlock</a>
+        </span>
+    
+    
+      <span><a href="../getting-started/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../understanding/the-problem/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

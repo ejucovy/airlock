@@ -44,6 +44,14 @@
                 <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
                 </li>
               </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getting-started/">Getting Started</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../testing/">Testing</a>
+                </li>
+              </ul>
               <p class="caption"><span class="caption-text">Understanding Airlock</span></p>
               <ul>
                   <li class="toctree-l1"><a class="reference internal" href="../../understanding/the-problem/">The Problem</a>
@@ -65,8 +73,6 @@
               <p class="caption"><span class="caption-text">Celery</span></p>
               <ul>
                   <li class="toctree-l1"><a class="reference internal" href="../../celery/">Overview</a>
-                  </li>
-                  <li class="toctree-l1"><a class="" href="../../celery/migration.md">Migration</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Extending</span></p>
@@ -338,7 +344,7 @@
 </span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airlock.integrations.executors.huey</span><span class="w"> </span><span class="kn">import</span> <span class="n">huey_executor</span>
 </span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airlock.integrations.executors.dramatiq</span><span class="w"> </span><span class="kn">import</span> <span class="n">dramatiq_executor</span>
 </span></code></pre></div>
-<p>See <a href="../guide/dispatch.md">Dispatch Guide</a> for details.</p>
+<p>See the <a href="../../api/executors/">API Reference</a> for details on each executor's behavior.</p>
 <h2 id="common-patterns">Common Patterns<a class="headerlink" href="#common-patterns" title="Permanent link">&para;</a></h2>
 <h3 id="pattern-1-fallback-executor">Pattern 1: Fallback Executor<a class="headerlink" href="#pattern-1-fallback-executor" title="Permanent link">&para;</a></h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">fallback_executor</span><span class="p">(</span><span class="n">intent</span><span class="p">):</span>
