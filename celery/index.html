@@ -92,7 +92,7 @@
     </li>
     </ul>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="migration/">Migration</a>
+                  <li class="toctree-l1"><a class="" href="migration.md">Migration</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Extending</span></p>
@@ -267,7 +267,7 @@
 <div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">my_task</span><span class="o">.</span><span class="n">delay</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>  <span class="c1"># Passes through to Celery, warns</span>
 </span></code></pre></div></p>
 <p><strong>Note:</strong> Global intercept is a (questionable) migration tool, not steady-state architecture. Use it to migrate legacy code, but prefer <code>airlock.enqueue()</code> for new code.</p>
-<p><a href="migration/">Full migration guide</a></p>
+<p><a href="migration.md">Full migration guide</a></p>
 <h2 id="using-with-django">Using with Django<a class="headerlink" href="#using-with-django" title="Permanent link">&para;</a></h2>
 <p>If you're using Django, the Airlock Django integration provides automatic configuration for Celery. Add Airlock to your <code>INSTALLED_APPS</code> and configure it to use the Celery executor:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># settings.py</span>
@@ -309,7 +309,7 @@
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
         <a href="../django/" class="btn btn-neutral float-left" title="Overview"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="migration/" class="btn btn-neutral float-right" title="Migration">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../extending/custom-policies/" class="btn btn-neutral float-right" title="Custom Policies">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -339,7 +339,7 @@
       <span><a href="../django/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="migration/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../extending/custom-policies/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
