@@ -133,7 +133,7 @@ class TestLocalPolicyContext:
             dispatched.append("blocked")
 
         with scope() as s:
-            with policy(BlockTasks({blocked.__module__ + ":" + blocked.__qualname__})):
+            with policy(BlockTasks({"blocked"})):
                 airlock.enqueue(allowed)
                 airlock.enqueue(blocked)
 
@@ -165,13 +165,10 @@ class TestLocalPolicyContext:
         def task_blocked_scope():
             dispatched.append("blocked_scope")
 
-        scope_blocked = task_blocked_scope.__module__ + ":" + task_blocked_scope.__qualname__
-        local_blocked = task_blocked_local.__module__ + ":" + task_blocked_local.__qualname__
-
-        with scope(policy=BlockTasks({scope_blocked})):
+        with scope(policy=BlockTasks({"task_blocked_scope"})):
             airlock.enqueue(task_allowed)
 
-            with policy(BlockTasks({local_blocked})):
+            with policy(BlockTasks({"task_blocked_local"})):
                 airlock.enqueue(task_blocked_local)
 
             airlock.enqueue(task_blocked_scope)

@@ -175,6 +175,7 @@ class Intent:
     origin: str | None = None
     dispatch_options: dict[str, Any] | None = None
     _local_policies: tuple["Policy", ...] = ()
+    _explicit_name: str | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.args, tuple):
@@ -182,14 +183,20 @@ class Intent:
 
     @property
     def name(self) -> str:
-        """Derived name for serialization/logging."""
-        # Celery tasks have a .name attribute
+        """The task's simple name (e.g., 'send_email', not the full module path).
+
+        If an explicit name was provided via `_name` parameter to `enqueue()`,
+        that name is returned. Otherwise, the name is derived from the task.
+        """
+        # Use explicit name if provided
+        if self._explicit_name is not None:
+            return self._explicit_name
+        # Celery tasks have a .name attribute (e.g., "myapp.tasks.send_email")
         if hasattr(self.task, "name"):
-            return self.task.name
-        # Regular functions - use qualified name
-        module = getattr(self.task, "__module__", "<unknown>")
-        qualname = getattr(self.task, "__qualname__", str(self.task))
-        return f"{module}:{qualname}"
+            # Extract just the function name from dotted path
+            return self.task.name.rsplit(".", 1)[-1]
+        # Regular functions - use __name__ (just the function name)
+        return getattr(self.task, "__name__", str(self.task))
 
     # NOTE: Intentionally not hashable. kwargs and dispatch_options may contain
     # unhashable values, and identity semantics suffice for airlock's purposes.
@@ -967,6 +974,7 @@ def policy(p: Policy) -> Iterator[None]:
 def enqueue(
     task: Callable,
     *args: Any,
+    _name: str | None = None,
     _origin: str | None = None,
     _dispatch_options: dict[str, Any] | None = None,
     **kwargs: Any,
@@ -978,6 +986,9 @@ def enqueue(
     Args:
         task: The callable to execute (Celery task, function, etc.).
         *args: Positional arguments for the task.
+        _name: Optional explicit name for the intent. If not provided, the name
+            is derived from the task (its ``__name__`` attribute, or for Celery
+            tasks, the last component of the task's ``.name``).
         _origin: Optional origin metadata for debugging/observability.
             This is NOT auto-detected - it must be set explicitly if needed.
             Integrations (Django middleware, Celery task wrapper) may set this
@@ -1016,6 +1027,7 @@ def enqueue(
         origin=_origin,
         dispatch_options=_dispatch_options,
         _local_policies=local_policies,
+        _explicit_name=_name,
     )
 
     current_scope = _current_scope.get()

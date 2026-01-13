@@ -9,7 +9,7 @@ Airlock makes testing side effects straightforward. You can suppress them, asser
 | Suppress all side effects | `DropAll()` |
 | Fail if any side effect is enqueued | `AssertNoEffects()` |
 | Inspect what was enqueued | `DropAll()` + `scope.intents` |
-| Block specific tasks | `BlockTasks({"mymodule:task_name"})` (uses fully qualified names) |
+| Block specific tasks | `BlockTasks({"task_name"})` |
 | Let side effects run normally | `AllowAll()` (default) |
 
 ## Suppressing Side Effects
@@ -62,12 +62,12 @@ def test_order_sends_correct_notifications():
         # Inspect the buffered intents
         assert len(scope.intents) == 2
 
-        # Check for tasks by looking for the function name within the fully qualified name
-        assert any("send_confirmation_email" in i.name for i in scope.intents)
-        assert any("notify_warehouse" in i.name for i in scope.intents)
+        intent_names = [intent.name for intent in scope.intents]
+        assert "send_confirmation_email" in intent_names
+        assert "notify_warehouse" in intent_names
 
         # Check arguments
-        email_intent = next(i for i in scope.intents if "send_confirmation_email" in i.name)
+        email_intent = next(i for i in scope.intents if i.name == "send_confirmation_email")
         assert email_intent.kwargs["order_id"] == order.id
 ```
 
@@ -75,7 +75,7 @@ def test_order_sends_correct_notifications():
 
 Each `Intent` object has:
 
-- `intent.name` - The fully qualified task name (e.g., `"mymodule:send_email"`). Use `"func_name" in intent.name` to match by function name.
+- `intent.name` - The task function name
 - `intent.task` - The actual callable
 - `intent.args` - Positional arguments tuple
 - `intent.kwargs` - Keyword arguments dict
@@ -85,17 +85,13 @@ Each `Intent` object has:
 
 ### Block specific tasks
 
-`BlockTasks` matches against the fully qualified task name (e.g., `"mymodule:function_name"`):
-
 ```python
 def test_order_without_email():
-    # Use the fully qualified name: "module:function"
-    blocked = {"myapp.tasks:send_confirmation_email"}
-    with airlock.scope(policy=airlock.BlockTasks(blocked)) as scope:
+    with airlock.scope(policy=airlock.BlockTasks({"send_confirmation_email"})) as scope:
         order.process()
 
         # Email was enqueued but will be dropped
-        assert any("send_confirmation_email" in i.name for i in scope.intents)
+        assert any(i.name == "send_confirmation_email" for i in scope.intents)
     # Warehouse notification dispatches, email does not
 ```
 
@@ -265,7 +261,7 @@ import pytest
 
 @pytest.mark.parametrize("policy,expected_count", [
     (airlock.AllowAll(), 2),
-    (airlock.BlockTasks({"myapp.tasks:send_email"}), 1),
+    (airlock.BlockTasks({"send_email"}), 1),
     (airlock.DropAll(), 0),
 ])
 def test_policy_behavior(policy, expected_count, mocker):
@@ -285,7 +281,7 @@ def test_email_contains_order_id():
 
         email_intent = next(
             i for i in scope.intents
-            if "send_confirmation_email" in i.name
+            if i.name == "send_confirmation_email"
         )
         assert email_intent.kwargs["order_id"] == 42
 ```
