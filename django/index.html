@@ -299,7 +299,7 @@ use <code>DjangoScope</code> with transaction-aware dispatch:</p>
 </span><span id="__span-7-22"><a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a>    <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span><span class="s2">&quot;OK&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <p>This pattern can also be combined with middleware-based implicit scopes.
-You'll want to read more about <a href="../guide/nested-scopes.md">how nested scopes work</a>
+You'll want to read more about <a href="../understanding/nesting/">how nested scopes work</a>
 in that case!</p>
 <h2 id="celery-tasks">Celery tasks<a class="headerlink" href="#celery-tasks" title="Permanent link">&para;</a></h2>
 <p>With the <code>INSTALLED_APPS</code> configuration, Celery tasks can use <code>@airlock.scoped()</code> directly:</p>
