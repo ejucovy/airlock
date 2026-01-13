@@ -6,6 +6,8 @@
 [![Docs](https://github.com/ejucovy/airlock/actions/workflows/docs.yml/badge.svg)](https://ejucovy.github.io/airlock)
 [![codecov](https://codecov.io/gh/ejucovy/airlock/graph/badge.svg?token=AZ8U5BHG1M)](https://codecov.io/gh/ejucovy/airlock)
 
+<img width="1263" height="550" alt="Screenshot 2026-01-12 at 11 21 29 PM" src="https://github.com/user-attachments/assets/d5aa2526-53d4-40a7-a6de-8589a5e7cad6" />
+
 ## tl;dr
 
 ```python
