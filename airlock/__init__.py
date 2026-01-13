@@ -68,6 +68,7 @@ _config: dict[str, Any] = {
     "scope_cls": None,  # None means use Scope (can't reference it yet)
     "policy": None,     # None means use AllowAll()
     "executor": None,   # None means use default sync executor
+    "scope_kwargs": {},  # Additional kwargs passed to scope instantiation
 }
 
 
@@ -76,6 +77,7 @@ def configure(
     scope_cls: "type[Scope] | None" = None,
     policy: "Policy | None" = None,
     executor: "Executor | None" = None,
+    scope_kwargs: "dict[str, Any] | None" = None,
 ) -> None:
     """
     Configure global defaults for airlock scopes.
@@ -89,6 +91,7 @@ def configure(
             default in Django applications.
         policy: Default policy for all scopes.
         executor: Default executor for all scopes.
+        scope_kwargs: Additional kwargs passed to scope class instantiation.
 
     Example:
         In Django, this is called automatically by `AppConfig.ready()`
@@ -111,6 +114,8 @@ def configure(
         _config["policy"] = policy
     if executor is not None:
         _config["executor"] = executor
+    if scope_kwargs is not None:
+        _config["scope_kwargs"] = scope_kwargs
 
 
 def reset_configuration() -> None:
@@ -118,6 +123,7 @@ def reset_configuration() -> None:
     _config["scope_cls"] = None
     _config["policy"] = None
     _config["executor"] = None
+    _config["scope_kwargs"] = {}
 
 
 def get_configuration() -> dict[str, Any]:
@@ -440,24 +446,6 @@ class LogOnFlush:
 
     def __repr__(self) -> str:
         return f"LogOnFlush(logger={self._logger.name!r})"
-
-
-class CompositePolicy:
-    """Policy that combines multiple policies (all must allow)."""
-
-    def __init__(self, *policies: Policy) -> None:
-        self._policies = policies
-
-    def on_enqueue(self, intent: Intent) -> None:
-        for policy in self._policies:
-            policy.on_enqueue(intent)
-
-    def allows(self, intent: Intent) -> bool:
-        return all(policy.allows(intent) for policy in self._policies)
-
-    def __repr__(self) -> str:
-        policies_str = ", ".join(repr(p) for p in self._policies)
-        return f"CompositePolicy({policies_str})"
 
 
 # ============================================================================
@@ -845,11 +833,14 @@ def scope(
     actual_cls = _cls if _cls is not None else (_config["scope_cls"] or Scope)
     actual_policy = policy if policy is not None else (_config["policy"] or AllowAll())
 
-    # For executor, check if it's in kwargs; if not, use configured default
-    if "executor" not in kwargs and _config["executor"] is not None:
-        kwargs["executor"] = _config["executor"]
+    # Merge configured scope_kwargs with explicit kwargs (explicit wins)
+    merged_kwargs = {**_config["scope_kwargs"], **kwargs}
 
-    s = actual_cls(policy=actual_policy, **kwargs)
+    # For executor, check if it's in kwargs; if not, use configured default
+    if "executor" not in merged_kwargs and _config["executor"] is not None:
+        merged_kwargs["executor"] = _config["executor"]
+
+    s = actual_cls(policy=actual_policy, **merged_kwargs)
     s.enter()
 
     error: BaseException | None = None
@@ -1072,7 +1063,6 @@ __all__ = [
     "AssertNoEffects",
     "BlockTasks",
     "LogOnFlush",
-    "CompositePolicy",
     # Internal (for integrations)
     "_execute",
     "_current_scope",

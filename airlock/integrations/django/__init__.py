@@ -27,7 +27,8 @@ Settings (in ``settings.py``)::
     AIRLOCK = {
         "POLICY": "airlock.AllowAll",  # Dotted path or callable
         "EXECUTOR": None,              # Dotted path to executor callable
-        "SCOPE": "airlock.integrations.django.DjangoScope",  # Scope class for middleware
+        "SCOPE": "airlock.integrations.django.DjangoScope",  # Scope class
+        "SCOPE_KWARGS": {},            # Additional kwargs for scope instantiation
     }
 
 ``EXECUTOR`` is a dotted import path to an executor callable:
@@ -44,7 +45,9 @@ from functools import wraps
 from typing import Any, Callable
 from importlib import import_module
 
+import django
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
 
 import airlock
@@ -60,6 +63,7 @@ DEFAULTS = {
     "POLICY": "airlock.AllowAll",
     "EXECUTOR": None,  # Dotted path to executor callable, or None for sync
     "SCOPE": "airlock.integrations.django.DjangoScope",
+    "SCOPE_KWARGS": {},  # Additional kwargs passed to scope instantiation
 }
 
 
@@ -67,6 +71,24 @@ def get_setting(name: str) -> Any:
     """Get an airlock setting, falling back to defaults."""
     user_settings = getattr(settings, "AIRLOCK", {})
     return user_settings.get(name, DEFAULTS[name])
+
+
+def validate_settings() -> None:
+    """Validate that AIRLOCK settings contain only known keys.
+
+    Raises:
+        ImproperlyConfigured: If unknown keys are present in AIRLOCK settings.
+    """
+    user_settings = getattr(settings, "AIRLOCK", {})
+    unknown_keys = set(user_settings.keys()) - set(DEFAULTS.keys())
+
+    if unknown_keys:
+        valid_keys = ", ".join(sorted(DEFAULTS.keys()))
+        unknown = ", ".join(sorted(unknown_keys))
+        raise ImproperlyConfigured(
+            f"Unknown key(s) in AIRLOCK settings: {unknown}. "
+            f"Valid keys are: {valid_keys}."
+        )
 
 
 def import_string(dotted_path: str) -> Any:
@@ -165,13 +187,17 @@ class DjangoScope(Scope):
     def schedule_dispatch(self, callback: Callable[[], None]) -> None:
         """Schedule the dispatch callback. Override to customize dispatch timing.
 
-        By default, uses ``transaction.on_commit(robust=True)``. This defers
-        dispatch until the transaction commits, or runs immediately if
+        By default, uses ``transaction.on_commit()``. On Django 5.0+, uses
+        ``robust=True`` so one failing callback doesn't prevent others from running.
+        This defers dispatch until the transaction commits, or runs immediately if
         outside a transaction (autocommit mode).
 
         Override to change timing, robust behavior, or skip ``on_commit`` entirely.
         """
-        transaction.on_commit(callback, robust=True)
+        if django.VERSION >= (5, 0):
+            transaction.on_commit(callback, robust=True)
+        else:
+            transaction.on_commit(callback)
 
     def _dispatch_all(self, intents: list[Intent]) -> None:
         """Dispatch each intent via `schedule_dispatch()`, orthogonally."""
@@ -208,12 +234,20 @@ class AirlockMiddleware:
         return response.status_code < 400
 
     def __call__(self, request):
-        policy = get_policy()
-        scope_class = get_scope_class()
+        config = airlock.get_configuration()
+
+        # Use configured values (set by AppConfig.ready)
+        scope_class = config["scope_cls"] or DjangoScope
+        policy = config["policy"] or AllowAll()
+        scope_kwargs = dict(config["scope_kwargs"])
+
+        # Add executor to kwargs if configured
+        if config["executor"] is not None:
+            scope_kwargs.setdefault("executor", config["executor"])
 
         # Use imperative API for manual terminal state handling.
         # This allows us to decide flush vs discard based on response status.
-        s = scope_class(policy=policy)
+        s = scope_class(policy=policy, **scope_kwargs)
         s.enter()
         request.airlock_scope = s
 

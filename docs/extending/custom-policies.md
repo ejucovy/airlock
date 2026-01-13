@@ -69,10 +69,21 @@ No error, no trace. Good for production filtering.
 
 ## Combining Policies
 
-Use `CompositePolicy`:
+Create a simple composite:
 
 ```python
-policy = airlock.CompositePolicy(
+class CompositePolicy:
+    def __init__(self, *policies):
+        self.policies = policies
+
+    def on_enqueue(self, intent):
+        for p in self.policies:
+            p.on_enqueue(intent)
+
+    def allows(self, intent):
+        return all(p.allows(intent) for p in self.policies)
+
+policy = CompositePolicy(
     RateLimitPolicy(max_per_flush=100),
     MetricsPolicy(),
     AuditPolicy("audit.log"),
