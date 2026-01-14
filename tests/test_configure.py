@@ -25,6 +25,17 @@ class CustomScope(Scope):
         CustomScope.instances.append(self)
 
 
+class KwargsCapturingScope(Scope):
+    """A test scope that captures kwargs for verification."""
+    captured_kwargs = []
+
+    def __init__(self, **kwargs):
+        KwargsCapturingScope.captured_kwargs.append(dict(kwargs))
+        # Remove custom kwargs before passing to parent
+        filtered = {k: v for k, v in kwargs.items() if k in ("policy", "executor")}
+        super().__init__(**filtered)
+
+
 class CustomPolicy:
     """A test policy that tracks calls."""
     instances = []
@@ -53,11 +64,13 @@ def reset_config():
     reset_configuration()
     CustomScope.instances = []
     CustomPolicy.instances = []
+    KwargsCapturingScope.captured_kwargs = []
     tracking_executor.calls = []
     yield
     reset_configuration()
     CustomScope.instances = []
     CustomPolicy.instances = []
+    KwargsCapturingScope.captured_kwargs = []
     tracking_executor.calls = []
 
 
@@ -104,15 +117,28 @@ class TestConfigureBasics:
         assert config["policy"] is policy
         assert config["executor"] is tracking_executor
 
+    def test_configure_scope_kwargs(self):
+        """Test configuring scope_kwargs."""
+        configure(scope_kwargs={"custom_arg": "value"})
+
+        config = get_configuration()
+        assert config["scope_kwargs"] == {"custom_arg": "value"}
+
     def test_reset_configuration(self):
         """Test that reset_configuration() clears all settings."""
-        configure(scope_cls=CustomScope, policy=DropAll(), executor=tracking_executor)
+        configure(
+            scope_cls=CustomScope,
+            policy=DropAll(),
+            executor=tracking_executor,
+            scope_kwargs={"custom": True},
+        )
         reset_configuration()
 
         config = get_configuration()
         assert config["scope_cls"] is None
         assert config["policy"] is None
         assert config["executor"] is None
+        assert config["scope_kwargs"] == {}
 
     def test_configure_partial_update(self):
         """Test that configure() only updates provided values."""
@@ -225,6 +251,35 @@ class CustomScopeUsesConfiguration:
 
         # Should use Scope and AllowAll
         assert len(calls) == 1
+
+    def test_scope_uses_configured_scope_kwargs(self):
+        """Test that scope() passes configured scope_kwargs to scope class."""
+        configure(
+            scope_cls=KwargsCapturingScope,
+            scope_kwargs={"custom_option": "configured_value"},
+        )
+
+        with scope():
+            pass
+
+        assert len(KwargsCapturingScope.captured_kwargs) == 1
+        assert KwargsCapturingScope.captured_kwargs[0]["custom_option"] == "configured_value"
+
+    def test_scope_explicit_kwargs_override_configured_scope_kwargs(self):
+        """Test that explicit kwargs override configured scope_kwargs."""
+        configure(
+            scope_cls=KwargsCapturingScope,
+            scope_kwargs={"option": "configured", "other": "from_config"},
+        )
+
+        with scope(option="explicit"):
+            pass
+
+        assert len(KwargsCapturingScope.captured_kwargs) == 1
+        # Explicit should override configured
+        assert KwargsCapturingScope.captured_kwargs[0]["option"] == "explicit"
+        # Non-overridden should still be present
+        assert KwargsCapturingScope.captured_kwargs[0]["other"] == "from_config"
 
 
 class CustomScopedUsesConfiguration:

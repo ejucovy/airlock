@@ -50,10 +50,17 @@ class AirlockConfig(AppConfig):
             DjangoScope,
             get_policy,
             get_executor,
+            get_setting,
+            validate_settings,
         )
 
+        # Validate settings early to catch typos like "TASK_BACKEND" vs "EXECUTOR"
+        validate_settings()
+
+        # Configure airlock with Django-appropriate defaults
         airlock.configure(
             scope_cls=DjangoScope,
             policy=get_policy(),
             executor=get_executor(),
+            scope_kwargs=get_setting("SCOPE_KWARGS"),
         )

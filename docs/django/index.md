@@ -79,8 +79,9 @@ def checkout(request):
 ### Configuration
 
 With zero configuration, all tasks execute synchronously as plain callables
-at dispatch time, hooked in to `transaction.on_commit(robust=True)` against
-the default database.
+at dispatch time, hooked in to `transaction.on_commit()` against
+the default database. On Django 5.0+, `robust=True` is used so one
+failing callback doesn't prevent others from running.
 
 ```python
 # settings.py

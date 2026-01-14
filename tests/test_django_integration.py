@@ -278,8 +278,19 @@ def test_get_policy_with_instance():
         assert policy is instance
 
 
-def test_middleware_uses_scope_class_from_setting(mock_transaction):
-    """Test AirlockMiddleware uses scope class from SCOPE setting."""
+def test_get_policy_with_string_path():
+    """Test get_policy() when POLICY setting is a dotted string path."""
+    with patch("airlock.integrations.django.get_setting") as mock_get_setting:
+        mock_get_setting.return_value = "airlock.DropAll"
+
+        policy = get_policy()
+
+        from airlock import DropAll
+        assert isinstance(policy, DropAll)
+
+
+def test_middleware_uses_scope_class_from_config(mock_transaction):
+    """Test AirlockMiddleware uses scope class from airlock.configure()."""
     # Create a custom scope class that tracks instantiation
     instantiated = []
 
@@ -291,19 +302,52 @@ def test_middleware_uses_scope_class_from_setting(mock_transaction):
     get_response = MagicMock()
     get_response.return_value.status_code = 200
 
-    with patch("airlock.integrations.django.get_scope_class") as mock_get_scope:
-        mock_get_scope.return_value = TrackingScope
-        with patch("airlock.integrations.django.get_policy") as mock_get_policy:
-            mock_get_policy.return_value = AllowAll()
+    # Configure airlock with our custom scope class
+    airlock.configure(scope_cls=TrackingScope, policy=AllowAll())
 
-            middleware = AirlockMiddleware(get_response)
-            request = MagicMock()
+    try:
+        middleware = AirlockMiddleware(get_response)
+        request = MagicMock()
 
-            middleware(request)
+        middleware(request)
 
-            # Should have instantiated our custom scope
-            assert len(instantiated) == 1
-            assert isinstance(instantiated[0], TrackingScope)
+        # Should have instantiated our custom scope
+        assert len(instantiated) == 1
+        assert isinstance(instantiated[0], TrackingScope)
+    finally:
+        airlock.reset_configuration()
+
+
+def test_middleware_uses_executor_from_config(mock_transaction):
+    """Test AirlockMiddleware passes configured executor to scope."""
+    received_executor = []
+
+    class ExecutorCapturingScope(DjangoScope):
+        def __init__(self, **kwargs):
+            received_executor.append(kwargs.get("executor"))
+            super().__init__(**kwargs)
+
+    def custom_executor(intent):
+        pass
+
+    get_response = MagicMock()
+    get_response.return_value.status_code = 200
+
+    # Configure airlock with executor
+    airlock.configure(
+        scope_cls=ExecutorCapturingScope,
+        policy=AllowAll(),
+        executor=custom_executor,
+    )
+
+    try:
+        middleware = AirlockMiddleware(get_response)
+        middleware(MagicMock())
+
+        assert len(received_executor) == 1
+        assert received_executor[0] is custom_executor
+    finally:
+        airlock.reset_configuration()
 
 
 # =============================================================================
@@ -733,3 +777,148 @@ class TestAppConfig:
         assert django_integration.default_app_config == (
             "airlock.integrations.django.apps.AirlockConfig"
         )
+        assert django_integration.default_app_config == "airlock.integrations.django.apps.AirlockConfig"
+
+
+# =============================================================================
+# Settings validation tests
+# =============================================================================
+
+
+class TestSettingsValidation:
+    """Tests for AIRLOCK settings validation."""
+
+    def test_validate_settings_passes_with_valid_keys(self):
+        """Test that validate_settings() passes with known keys."""
+        from airlock.integrations.django import validate_settings
+
+        with override_settings(AIRLOCK={"POLICY": "airlock.AllowAll", "EXECUTOR": None}):
+            # Should not raise
+            validate_settings()
+
+    def test_validate_settings_accepts_scope_kwargs(self):
+        """Test that SCOPE_KWARGS is a valid setting."""
+        from airlock.integrations.django import validate_settings
+
+        with override_settings(AIRLOCK={"SCOPE_KWARGS": {"custom_arg": True}}):
+            # Should not raise
+            validate_settings()
+
+    def test_middleware_passes_scope_kwargs_to_scope(self, mock_transaction):
+        """Test that scope_kwargs are passed through to scope instantiation."""
+        received_kwargs = {}
+
+        class KwargsCapturingScope(DjangoScope):
+            def __init__(self, **kwargs):
+                # Capture all kwargs before filtering for parent
+                received_kwargs.update(kwargs)
+                # Remove custom kwarg before passing to parent
+                kwargs.pop("custom_option", None)
+                super().__init__(**kwargs)
+
+        get_response = MagicMock()
+        get_response.return_value.status_code = 200
+
+        # Configure airlock with scope_kwargs
+        airlock.configure(
+            scope_cls=KwargsCapturingScope,
+            scope_kwargs={"custom_option": "test_value"},
+        )
+
+        try:
+            middleware = AirlockMiddleware(get_response)
+            middleware(MagicMock())
+
+            assert received_kwargs.get("custom_option") == "test_value"
+        finally:
+            airlock.reset_configuration()
+
+    def test_validate_settings_raises_on_unknown_key(self):
+        """Test that validate_settings() raises ImproperlyConfigured on unknown keys."""
+        from django.core.exceptions import ImproperlyConfigured
+        from airlock.integrations.django import validate_settings
+
+        with override_settings(AIRLOCK={"TASK_BACKEND": "celery"}):
+            with pytest.raises(ImproperlyConfigured) as exc_info:
+                validate_settings()
+
+            assert "TASK_BACKEND" in str(exc_info.value)
+            assert "EXECUTOR" in str(exc_info.value)  # Valid keys shown
+
+    def test_validate_settings_raises_on_multiple_unknown_keys(self):
+        """Test that validate_settings() lists all unknown keys."""
+        from django.core.exceptions import ImproperlyConfigured
+        from airlock.integrations.django import validate_settings
+
+        with override_settings(AIRLOCK={"FOO": 1, "BAR": 2}):
+            with pytest.raises(ImproperlyConfigured) as exc_info:
+                validate_settings()
+
+            assert "BAR" in str(exc_info.value)
+            assert "FOO" in str(exc_info.value)
+
+    def test_validate_settings_passes_with_empty_settings(self):
+        """Test that validate_settings() passes when AIRLOCK is empty or missing."""
+        from airlock.integrations.django import validate_settings
+
+        with override_settings(AIRLOCK={}):
+            validate_settings()  # Should not raise
+
+    def test_app_config_ready_validates_settings(self):
+        """Test that AppConfig.ready() calls validate_settings()."""
+        from airlock.integrations.django.apps import AirlockConfig
+        from django.core.exceptions import ImproperlyConfigured
+        import airlock.integrations.django as django_module
+
+        with override_settings(AIRLOCK={"INVALID_KEY": "value"}):
+            config = AirlockConfig("airlock.integrations.django", django_module)
+            with pytest.raises(ImproperlyConfigured) as exc_info:
+                config.ready()
+
+            assert "INVALID_KEY" in str(exc_info.value)
+
+
+# =============================================================================
+# Django version compatibility tests
+# =============================================================================
+
+
+class TestDjangoVersionCompatibility:
+    """Tests for Django version-specific behavior."""
+
+    def test_on_commit_uses_robust_on_django_5(self):
+        """Test that on_commit uses robust=True on Django 5.0+."""
+        import django
+
+        if django.VERSION < (5, 0):
+            pytest.skip("Test only runs on Django 5.0+")
+
+        with patch("airlock.integrations.django.transaction") as mock_transaction:
+            s = DjangoScope(policy=AllowAll())
+            s._add(Intent(task=dummy_task, args=(), kwargs={}))
+            s.flush()
+
+            # Should have been called with robust=True
+            mock_transaction.on_commit.assert_called_once()
+            call_kwargs = mock_transaction.on_commit.call_args[1]
+            assert call_kwargs.get("robust") is True
+
+    def test_on_commit_without_robust_on_django_4(self):
+        """Test that on_commit doesn't use robust on Django < 5.0."""
+        import django
+
+        # Mock Django version to be 4.x for testing
+        with patch.object(django, "VERSION", (4, 2)):
+            with patch("airlock.integrations.django.transaction") as mock_transaction:
+                # Reimport to pick up the patched VERSION... but we need to test the logic directly
+                # Instead, let's just call schedule_dispatch and check the call
+                s = DjangoScope(policy=AllowAll())
+                callback = lambda: None
+
+                # Call schedule_dispatch directly with mocked django.VERSION
+                with patch("airlock.integrations.django.django") as mock_django:
+                    mock_django.VERSION = (4, 2)
+                    s.schedule_dispatch(callback)
+
+                    # Should have been called without robust
+                    mock_transaction.on_commit.assert_called_once_with(callback)
