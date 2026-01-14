@@ -93,6 +93,8 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#lifecycle-phases">Lifecycle Phases</a>
     </li>
+    <li class="toctree-l2"><a class="reference internal" href="#why-override-_dispatch_all-not-flush">Why Override _dispatch_all, Not flush?</a>
+    </li>
     <li class="toctree-l2"><a class="reference internal" href="#common-mistakes">Common Mistakes</a>
         <ul>
     <li class="toctree-l3"><a class="reference internal" href="#dont-override-flush">Don't Override flush()</a>
@@ -255,35 +257,50 @@
 </span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>6. flush()            - Apply policy, call _dispatch_all()
 </span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>7. _dispatch_all()    - Execute intents
 </span></code></pre></div>
+<h2 id="why-override-_dispatch_all-not-flush">Why Override <code>_dispatch_all</code>, Not <code>flush</code>?<a class="headerlink" href="#why-override-_dispatch_all-not-flush" title="Permanent link">&para;</a></h2>
+<p>Many frameworks have a "split lifecycle" where the code block ends before the transaction commits:</p>
+<ul>
+<li><strong>Logical end</strong>: The <code>with</code> block exits. No more intents should be accepted.</li>
+<li><strong>Physical end</strong>: The transaction commits. Side effects should actually happen.</li>
+</ul>
+<p>If you override <code>flush()</code> to defer execution, you create a "zombie scope"—logically finished but physically still open. This leads to bugs: double-flushes, lost intents, or intents accepted after the block exits.</p>
+<p>The <code>Scope</code> class handles this with the Template Method pattern:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">flush</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="c1"># 1. Marks scope as flushed (closed to new intents)</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="c1"># 2. Applies policies synchronously</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="c1"># 3. Persists to storage</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="c1"># 4. Calls self._dispatch_all(intents)</span>
+</span></code></pre></div>
+<p>By overriding only <code>_dispatch_all</code>, you defer the network calls while airlock handles the state management correctly.</p>
 <h2 id="common-mistakes">Common Mistakes<a class="headerlink" href="#common-mistakes" title="Permanent link">&para;</a></h2>
 <h3 id="dont-override-flush">Don't Override flush()<a class="headerlink" href="#dont-override-flush" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Bad - breaks internal state management</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">BadScope</span><span class="p">(</span><span class="n">Scope</span><span class="p">):</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">flush</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>        <span class="o">...</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Bad - breaks internal state management</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">BadScope</span><span class="p">(</span><span class="n">Scope</span><span class="p">):</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">flush</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>        <span class="o">...</span>
 </span></code></pre></div>
 <p>Override <code>should_flush()</code> or <code>_dispatch_all()</code> instead.</p>
 <h3 id="dont-forget-to-call-super">Don't Forget to Call super()<a class="headerlink" href="#dont-forget-to-call-super" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Bad - breaks buffer management</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">BadScope</span><span class="p">(</span><span class="n">Scope</span><span class="p">):</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">intent</span><span class="p">):</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>        <span class="n">my_custom_buffer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">intent</span><span class="p">)</span>  <span class="c1"># Forgot super()!</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="c1"># Good</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="k">class</span><span class="w"> </span><span class="nc">GoodScope</span><span class="p">(</span><span class="n">Scope</span><span class="p">):</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">intent</span><span class="p">):</span>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_add</span><span class="p">(</span><span class="n">intent</span><span class="p">)</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>        <span class="n">my_custom_buffer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">intent</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Bad - breaks buffer management</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">BadScope</span><span class="p">(</span><span class="n">Scope</span><span class="p">):</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">intent</span><span class="p">):</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>        <span class="n">my_custom_buffer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">intent</span><span class="p">)</span>  <span class="c1"># Forgot super()!</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="c1"># Good</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="k">class</span><span class="w"> </span><span class="nc">GoodScope</span><span class="p">(</span><span class="n">Scope</span><span class="p">):</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">intent</span><span class="p">):</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_add</span><span class="p">(</span><span class="n">intent</span><span class="p">)</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>        <span class="n">my_custom_buffer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">intent</span><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="dont-mutate-intents-list">Don't Mutate Intents List<a class="headerlink" href="#dont-mutate-intents-list" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Bad - mutates caller&#39;s list</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">before_descendant_flushes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exiting_scope</span><span class="p">,</span> <span class="n">intents</span><span class="p">):</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="n">intents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_intent</span><span class="p">)</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="k">return</span> <span class="n">intents</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="c1"># Good - return new list</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="k">def</span><span class="w"> </span><span class="nf">before_descendant_flushes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exiting_scope</span><span class="p">,</span> <span class="n">intents</span><span class="p">):</span>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="k">return</span> <span class="n">intents</span> <span class="o">+</span> <span class="p">[</span><span class="n">new_intent</span><span class="p">]</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Bad - mutates caller&#39;s list</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">before_descendant_flushes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exiting_scope</span><span class="p">,</span> <span class="n">intents</span><span class="p">):</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="n">intents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_intent</span><span class="p">)</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="k">return</span> <span class="n">intents</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="c1"># Good - return new list</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="k">def</span><span class="w"> </span><span class="nf">before_descendant_flushes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exiting_scope</span><span class="p">,</span> <span class="n">intents</span><span class="p">):</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>    <span class="k">return</span> <span class="n">intents</span> <span class="o">+</span> <span class="p">[</span><span class="n">new_intent</span><span class="p">]</span>
 </span></code></pre></div>
               
             </div>

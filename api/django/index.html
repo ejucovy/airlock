@@ -222,8 +222,9 @@ on <code>EXECUTOR</code> setting.</p>
     <div class="doc doc-contents ">
 
         <p>Schedule the dispatch callback. Override to customize dispatch timing.</p>
-<p>By default, uses <code>transaction.on_commit(robust=True)</code>. This defers
-dispatch until the transaction commits, or runs immediately if
+<p>By default, uses <code>transaction.on_commit()</code>. On Django 5.0+, uses
+<code>robust=True</code> so one failing callback doesn't prevent others from running.
+This defers dispatch until the transaction commits, or runs immediately if
 outside a transaction (autocommit mode).</p>
 <p>Override to change timing, robust behavior, or skip <code>on_commit</code> entirely.</p>
 

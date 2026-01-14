@@ -2,74 +2,74 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://ejucovy.github.io/airlock/</loc>
-         <lastmod>2026-01-13</lastmod>
+         <lastmod>2026-01-14</lastmod>
     </url>
     <url>
          <loc>https://ejucovy.github.io/airlock/getting-started/</loc>
-         <lastmod>2026-01-13</lastmod>
+         <lastmod>2026-01-14</lastmod>
     </url>
     <url>
          <loc>https://ejucovy.github.io/airlock/testing/</loc>
-         <lastmod>2026-01-13</lastmod>
+         <lastmod>2026-01-14</lastmod>
     </url>
     <url>
          <loc>https://ejucovy.github.io/airlock/api/</loc>
-         <lastmod>2026-01-13</lastmod>
+         <lastmod>2026-01-14</lastmod>
     </url>
     <url>
          <loc>https://ejucovy.github.io/airlock/api/celery/</loc>
-         <lastmod>2026-01-13</lastmod>
+         <lastmod>2026-01-14</lastmod>
     </url>
     <url>
          <loc>https://ejucovy.github.io/airlock/api/core/</loc>
-         <lastmod>2026-01-13</lastmod>
+         <lastmod>2026-01-14</lastmod>
     </url>
     <url>
          <loc>https://ejucovy.github.io/airlock/api/django/</loc>
-         <lastmod>2026-01-13</lastmod>
+         <lastmod>2026-01-14</lastmod>
     </url>
     <url>
          <loc>https://ejucovy.github.io/airlock/api/executors/</loc>
-         <lastmod>2026-01-13</lastmod>
+         <lastmod>2026-01-14</lastmod>
     </url>
     <url>
          <loc>https://ejucovy.github.io/airlock/celery/</loc>
-         <lastmod>2026-01-13</lastmod>
+         <lastmod>2026-01-14</lastmod>
     </url>
     <url>
          <loc>https://ejucovy.github.io/airlock/django/</loc>
-         <lastmod>2026-01-13</lastmod>
+         <lastmod>2026-01-14</lastmod>
     </url>
     <url>
          <loc>https://ejucovy.github.io/airlock/extending/custom-executors/</loc>
-         <lastmod>2026-01-13</lastmod>
+         <lastmod>2026-01-14</lastmod>
     </url>
     <url>
          <loc>https://ejucovy.github.io/airlock/extending/custom-policies/</loc>
-         <lastmod>2026-01-13</lastmod>
+         <lastmod>2026-01-14</lastmod>
     </url>
     <url>
          <loc>https://ejucovy.github.io/airlock/extending/custom-scopes/</loc>
-         <lastmod>2026-01-13</lastmod>
+         <lastmod>2026-01-14</lastmod>
     </url>
     <url>
          <loc>https://ejucovy.github.io/airlock/understanding/alternatives/</loc>
-         <lastmod>2026-01-13</lastmod>
+         <lastmod>2026-01-14</lastmod>
     </url>
     <url>
          <loc>https://ejucovy.github.io/airlock/understanding/core-model/</loc>
-         <lastmod>2026-01-13</lastmod>
+         <lastmod>2026-01-14</lastmod>
     </url>
     <url>
          <loc>https://ejucovy.github.io/airlock/understanding/design-invariants/</loc>
-         <lastmod>2026-01-13</lastmod>
+         <lastmod>2026-01-14</lastmod>
     </url>
     <url>
          <loc>https://ejucovy.github.io/airlock/understanding/nesting/</loc>
-         <lastmod>2026-01-13</lastmod>
+         <lastmod>2026-01-14</lastmod>
     </url>
     <url>
          <loc>https://ejucovy.github.io/airlock/understanding/the-problem/</loc>
-         <lastmod>2026-01-13</lastmod>
+         <lastmod>2026-01-14</lastmod>
     </url>
 </urlset>

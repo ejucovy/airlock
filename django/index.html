@@ -211,8 +211,9 @@ database state has settled.</p>
 </span></code></pre></div>
 <h3 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h3>
 <p>With zero configuration, all tasks execute synchronously as plain callables
-at dispatch time, hooked in to <code>transaction.on_commit(robust=True)</code> against
-the default database.</p>
+at dispatch time, hooked in to <code>transaction.on_commit()</code> against
+the default database. On Django 5.0+, <code>robust=True</code> is used so one
+failing callback doesn't prevent others from running.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># settings.py</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">AIRLOCK</span> <span class="o">=</span> <span class="p">{</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="c1"># Just call functions synchronously at dispatch time</span>
