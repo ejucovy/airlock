@@ -70,6 +70,27 @@ with transaction.atomic():
 7. _dispatch_all()    - Execute intents
 ```
 
+## Why Override `_dispatch_all`, Not `flush`?
+
+Many frameworks have a "split lifecycle" where the code block ends before the transaction commits:
+
+- **Logical end**: The `with` block exits. No more intents should be accepted.
+- **Physical end**: The transaction commits. Side effects should actually happen.
+
+If you override `flush()` to defer execution, you create a "zombie scope"—logically finished but physically still open. This leads to bugs: double-flushes, lost intents, or intents accepted after the block exits.
+
+The `Scope` class handles this with the Template Method pattern:
+
+```python
+def flush(self):
+    # 1. Marks scope as flushed (closed to new intents)
+    # 2. Applies policies synchronously
+    # 3. Persists to storage
+    # 4. Calls self._dispatch_all(intents)
+```
+
+By overriding only `_dispatch_all`, you defer the network calls while airlock handles the state management correctly.
+
 ## Common Mistakes
 
 ### Don't Override flush()
