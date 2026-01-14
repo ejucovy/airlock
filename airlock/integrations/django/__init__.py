@@ -49,7 +49,8 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
 
-from airlock import Scope, Intent, Executor
+import airlock
+from airlock import Scope, Intent, Executor, AllowAll
 from airlock.integrations.executors.sync import sync_executor
 
 

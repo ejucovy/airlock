@@ -17,6 +17,7 @@ if not settings.configured:
     )
 
 from django.db import transaction
+from django.test import override_settings
 from airlock.integrations.django import (
     DjangoScope,
     AirlockMiddleware,
@@ -777,7 +778,6 @@ class TestAppConfig:
         assert django_integration.default_app_config == (
             "airlock.integrations.django.apps.AirlockConfig"
         )
-        assert django_integration.default_app_config == "airlock.integrations.django.apps.AirlockConfig"
 
 
 # =============================================================================
@@ -913,7 +913,9 @@ class TestDjangoVersionCompatibility:
                 # Reimport to pick up the patched VERSION... but we need to test the logic directly
                 # Instead, let's just call schedule_dispatch and check the call
                 s = DjangoScope(policy=AllowAll())
-                callback = lambda: None
+
+                def callback():
+                    pass
 
                 # Call schedule_dispatch directly with mocked django.VERSION
                 with patch("airlock.integrations.django.django") as mock_django:
