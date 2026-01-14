@@ -21,6 +21,12 @@ jobs:
       - name: Install dependencies
         run: pip install -e ".[dev,test]"
 
+      - name: Lint with flake8
+        run: flake8 airlock tests
+
+      - name: Check airlock-specific lint rules
+        run: python -m airlock.flake8_plugin
+
       - name: Run tests with coverage
         run: |
           pytest --cov=airlock --cov-report=term-missing --cov-report=xml

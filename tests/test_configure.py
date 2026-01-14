@@ -2,7 +2,6 @@
 
 import pytest
 
-import airlock
 from airlock import (
     configure,
     reset_configuration,

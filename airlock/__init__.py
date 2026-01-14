@@ -16,6 +16,7 @@ Usage:
 from contextvars import ContextVar, Token
 from contextlib import contextmanager
 from dataclasses import dataclass
+from functools import wraps
 from typing import Any, Callable, Protocol, Iterator, runtime_checkable
 import logging
 import warnings
@@ -39,7 +40,7 @@ def _check_greenlet_compatibility() -> None:
     This check runs at import time to provide early warning.
     """
     try:
-        import greenlet
+        import greenlet  # noqa: AIR002 - conditional import for optional dependency
     except ImportError:
         # No greenlet installed - not a greenlet-based environment
         return
@@ -214,7 +215,10 @@ class Intent:
         origin_str = f", origin={self.origin!r}" if self.origin else ""
         opts_str = f", dispatch_options={self.dispatch_options!r}" if self.dispatch_options else ""
         policies_str = f", policies={len(self._local_policies)}" if self._local_policies else ""
-        return f"Intent({self.name!r}, args={self.args!r}, kwargs={self.kwargs!r}{origin_str}{opts_str}{policies_str})"
+        return (
+            f"Intent({self.name!r}, args={self.args!r}, kwargs={self.kwargs!r}"
+            f"{origin_str}{opts_str}{policies_str})"
+        )
 
     @property
     def local_policies(self) -> tuple["Policy", ...]:
@@ -577,7 +581,9 @@ class Scope:
         """
         return error is None
 
-    def before_descendant_flushes(self, exiting_scope: "Scope", intents: list[Intent]) -> list[Intent]:
+    def before_descendant_flushes(
+        self, exiting_scope: "Scope", intents: list[Intent]
+    ) -> list[Intent]:
         """Called when a nested scope exits and attempts to flush.
 
         This method is called during the parent chain walk, allowing each ancestor
@@ -913,8 +919,6 @@ def scoped(
         safe for concurrent execution - each call gets its own isolated scope.
         Arguments passed explicitly always override configured defaults.
     """
-    from functools import wraps
-
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args, **kw):

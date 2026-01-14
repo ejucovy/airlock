@@ -1,7 +1,5 @@
 """Tests for context handling."""
 
-import pytest
-
 from airlock import get_current_scope, _current_scope, _in_policy
 
 

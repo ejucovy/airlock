@@ -3,8 +3,10 @@
 import pytest
 
 import airlock
-from airlock import enqueue, PolicyEnqueueError, NoScopeError, PolicyViolation, scope, scoped, AllowAll, AssertNoEffects, DropAll
-from airlock import _in_policy
+from airlock import (
+    enqueue, PolicyEnqueueError, NoScopeError, PolicyViolation,
+    scope, scoped, AllowAll, AssertNoEffects, DropAll, _in_policy,
+)
 
 
 # Test tasks

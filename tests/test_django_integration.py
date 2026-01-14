@@ -17,11 +17,9 @@ if not settings.configured:
     )
 
 from django.db import transaction
-from django.test import override_settings
 from airlock.integrations.django import (
     DjangoScope,
     AirlockMiddleware,
-    get_setting,
     get_executor,
     get_scope_class,
     get_policy,
@@ -151,7 +149,9 @@ def test_get_executor_imports_django_q_executor():
         sys.modules.pop("airlock.integrations.executors.django_q", None)
 
         with patch("airlock.integrations.django.get_setting") as mock_get_setting:
-            mock_get_setting.return_value = "airlock.integrations.executors.django_q.django_q_executor"
+            mock_get_setting.return_value = (
+                "airlock.integrations.executors.django_q.django_q_executor"
+            )
 
             executor = get_executor()
 
@@ -361,7 +361,6 @@ def test_django_scope_uses_django_q_executor_from_setting(mock_transaction):
 
 def test_django_scope_explicit_executor_overrides_setting(mock_transaction):
     """Test explicit executor parameter overrides EXECUTOR setting."""
-    from airlock.integrations.executors.celery import celery_executor
     from airlock.integrations.executors.huey import huey_executor
 
     with patch("airlock.integrations.django.get_setting") as mock_get_setting:
@@ -731,4 +730,6 @@ class TestAppConfig:
         from airlock.integrations import django as django_integration
 
         assert hasattr(django_integration, "default_app_config")
-        assert django_integration.default_app_config == "airlock.integrations.django.apps.AirlockConfig"
+        assert django_integration.default_app_config == (
+            "airlock.integrations.django.apps.AirlockConfig"
+        )

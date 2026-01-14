@@ -12,7 +12,6 @@ The tests require gevent and will be skipped if it's not installed.
 import pytest
 
 try:
-    import gevent
     from gevent import spawn, joinall, sleep as gsleep
     import greenlet
 
@@ -47,9 +46,9 @@ class TestGreenletContextIsolation:
     def test_greenlet_has_contextvar_support(self):
         """Verify that the installed greenlet version supports contextvars."""
         assert GREENLET_CONTEXTVAR_SAFE, (
-            f"greenlet.GREENLET_USE_CONTEXT_VARS is False. "
-            f"airlock requires greenlet>=1.0 for safe concurrent operation. "
-            f"Installed greenlet version may be too old."
+            "greenlet.GREENLET_USE_CONTEXT_VARS is False. "
+            "airlock requires greenlet>=1.0 for safe concurrent operation. "
+            "Installed greenlet version may be too old."
         )
 
     def test_concurrent_scopes_are_isolated(self):
@@ -106,10 +105,12 @@ class TestGreenletContextIsolation:
         joinall(greenlets)
 
         # Check for errors
-        assert not errors, f"Isolation failures detected:\n" + "\n".join(errors)
+        assert not errors, "Isolation failures detected:\n" + "\n".join(errors)
 
         # Verify each greenlet saw exactly 2 intents (before and after yield)
-        assert len(results) == num_greenlets, f"Not all greenlets completed: {len(results)}/{num_greenlets}"
+        assert len(results) == num_greenlets, (
+            f"Not all greenlets completed: {len(results)}/{num_greenlets}"
+        )
 
         for task_id, result in results.items():
             assert result["intent_count"] == 2, (
@@ -175,7 +176,7 @@ class TestGreenletContextIsolation:
         greenlets = [spawn(greenlet_task, i) for i in range(num_greenlets)]
         joinall(greenlets)
 
-        assert not errors, f"Isolation failures:\n" + "\n".join(errors)
+        assert not errors, "Isolation failures:\n" + "\n".join(errors)
         assert len(results) == num_greenlets
 
     def test_rapid_scope_switching(self):
@@ -212,7 +213,7 @@ class TestGreenletContextIsolation:
         greenlets = [spawn(greenlet_task, i) for i in range(num_greenlets)]
         joinall(greenlets)
 
-        assert not errors, f"Isolation failures:\n" + "\n".join(errors)
+        assert not errors, "Isolation failures:\n" + "\n".join(errors)
         assert len(completed) == num_greenlets
 
 
@@ -343,9 +344,11 @@ class TestGreenletCompatibilityCheck:
                 _check_greenlet_compatibility()
 
             # Should have issued a warning
-            greenlet_warnings = [warning for warning in w
-                               if "greenlet" in str(warning.message).lower()
-                               and warning.category == RuntimeWarning]
+            greenlet_warnings = [
+                warning for warning in w
+                if "greenlet" in str(warning.message).lower()
+                and warning.category == RuntimeWarning
+            ]
             assert len(greenlet_warnings) == 1, f"Expected 1 warning, got {len(greenlet_warnings)}"
             assert "contextvars" in str(greenlet_warnings[0].message).lower()
         finally:

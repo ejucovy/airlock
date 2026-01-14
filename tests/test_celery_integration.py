@@ -1,17 +1,16 @@
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 pytest.importorskip("celery")
 
 from celery import Task
 
 import airlock
-from airlock import DropAll, AllowAll
+from airlock import DropAll
 from airlock.integrations.celery import (
     LegacyTaskShim,
     install_global_intercept,
     uninstall_global_intercept,
-    _installed,
 )
 from airlock.integrations import celery as celery_module
 
