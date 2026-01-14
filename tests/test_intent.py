@@ -211,4 +211,3 @@ class TestPassesLocalPolicies:
         )
 
         assert intent.passes_local_policies() is False
-
