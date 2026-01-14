@@ -236,5 +236,3 @@ class TestLogOnFlush:
         repr_str = repr(policy)
         assert "LogOnFlush" in repr_str
         assert "custom.logger" in repr_str
-
-
