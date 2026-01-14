@@ -41,7 +41,6 @@ Settings (in ``settings.py``)::
 - ``"myapp.executors.custom_executor"`` (or any custom executor)
 """
 
-from functools import wraps
 from typing import Any, Callable
 from importlib import import_module
 
@@ -50,8 +49,7 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
 
-import airlock
-from airlock import Scope, Intent, Executor, AllowAll, DropAll, _execute
+from airlock import Scope, Intent, Executor
 from airlock.integrations.executors.sync import sync_executor
 
 

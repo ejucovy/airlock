@@ -805,7 +805,9 @@ class TestNestedScopeCapture:
         def task():
             pass
 
-        with pytest.raises(TypeError, match="before_descendant_flushes.*must return a list.*got NoneType"):
+        with pytest.raises(
+            TypeError, match="before_descendant_flushes.*must return a list.*got NoneType"
+        ):
             with scope(policy=AllowAll(), _cls=BrokenScope):
                 with scope(policy=AllowAll()):
                     airlock.enqueue(task)
@@ -820,7 +822,9 @@ class TestNestedScopeCapture:
         def task():
             pass
 
-        with pytest.raises(TypeError, match="before_descendant_flushes.*must return a list.*got dict"):
+        with pytest.raises(
+            TypeError, match="before_descendant_flushes.*must return a list.*got dict"
+        ):
             with scope(policy=AllowAll(), _cls=BrokenScope):
                 with scope(policy=AllowAll()):
                     airlock.enqueue(task)

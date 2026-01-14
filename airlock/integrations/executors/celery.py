@@ -18,10 +18,10 @@ def celery_executor(intent: Intent) -> None:
 
     # Prefer apply_async if we have options or if delay() isn't available
     if hasattr(task, "apply_async"):
-        task.apply_async(args=intent.args, kwargs=intent.kwargs, **opts)
+        task.apply_async(args=intent.args, kwargs=intent.kwargs, **opts)  # noqa: AIR001
     # Fall back to .delay() (can't pass options)
     elif hasattr(task, "delay"):
-        task.delay(*intent.args, **intent.kwargs)
+        task.delay(*intent.args, **intent.kwargs)  # noqa: AIR001
     # Plain callable (fallback)
     else:
         task(*intent.args, **intent.kwargs)

@@ -1,9 +1,7 @@
 """Tests for local policy contexts."""
 
-import pytest
-
 import airlock
-from airlock import Intent, scope, policy, AllowAll, DropAll, BlockTasks
+from airlock import scope, policy, AllowAll, DropAll, BlockTasks
 
 
 def task_a():

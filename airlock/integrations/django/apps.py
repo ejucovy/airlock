@@ -45,8 +45,8 @@ class AirlockConfig(AppConfig):
 
     def ready(self) -> None:
         """Configure airlock with Django defaults on app startup."""
-        import airlock
-        from airlock.integrations.django import (
+        import airlock  # noqa: AIR002 - must delay until Django settings ready
+        from airlock.integrations.django import (  # noqa: AIR002
             DjangoScope,
             get_policy,
             get_executor,
