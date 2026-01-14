@@ -84,10 +84,6 @@ The main airlock module. Import with `import airlock`.
     options:
       show_root_heading: true
 
-::: airlock.CompositePolicy
-    options:
-      show_root_heading: true
-
 ## Exceptions
 
 ::: airlock.AirlockError
