@@ -6,7 +6,7 @@
 [![Docs](https://github.com/ejucovy/airlock/actions/workflows/docs.yml/badge.svg)](https://ejucovy.github.io/airlock)
 [![codecov](https://codecov.io/gh/ejucovy/airlock/graph/badge.svg?token=AZ8U5BHG1M)](https://codecov.io/gh/ejucovy/airlock)
 
-<img width="1263" height="550" alt="Screenshot 2026-01-12 at 11 21 29 PM" src="https://github.com/user-attachments/assets/d5aa2526-53d4-40a7-a6de-8589a5e7cad6" />
+<img width="1263" height="550" alt="Airlock diagram" src="https://github.com/user-attachments/assets/d5aa2526-53d4-40a7-a6de-8589a5e7cad6" style="max-width: 100%; height: auto;" />
 
 ## tl;dr
 
@@ -78,7 +78,7 @@ def checkout(request):
 # Celery tasks dispatch in middleware, after transaction has committed
 ```
 
-Read more: [Django integration](docs/django/index.md)
+Read more: [Django integration](https://ejucovy.github.io/airlock/django/)
 
 ## Installation
 
@@ -92,14 +92,14 @@ pip install airlock-py
 
 Key pages:
 
-- [The Problem](docs/understanding/the-problem.md) - Why airlock exists
-- [Core Model](docs/understanding/core-model.md) - The 3 concerns (Policy/Executor/Scope)
-- [Nesting](docs/understanding/nesting.md) - Nested scopes and safety
-- [Alternatives](docs/understanding/alternatives.md) - Do I really need this...?
+- [The Problem](https://ejucovy.github.io/airlock/understanding/the-problem/) - Why airlock exists
+- [Core Model](https://ejucovy.github.io/airlock/understanding/core-model/) - The 3 concerns (Policy/Executor/Scope)
+- [Nesting](https://ejucovy.github.io/airlock/understanding/nesting/) - Nested scopes and safety
+- [Alternatives](https://ejucovy.github.io/airlock/understanding/alternatives/) - Do I really need this...?
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup.
+See [CONTRIBUTING.md](https://github.com/ejucovy/airlock/blob/main/CONTRIBUTING.md) for development setup.
 
 ## License
 

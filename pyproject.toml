@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "airlock-py"
-version = "0.1.0a1"
+version = "0.1.0a2"
 description = "Explicit, lifecycle-scoped control of side effects"
 readme = "README.md"
 license = {text = "MIT"}
@@ -28,6 +28,12 @@ classifiers = [
     "Typing :: Typed",
 ]
 keywords = ["side-effects", "celery", "tasks", "lifecycle", "outbox", "airlock"]
+
+[project.urls]
+Homepage = "https://github.com/ejucovy/airlock"
+Documentation = "https://ejucovy.github.io/airlock/"
+Repository = "https://github.com/ejucovy/airlock"
+Issues = "https://github.com/ejucovy/airlock/issues"
 
 [project.optional-dependencies]
 dev = [
