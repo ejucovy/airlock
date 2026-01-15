@@ -4,15 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "airlock-py"
-version = "0.1.0a2"
+version = "0.1.0a3"
 description = "Explicit, lifecycle-scoped control of side effects"
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
 requires-python = ">=3.10"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Framework :: Django",
     "Framework :: Django :: 4.0",

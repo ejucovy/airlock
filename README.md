@@ -6,7 +6,7 @@
 [![Docs](https://github.com/ejucovy/airlock/actions/workflows/docs.yml/badge.svg)](https://ejucovy.github.io/airlock)
 [![codecov](https://codecov.io/gh/ejucovy/airlock/graph/badge.svg?token=AZ8U5BHG1M)](https://codecov.io/gh/ejucovy/airlock)
 
-<img width="1263" height="550" alt="Airlock diagram" src="https://github.com/user-attachments/assets/d5aa2526-53d4-40a7-a6de-8589a5e7cad6" style="max-width: 100%; height: auto;" />
+<img alt="Airlock diagram" src="https://github.com/user-attachments/assets/d5aa2526-53d4-40a7-a6de-8589a5e7cad6" />
 
 ## tl;dr
 
