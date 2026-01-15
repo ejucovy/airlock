@@ -38,7 +38,7 @@ build:
 release: build
     #!/usr/bin/env bash
     set -euo pipefail
-    version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+    version=$(grep '^version' pyproject.toml | cut -d'"' -f2)
     git tag "v$version"
     uvx twine upload dist/*
     git push origin "v$version"
