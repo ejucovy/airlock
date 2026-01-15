@@ -28,3 +28,21 @@ docs:
 # Build docs
 docs-build:
     mkdocs build
+
+# Build package
+build:
+    rm -rf dist/
+    uvx --from build pyproject-build
+
+# Build, tag, and upload to PyPI
+release: build
+    #!/usr/bin/env bash
+    set -euo pipefail
+    version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+    git tag "v$version"
+    uvx twine upload dist/*
+    git push origin "v$version"
+
+# Build and upload to TestPyPI for dry run
+release-test: build
+    uvx twine upload --repository testpypi dist/*
